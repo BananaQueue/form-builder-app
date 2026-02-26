@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 
-function FormList() {
+
+function FormList( {onViewForm}) {
   const [forms, setForms] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -155,7 +156,7 @@ function FormList() {
         </div>
 
         <div className="form-card-buttons">
-          <button className="btn-view">
+          <button className="btn-view" onClick={() => onViewForm(form.id)}>
             View
           </button>
           <button className="btn-edit">
