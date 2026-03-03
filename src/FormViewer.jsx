@@ -106,7 +106,7 @@ function FormViewer({ formId, onBack }) {
             <div
               key={question.id}
               style={{
-                background: '#f9f9f9',
+                background: '#f9f9f990',
                 padding: '20px',
                 marginBottom: '20px',
                 border: '1px solid #ddd',
@@ -140,7 +140,8 @@ function FormViewer({ formId, onBack }) {
                           borderRadius: '4px',
                           marginBottom: '5px',
                           display: 'inline-block',
-                          marginRight: '10px'
+                          marginRight: '10px',
+                          color: '#333',
                         }}
                       >
                         {option}
