@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-function FormViewer({ formId, onBack }) {
+function FormViewer({ formId, onBack, onDisplayForm}) {
   const [form, setForm] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -63,6 +63,20 @@ function FormViewer({ formId, onBack }) {
         >
           ← Back to List
         </button>
+
+          <button
+            onClick={() => onDisplayForm(formId)}
+            style={{
+              padding: '10px 20px',
+              background: '#28a745',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+              borderRadius: '3px'
+            }}
+          >
+    📝 Fill Out This Form
+  </button>
       </div>
 
       {/* Form Title and Info */}

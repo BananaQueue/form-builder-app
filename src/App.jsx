@@ -2,11 +2,18 @@ import { useState } from 'react'
 import FormBuilder from './FormBuilder'
 import FormList from './FormList'
 import FormViewer from './FormViewer'
+import FormDisplay from './FormDisplay'
 import './App.css'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('list')
   const [viewingFormId, setViewingFormId] = useState(null)
+  const [displayFormId, setDisplayFormId] = useState(null)
+
+  function handleDisplayForm(formId) {
+  setDisplayFormId(formId)
+  setCurrentPage('display')
+}
 
   function handleViewForm(formId) {
     setViewingFormId(formId)
@@ -64,7 +71,8 @@ function App() {
       <div>
         {currentPage === 'list' && <FormList onViewForm={handleViewForm} />}
         {currentPage === 'create' && <FormBuilder />}
-        {currentPage === 'view' && <FormViewer formId={viewingFormId} onBack={handleBackToList} />}
+        {currentPage === 'view' && <FormViewer formId={viewingFormId} onBack={handleBackToList} onDisplayForm={handleDisplayForm}/>}
+        {currentPage === 'display' && <FormDisplay formId={displayFormId} />}
       </div>
     </div>
   )
