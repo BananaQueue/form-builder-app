@@ -3,17 +3,21 @@ import FormBuilder from './FormBuilder'
 import FormList from './FormList'
 import FormViewer from './FormViewer'
 import FormDisplay from './FormDisplay'
+import ResponseList from './ResponseList'
+import ResponseViewer from './ResponseViewer'
 import './App.css'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('list')
   const [viewingFormId, setViewingFormId] = useState(null)
   const [displayFormId, setDisplayFormId] = useState(null)
+  const [responsesFormId, setResponsesFormId] = useState(null)
+  const [viewingResponseId, setViewingResponseId] = useState(null)
 
   function handleDisplayForm(formId) {
   setDisplayFormId(formId)
   setCurrentPage('display')
-}
+  }
 
   function handleViewForm(formId) {
     setViewingFormId(formId)
@@ -24,6 +28,21 @@ function App() {
     setViewingFormId(null)
     setCurrentPage('list')
   }
+
+function handleViewResponses(formId) {
+  setResponsesFormId(formId)
+  setCurrentPage('responses')
+}
+
+function handleViewResponseDetail(responseId) {
+  setViewingResponseId(responseId)
+  setCurrentPage('response-detail')
+}
+
+function handleBackToResponses() {
+  setViewingResponseId(null)
+  setCurrentPage('responses')
+}
 
   return (
     <div>
@@ -69,10 +88,12 @@ function App() {
 
       {/* Page Content */}
       <div>
-        {currentPage === 'list' && <FormList onViewForm={handleViewForm} />}
+        {currentPage === 'list' && <FormList onViewForm={handleViewForm} onViewResponses={handleViewResponses} />}
         {currentPage === 'create' && <FormBuilder />}
         {currentPage === 'view' && <FormViewer formId={viewingFormId} onBack={handleBackToList} onDisplayForm={handleDisplayForm}/>}
         {currentPage === 'display' && <FormDisplay formId={displayFormId} />}
+        {currentPage === 'responses' && <ResponseList formId={responsesFormId} onBack={handleBackToList} onViewResponse={handleViewResponseDetail} />}
+        {currentPage === 'response-detail' && <ResponseViewer responseId={viewingResponseId} onBack={handleBackToResponses} />}
       </div>
     </div>
   )
