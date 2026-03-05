@@ -28,6 +28,14 @@ function ResponseList({ formId, onBack, onViewResponse }) {
     }
   }
 
+  function handleExport() {
+  // Create a link to the export endpoint
+  const exportUrl = `http://localhost/form-builder-api/export_responses.php?form_id=${formId}`
+  
+  // Open in new window to trigger download
+  window.open(exportUrl, '_blank')
+}
+
   if (loading) {
     return <div style={{ padding: '20px' }}>Loading responses...</div>
   }
@@ -60,6 +68,20 @@ function ResponseList({ formId, onBack, onViewResponse }) {
           }}
         >
           ← Back to List
+        </button>
+        <button
+            onClick={handleExport}
+            disabled={responses.length === 0}
+            style={{
+            padding: '10px 20px',
+            background: responses.length === 0 ? '#ccc' : '#28a745',
+            color: 'white',
+            border: 'none',
+            cursor: responses.length === 0 ? 'not-allowed' : 'pointer',
+            borderRadius: '3px'
+            }}
+        >
+    📥 Export to CSV
         </button>
       </div>
 
@@ -96,7 +118,7 @@ function ResponseList({ formId, onBack, onViewResponse }) {
               }}
             >
               <div>
-                <strong style={{ fontSize: '16px' }}>Response #{index + 1}</strong>
+                <strong style={{ fontSize: '16px', color: '#333' }}>Response #{index + 1}</strong>
                 <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
                   Submitted: {new Date(response.submitted_at).toLocaleString()}
                 </p>

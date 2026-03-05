@@ -85,7 +85,7 @@ function ResponseViewer({ responseId, onBack }) {
         <div
           key={answer.id}
           style={{
-            background: '#f9f9f9',
+            background: '#f9f9f994',
             padding: '20px',
             marginBottom: '20px',
             border: '1px solid #ddd',
@@ -110,7 +110,9 @@ function ResponseViewer({ responseId, onBack }) {
               padding: '15px',
               background: '#fff',
               border: '1px solid #ddd',
-              borderRadius: '4px'
+              borderRadius: '4px',
+              color: '#333',
+              fontWeight: '500'
             }}
           >
             <strong>Answer:</strong>
