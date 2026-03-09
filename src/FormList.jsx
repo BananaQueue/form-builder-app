@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function FormList({ onViewForm, onViewResponses }) {
+function FormList({ onViewForm, onViewResponses, onEditForm }) {
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -173,7 +173,11 @@ function FormList({ onViewForm, onViewResponses }) {
                 >
                   View
                 </button>
-                <button className="btn-edit">Edit</button>
+                <button className="btn-edit"
+                  onClick={() => onEditForm(form.id)}
+                >
+                  Edit
+                </button>
                 <button
                   className="btn-delete"
                   onClick={() => deleteForm(form.id, form.title)}

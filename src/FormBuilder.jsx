@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function FormBuilder() {
+function FormBuilder({editFormId = null, onSaveComplete = null}) {
   // All state declarations
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
@@ -14,6 +14,9 @@ function FormBuilder() {
 
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(1);
+
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [loadingForm, setLoadingForm] = useState(false);
 
   // Fetch categories when component loads
   useEffect(() => {
@@ -34,6 +37,46 @@ function FormBuilder() {
       console.error("Failed to fetch categories:", error);
     }
   }
+
+  // Load form data if in edit mode
+useEffect(() => {
+  if (editFormId) {
+    loadFormForEditing(editFormId)
+  }
+}, [editFormId])
+
+async function loadFormForEditing(formId) {
+  setLoadingForm(true)
+  setIsEditMode(true)
+  
+  try {
+    const response = await fetch(`http://localhost/form-builder-api/get_form_details.php?id=${formId}`)
+    const result = await response.json()
+    
+    if (result.success) {
+      const form = result.form
+      
+      // Set form details
+      setFormTitle(form.title)
+      setFormDescription(form.description || '')
+      setSelectedCategoryId(parseInt(form.category_id))
+      
+      // Set questions
+      setQuestions(form.questions.map(q => ({
+        id: Date.now() + Math.random(), // Generate new temp ID for React
+        text: q.question_text,
+        type: q.question_type,
+        options: q.options || []
+      })))
+    } else {
+      alert('Failed to load form: ' + (result.error || 'Unknown error'))
+    }
+  } catch (error) {
+    alert('Failed to load form: ' + error.message)
+  } finally {
+    setLoadingForm(false)
+  }
+}
 
   // Add a question
   function addQuestion() {
@@ -90,55 +133,83 @@ function FormBuilder() {
 
   // Save form to database
   async function saveForm() {
-    if (formTitle.trim() === "") {
-      alert("Please enter a form title");
-      return;
-    }
-
-    if (questions.length === 0) {
-      alert("Please add at least one question");
-      return;
-    }
-
-    const formData = {
-      title: formTitle,
-      description: formDescription,
-      category_id: selectedCategoryId,
-      questions: questions,
-    };
-
-    try {
-      const response = await fetch(
-        "http://localhost/form-builder-api/save_form.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        },
-      );
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert("Form saved successfully! Form ID: " + result.form_id);
-
-        setFormTitle("");
-        setFormDescription("");
-        setQuestions([]);
-      } else {
-        alert("Error saving form: " + (result.error || "Unknown error"));
-      }
-    } catch (error) {
-      alert("Failed to connect to server: " + error.message);
-      console.error("Error:", error);
-    }
+  if (formTitle.trim() === '') {
+    alert('Please enter a form title')
+    return
   }
+
+  if (questions.length === 0) {
+    alert('Please add at least one question')
+    return
+  }
+
+  const formData = {
+    title: formTitle,
+    description: formDescription,
+    category_id: selectedCategoryId,
+    questions: questions
+  }
+
+  // Add form_id if editing
+  if (isEditMode && editFormId) {
+    formData.form_id = editFormId
+  }
+
+  try {
+    // Use different endpoint based on mode
+    const endpoint = isEditMode 
+      ? 'http://localhost/form-builder-api/update_form.php'
+      : 'http://localhost/form-builder-api/save_form.php'
+
+    
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    })
+
+    const result = await response.json()
+
+    if (result.success) {
+      alert(isEditMode 
+        ? 'Form updated successfully!' 
+        : 'Form saved successfully! Form ID: ' + result.form_id
+      )
+      
+      // Clear form or call callback
+      if (isEditMode && onSaveComplete) {
+        onSaveComplete() // Go back to list
+      } else {
+        // Clear the form after creating
+        setFormTitle('')
+        setFormDescription('')
+        setQuestions([])
+      }
+    } else {
+      alert('Error saving form: ' + (result.error || 'Unknown error'))
+    }
+
+  } catch (error) {
+    alert('Failed to connect to server: ' + error.message)
+    console.error('Error:', error)
+  }
+}
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px" }}>
-      <h1>Form Builder</h1>
+      {loadingForm && (
+        <div style={{padding: '20px', textAlign: 'center', background: '#f0f8ff', marginBottom: '20px', borderRadius: '5px'}}>
+          Loading form data...
+        </div>
+      )}
+      <h1>{isEditMode ? "Edit Form" : "Form Builder"}</h1>
+      {isEditMode && (
+        <p style={{ color: "#666", marginBottom: "20px" }}>
+          You are editing an existing form. Changes will be save when you click "Save Form".
+          </p>
+      )}
 
       {/* Form Title Input */}
       <div style={{ marginBottom: "20px" }}>
@@ -423,7 +494,7 @@ function FormBuilder() {
             fontWeight: "bold",
           }}
         >
-          💾 Save Form to Database
+          💾 {isEditMode ? "Update Form" : "Save Form to Database"}
         </button>
       </div>
 

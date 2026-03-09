@@ -13,6 +13,7 @@ function App() {
   const [displayFormId, setDisplayFormId] = useState(null)
   const [responsesFormId, setResponsesFormId] = useState(null)
   const [viewingResponseId, setViewingResponseId] = useState(null)
+  const [editingFormId, setEditingFormId] = useState(null)
 
   function handleDisplayForm(formId) {
   setDisplayFormId(formId)
@@ -28,6 +29,16 @@ function App() {
     setViewingFormId(null)
     setCurrentPage('list')
   }
+
+  function handleEditForm(formId) {
+  setEditingFormId(formId)
+  setCurrentPage('edit')
+}
+
+function handleEditComplete() {
+  setEditingFormId(null)
+  setCurrentPage('list')
+}
 
 function handleViewResponses(formId) {
   setResponsesFormId(formId)
@@ -88,8 +99,9 @@ function handleBackToResponses() {
 
       {/* Page Content */}
       <div>
-        {currentPage === 'list' && <FormList onViewForm={handleViewForm} onViewResponses={handleViewResponses} />}
+        {currentPage === 'list' && <FormList onViewForm={handleViewForm} onViewResponses={handleViewResponses} onEditForm={handleEditForm}   />}
         {currentPage === 'create' && <FormBuilder />}
+        {currentPage === 'edit' && <FormBuilder editFormId={editingFormId} onSaveComplete={handleEditComplete} />}
         {currentPage === 'view' && <FormViewer formId={viewingFormId} onBack={handleBackToList} onDisplayForm={handleDisplayForm}/>}
         {currentPage === 'display' && <FormDisplay formId={displayFormId} />}
         {currentPage === 'responses' && <ResponseList formId={responsesFormId} onBack={handleBackToList} onViewResponse={handleViewResponseDetail} />}
