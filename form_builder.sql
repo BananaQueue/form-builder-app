@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 26, 2026 at 07:22 AM
+-- Generation Time: Mar 09, 2026 at 06:48 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -33,6 +33,26 @@ CREATE TABLE `answers` (
   `question_id` int(11) NOT NULL,
   `answer_text` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `answers`
+--
+
+INSERT INTO `answers` (`id`, `response_id`, `question_id`, `answer_text`) VALUES
+(1, 1, 10, 'ABCDE FGH'),
+(2, 1, 11, 'Red'),
+(3, 2, 7, 'ORD'),
+(4, 2, 8, 'Darwin Pua'),
+(5, 2, 9, 'Orange,Lemon,Grape,Apple,Starfruit,Watermelon,Kiwi,Apple Mango'),
+(6, 3, 7, 'FAD'),
+(7, 3, 8, 'Father'),
+(8, 3, 9, 'Orange,Lemon,Grape,Starfruit'),
+(9, 4, 12, 'okay'),
+(10, 4, 13, 'Me'),
+(11, 4, 14, 'Everywhere'),
+(12, 5, 12, 'Now'),
+(13, 5, 13, 'U'),
+(14, 5, 14, 'There');
 
 -- --------------------------------------------------------
 
@@ -74,10 +94,9 @@ CREATE TABLE `forms` (
 --
 
 INSERT INTO `forms` (`id`, `title`, `description`, `created_at`, `category_id`) VALUES
-(1, 'Test Form', 'This is a test form', '2026-02-11 01:18:13', 1),
-(2, 'Test Form from HTML', 'This is a test', '2026-02-24 01:15:42', 1),
-(3, 'Test Three', 'Three Test', '2026-02-24 06:04:45', 1),
-(4, 'Webinar Feedback', 'Feedback on Webinar', '2026-02-25 09:41:49', 3);
+(3, 'Test Three', 'Three Test', '2026-02-24 06:04:45', 2),
+(4, 'Webinar Feedback', 'Feedback on Webinar', '2026-02-25 09:41:49', 3),
+(5, 'Test Form from HTML', 'This is a test', '2026-02-26 08:27:59', 1);
 
 -- --------------------------------------------------------
 
@@ -98,15 +117,14 @@ CREATE TABLE `questions` (
 --
 
 INSERT INTO `questions` (`id`, `form_id`, `question_text`, `question_type`, `position`) VALUES
-(1, 1, 'What is your favorite color?', 'multiple_choice', 0),
-(2, 2, 'What is your name?', 'text', 0),
-(3, 2, 'What is your favorite color?', 'multiple_choice', 1),
-(4, 3, 'What?', 'text', 0),
-(5, 3, 'Who?', 'checkbox', 1),
-(6, 3, 'Where?', 'multiple_choice', 2),
 (7, 4, 'Section/Unit/Section', 'checkbox', 0),
 (8, 4, 'Full name:', 'text', 1),
-(9, 4, 'Select all that apply', 'multiple_choice', 2);
+(9, 4, 'Select all that apply', 'multiple_choice', 2),
+(10, 5, 'What is your name?', 'text', 0),
+(11, 5, 'What is your favorite color?', 'multiple_choice', 1),
+(12, 3, 'What?', 'text', 0),
+(13, 3, 'Who?', 'checkbox', 1),
+(14, 3, 'Where?', 'multiple_choice', 2);
 
 -- --------------------------------------------------------
 
@@ -126,17 +144,6 @@ CREATE TABLE `question_options` (
 --
 
 INSERT INTO `question_options` (`id`, `question_id`, `option_text`, `position`) VALUES
-(1, 1, 'Red', 0),
-(2, 1, 'Blue', 1),
-(3, 1, 'Green', 2),
-(4, 3, 'Red', 0),
-(5, 3, 'Blue', 1),
-(6, 3, 'Green', 2),
-(7, 5, 'Me', 0),
-(8, 5, 'U', 1),
-(9, 6, 'Here', 0),
-(10, 6, 'There', 1),
-(11, 6, 'Everywhere', 2),
 (12, 7, 'FAD', 0),
 (13, 7, 'CPD', 1),
 (14, 7, 'EMED', 2),
@@ -148,7 +155,15 @@ INSERT INTO `question_options` (`id`, `question_id`, `option_text`, `position`) 
 (20, 9, 'Watermelon', 4),
 (21, 9, 'Starfruit', 5),
 (22, 9, 'Kiwi', 6),
-(23, 9, 'Apple Mango', 7);
+(23, 9, 'Apple Mango', 7),
+(24, 11, 'Red', 0),
+(25, 11, 'Blue', 1),
+(26, 11, 'Green', 2),
+(27, 13, 'Me', 0),
+(28, 13, 'U', 1),
+(29, 14, 'Here', 0),
+(30, 14, 'There', 1),
+(31, 14, 'Everywhere', 2);
 
 -- --------------------------------------------------------
 
@@ -161,6 +176,17 @@ CREATE TABLE `responses` (
   `form_id` int(11) NOT NULL,
   `submitted_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `responses`
+--
+
+INSERT INTO `responses` (`id`, `form_id`, `submitted_at`) VALUES
+(1, 5, '2026-03-03 03:56:07'),
+(2, 4, '2026-03-03 03:58:30'),
+(3, 4, '2026-03-03 03:59:23'),
+(4, 3, '2026-03-09 03:41:18'),
+(5, 3, '2026-03-09 03:41:53');
 
 --
 -- Indexes for dumped tables
@@ -217,7 +243,7 @@ ALTER TABLE `responses`
 -- AUTO_INCREMENT for table `answers`
 --
 ALTER TABLE `answers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -229,25 +255,25 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `forms`
 --
 ALTER TABLE `forms`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `questions`
 --
 ALTER TABLE `questions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `question_options`
 --
 ALTER TABLE `question_options`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `responses`
 --
 ALTER TABLE `responses`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
