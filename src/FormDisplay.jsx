@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiUrl } from './apiBase'
 
 function FormDisplay({ formId }) {
   const [form, setForm] = useState(null)
@@ -8,13 +9,9 @@ function FormDisplay({ formId }) {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
-  useEffect(() => {
-    fetchFormDetails()
-  }, [formId])
-
   async function fetchFormDetails() {
     try {
-      const response = await fetch(`http://localhost/form-builder-api/get_form_details.php?id=${formId}`)
+      const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}`))
       const result = await response.json()
 
       if (result.success) {
@@ -65,7 +62,7 @@ function FormDisplay({ formId }) {
     }
 
     try {
-      const response = await fetch('http://localhost/form-builder-api/submit_response.php', {
+      const response = await fetch(apiUrl('/submit_response.php'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -87,6 +84,13 @@ function FormDisplay({ formId }) {
       setSubmitting(false)
     }
   }
+
+  useEffect(() => {
+    fetchFormDetails()
+    // we intentionally don't include fetchFormDetails in deps
+    // to avoid re-creating it on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formId])
 
   if (loading) {
     return <div style={{ padding: '40px', textAlign: 'center' }}>Loading form...</div>
@@ -117,12 +121,12 @@ function FormDisplay({ formId }) {
   }
 
   return (
-    <div style={{ padding: '40px', maxWidth: '700px', margin: '0 auto' }}>
+    <div style={{ padding: '32px 16px', maxWidth: '900px', margin: '0 auto' }}>
       {/* Form Header */}
       <div style={{ marginBottom: '40px', borderBottom: '3px solid #007bff', paddingBottom: '20px' }}>
         <h1 style={{ margin: '0 0 10px 0' }}>{form.title}</h1>
         {form.description && (
-          <p style={{ color: '#666', fontSize: '16px', margin: '0' }}>
+          <p style={{ color: '#333', fontSize: '16px', margin: '0' }}>
             {form.description}
           </p>
         )}
@@ -156,12 +160,12 @@ function FormDisplay({ formId }) {
                 value={answers[question.id] || ''}
                 onChange={(e) => handleAnswerChange(question.id, e.target.value)}
                 style={{
-                  width: '80%',
-                  padding: '10px',
+                  width: '100%',
+                  padding: '10px 12px',
                   fontSize: '14px',
                   border: '1px solid #ccc',
                   borderRadius: '4px',
-                  margin: 'auto',
+                  boxSizing: 'border-box',
                 }}
                 placeholder="Your answer"
               />

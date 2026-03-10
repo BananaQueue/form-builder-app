@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiUrl, API_BASE } from './apiBase'
 
 function ResponseList({ formId, onBack, onViewResponse }) {
   const [form, setForm] = useState(null)
@@ -6,13 +7,9 @@ function ResponseList({ formId, onBack, onViewResponse }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchResponses()
-  }, [formId])
-
   async function fetchResponses() {
     try {
-      const response = await fetch(`http://localhost/form-builder-api/get_responses.php?form_id=${formId}`)
+      const response = await fetch(apiUrl(`/get_responses.php?form_id=${formId}`))
       const result = await response.json()
 
       if (result.success) {
@@ -28,9 +25,16 @@ function ResponseList({ formId, onBack, onViewResponse }) {
     }
   }
 
+  useEffect(() => {
+    fetchResponses()
+    // we intentionally don't include fetchResponses in deps
+    // to avoid re-creating it on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formId])
+
   function handleExport() {
   // Create a link to the export endpoint
-  const exportUrl = `http://localhost/form-builder-api/export_responses.php?form_id=${formId}`
+  const exportUrl = `${API_BASE}/export_responses.php?form_id=${formId}`
   
   // Open in new window to trigger download
   window.open(exportUrl, '_blank')

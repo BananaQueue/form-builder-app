@@ -7,9 +7,11 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost/form-builder/backend',
+        // Forward frontend calls like /api/get_forms.php to your local PHP backend
+        // hosted at http://localhost/form-builder-api/get_forms.php
+        target: 'http://localhost',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '/api')
+        rewrite: (path) => path.replace(/^\/api/, '/form-builder-api')
       }
     }
   }

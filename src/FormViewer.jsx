@@ -1,17 +1,53 @@
 import { useState, useEffect } from 'react'
+import { apiUrl } from './apiBase'
 
 function FormViewer({ formId, onBack, onDisplayForm}) {
   const [form, setForm] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchFormDetails()
-  }, [formId])
+  async function copyPublicLink() {
+    const publicUrl = `${window.location.origin}/form/${formId}`
+
+    // Clipboard API may be unavailable on some http/network-host contexts or browsers.
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(publicUrl)
+        alert('Link copied to clipboard!\n\n' + publicUrl)
+        return
+      }
+      throw new Error('Clipboard API unavailable')
+    } catch {
+      // Fallback: create a temporary textarea and use execCommand('copy')
+      try {
+        const textarea = document.createElement('textarea')
+        textarea.value = publicUrl
+        textarea.setAttribute('readonly', '')
+        textarea.style.position = 'fixed'
+        textarea.style.top = '0'
+        textarea.style.left = '0'
+        textarea.style.opacity = '0'
+        document.body.appendChild(textarea)
+        textarea.focus()
+        textarea.select()
+
+        const ok = document.execCommand('copy')
+        document.body.removeChild(textarea)
+
+        if (ok) {
+          alert('Link copied to clipboard!\n\n' + publicUrl)
+        } else {
+          alert('Copy failed. Please copy this link manually:\n\n' + publicUrl)
+        }
+      } catch {
+        alert('Copy failed. Please copy this link manually:\n\n' + publicUrl)
+      }
+    }
+  }
 
   async function fetchFormDetails() {
     try {
-      const response = await fetch(`http://localhost/form-builder-api/get_form_details.php?id=${formId}`)
+      const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}`))
       const result = await response.json()
 
       if (result.success) {
@@ -25,6 +61,13 @@ function FormViewer({ formId, onBack, onDisplayForm}) {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchFormDetails()
+    // we intentionally don't include fetchFormDetails in deps
+    // to avoid re-creating it on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formId])
 
   if (loading) {
     return <div style={{ padding: '20px' }}>Loading form...</div>
@@ -65,7 +108,7 @@ function FormViewer({ formId, onBack, onDisplayForm}) {
         </button>
 
           <button
-            onClick={() => onDisplayForm(formId)}
+            onClick={() => (onDisplayForm ? onDisplayForm(formId) : window.location.assign(`/form/${formId}`))}
             style={{
               padding: '10px 20px',
               background: '#28a745',
@@ -77,6 +120,19 @@ function FormViewer({ formId, onBack, onDisplayForm}) {
           >
     📝 Fill Out This Form
   </button>
+  <button
+  onClick={copyPublicLink}
+  style={{
+    padding: '10px 20px',
+    background: '#17a2b8',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
+    borderRadius: '3px'
+  }}
+>
+  🔗 Copy Public Link
+</button>
       </div>
 
       {/* Form Title and Info */}

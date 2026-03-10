@@ -110,6 +110,7 @@ button:focus-visible {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 10px;
+  min-height: 55px;
 }
 
 .form-card-title {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { apiUrl } from "./apiBase";
 
 function FormList({ onViewForm, onViewResponses, onEditForm }) {
   const [forms, setForms] = useState([]);
@@ -16,12 +17,39 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
   async function fetchForms() {
     try {
       const response = await fetch(
-        "http://localhost/form-builder-api/get_forms.php",
+        apiUrl("/get_forms.php"),
       );
       const result = await response.json();
 
       if (result.success) {
-        setForms(result.forms);
+        const formsData = result.forms;
+        
+        // Fetch response counts for each form in parallel
+        const formsWithCounts = await Promise.all(
+          formsData.map(async (form) => {
+            try {
+              const responseCountRes = await fetch(
+                apiUrl(`/get_responses.php?form_id=${form.id}`)
+              );
+              const responseCountResult = await responseCountRes.json();
+              
+              return {
+                ...form,
+                response_count: responseCountResult.success 
+                  ? (responseCountResult.responses?.length || 0)
+                  : 0
+              };
+            } catch (err) {
+              // If fetching response count fails, default to 0
+              return {
+                ...form,
+                response_count: 0
+              };
+            }
+          })
+        );
+        
+        setForms(formsWithCounts);
       } else {
         setError("Failed to load forms");
       }
@@ -35,7 +63,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
   async function fetchCategories() {
     try {
       const response = await fetch(
-        "http://localhost/form-builder-api/get_categories.php",
+        apiUrl("/get_categories.php"),
       );
       const result = await response.json();
 
@@ -58,7 +86,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
 
     try {
       const response = await fetch(
-        "http://localhost/form-builder-api/delete_form.php",
+        apiUrl("/delete_form.php"),
         {
           method: "POST",
           headers: {
@@ -163,6 +191,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
                 <div className="form-card-meta">
                   <div>📝 {form.question_count} question(s)</div>
                   <div>🕐 {new Date(form.created_at).toLocaleDateString()}</div>
+                  <div>📊 {form.response_count || 0} response(s)</div>
                 </div>
               </div>
 

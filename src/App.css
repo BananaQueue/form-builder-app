@@ -40,3 +40,18 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Public form page layout: full-width on mobile, capped with min-width on larger screens */
+.public-main {
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex: 1;
+}
+
+@media (min-width: 900px) {
+  .public-main {
+    max-width: 980px;
+    min-width: 720px;
+  }
+}

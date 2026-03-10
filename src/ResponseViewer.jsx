@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react'
+import { apiUrl } from './apiBase'
 
 function ResponseViewer({ responseId, onBack }) {
   const [response, setResponse] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchResponseDetails()
-  }, [responseId])
-
   async function fetchResponseDetails() {
     try {
-      const res = await fetch(`http://localhost/form-builder-api/get_response_details.php?id=${responseId}`)
+      const res = await fetch(apiUrl(`/get_response_details.php?id=${responseId}`))
       const result = await res.json()
 
       if (result.success) {
@@ -25,6 +22,13 @@ function ResponseViewer({ responseId, onBack }) {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchResponseDetails()
+    // we intentionally don't include fetchResponseDetails in deps
+    // to avoid re-creating it on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [responseId])
 
   if (loading) {
     return <div style={{ padding: '20px' }}>Loading response...</div>

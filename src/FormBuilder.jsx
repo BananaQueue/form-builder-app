@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { apiUrl } from "./apiBase";
 
 function FormBuilder({editFormId = null, onSaveComplete = null}) {
   // All state declarations
@@ -26,7 +27,7 @@ function FormBuilder({editFormId = null, onSaveComplete = null}) {
   async function fetchCategories() {
     try {
       const response = await fetch(
-        "http://localhost/form-builder-api/get_categories.php",
+        apiUrl("/get_categories.php"),
       );
       const result = await response.json();
 
@@ -50,7 +51,7 @@ async function loadFormForEditing(formId) {
   setIsEditMode(true)
   
   try {
-    const response = await fetch(`http://localhost/form-builder-api/get_form_details.php?id=${formId}`)
+    const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}`))
     const result = await response.json()
     
     if (result.success) {
@@ -158,8 +159,8 @@ async function loadFormForEditing(formId) {
   try {
     // Use different endpoint based on mode
     const endpoint = isEditMode 
-      ? 'http://localhost/form-builder-api/update_form.php'
-      : 'http://localhost/form-builder-api/save_form.php'
+      ? apiUrl('/update_form.php')
+      : apiUrl('/save_form.php')
 
     
     const response = await fetch(endpoint, {
