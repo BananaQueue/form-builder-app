@@ -1,132 +1,155 @@
-import { useState, useEffect } from 'react'
-import { apiUrl } from './apiBase'
+import { useState, useEffect } from "react";
+import { apiUrl } from "./apiBase";
 
 function FormDisplay({ formId }) {
-  const [form, setForm] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [answers, setAnswers] = useState({})
-  const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [form, setForm] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   async function fetchFormDetails() {
     try {
-      const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}`))
-      const result = await response.json()
+      const response = await fetch(
+        apiUrl(`/get_form_details.php?id=${formId}`),
+      );
+      const result = await response.json();
 
       if (result.success) {
-        setForm(result.form)
+        setForm(result.form);
         // Initialize answers object with empty values
-        const initialAnswers = {}
-        result.form.questions.forEach(q => {
-          initialAnswers[q.id] = ''
-        })
-        setAnswers(initialAnswers)
+        const initialAnswers = {};
+        result.form.questions.forEach((q) => {
+          initialAnswers[q.id] = "";
+        });
+        setAnswers(initialAnswers);
       } else {
-        setError(result.error || 'Failed to load form')
+        setError(result.error || "Failed to load form");
       }
     } catch (err) {
-      setError('Could not connect to server: ' + err.message)
+      setError("Could not connect to server: " + err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   function handleAnswerChange(questionId, value) {
     setAnswers({
       ...answers,
-      [questionId]: value
-    })
+      [questionId]: value,
+    });
   }
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    
-    // Validate that all questions are answered
-    const unansweredQuestions = form.questions.filter(q => !answers[q.id] || answers[q.id].trim() === '')
-    
-    if (unansweredQuestions.length > 0) {
-      alert('Please answer all questions before submitting.')
-      return
+    e.preventDefault();
+    // Check only required questions
+    const unansweredRequired = form.questions.filter((q) => {
+      const isRequired =
+        q.is_required === 1 || q.is_required === "1" || q.is_required === true;
+      const isAnswered = answers[q.id] && answers[q.id].trim() !== "";
+      return isRequired && !isAnswered;
+    });
+
+    if (unansweredRequired.length > 0) {
+      const questionNumbers = unansweredRequired.map(
+        (q) => form.questions.findIndex((fq) => fq.id === q.id) + 1,
+      );
+      alert(
+        `Please answer the following required questions: ${questionNumbers.join(", ")}`,
+      );
+      return;
     }
 
-    setSubmitting(true)
+    setSubmitting(true);
 
     // Prepare data for submission
     const submissionData = {
       form_id: formId,
-      answers: form.questions.map(q => ({
+      answers: form.questions.map((q) => ({
         question_id: q.id,
-        answer_text: answers[q.id]
-      }))
-    }
+        answer_text: answers[q.id],
+      })),
+    };
 
     try {
-      const response = await fetch(apiUrl('/submit_response.php'), {
-        method: 'POST',
+      const response = await fetch(apiUrl("/submit_response.php"), {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(submissionData)
-      })
+        body: JSON.stringify(submissionData),
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (result.success) {
-        setSubmitted(true)
+        setSubmitted(true);
       } else {
-        alert('Error submitting form: ' + (result.error || 'Unknown error'))
+        alert("Error submitting form: " + (result.error || "Unknown error"));
       }
     } catch (error) {
-      alert('Failed to connect to server: ' + error.message)
-      console.error('Error:', error)
+      alert("Failed to connect to server: " + error.message);
+      console.error("Error:", error);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
   useEffect(() => {
-    fetchFormDetails()
+    fetchFormDetails();
     // we intentionally don't include fetchFormDetails in deps
     // to avoid re-creating it on every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formId])
+  }, [formId]);
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}>Loading form...</div>
+    return (
+      <div style={{ padding: "40px", textAlign: "center" }}>
+        Loading form...
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: 'red' }}>
+      <div style={{ padding: "40px", textAlign: "center", color: "red" }}>
         <h2>Error</h2>
         <p>{error}</p>
       </div>
-    )
+    );
   }
 
   if (!form) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}>Form not found</div>
+    return (
+      <div style={{ padding: "40px", textAlign: "center" }}>Form not found</div>
+    );
   }
 
   if (submitted) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <h1 style={{ color: '#28a745' }}>✓ Thank You!</h1>
-        <p style={{ fontSize: '18px', marginTop: '20px' }}>
+      <div style={{ padding: "40px", textAlign: "center" }}>
+        <h1 style={{ color: "#28a745" }}>✓ Thank You!</h1>
+        <p style={{ fontSize: "18px", marginTop: "20px" }}>
           Your response has been submitted successfully.
         </p>
       </div>
-    )
+    );
   }
 
   return (
-    <div style={{ padding: '32px 16px', maxWidth: '900px', margin: '0 auto' }}>
+    <div style={{ padding: "32px 16px", maxWidth: "900px", margin: "0 auto" }}>
       {/* Form Header */}
-      <div style={{ marginBottom: '40px', borderBottom: '3px solid #007bff', paddingBottom: '20px' }}>
-        <h1 style={{ margin: '0 0 10px 0' }}>{form.title}</h1>
+      <div
+        style={{
+          marginBottom: "40px",
+          borderBottom: "3px solid #007bff",
+          paddingBottom: "20px",
+        }}
+      >
+        <h1 style={{ margin: "0 0 10px 0" }}>{form.title}</h1>
         {form.description && (
-          <p style={{ color: '#333', fontSize: '16px', margin: '0' }}>
+          <p style={{ color: "#333", fontSize: "16px", margin: "0" }}>
             {form.description}
           </p>
         )}
@@ -138,52 +161,77 @@ function FormDisplay({ formId }) {
           <div
             key={question.id}
             style={{
-              marginBottom: '30px',
-              padding: '20px',
-              background: '#f9f9f99b',
-              borderRadius: '5px',
-              border: '1px solid #ddd'
+              marginBottom: "30px",
+              padding: "20px",
+              background: "#f9f9f99b",
+              borderRadius: "5px",
+              border: "1px solid #ddd",
             }}
           >
             {/* Question Text */}
-            <label style={{ display: 'block', marginBottom: '15px' }}>
-              <strong style={{ fontSize: '16px' }}>
+            <label style={{ display: "block", marginBottom: "15px" }}>
+              <strong style={{ fontSize: "16px" }}>
                 {index + 1}. {question.question_text}
               </strong>
-              <span style={{ color: 'red', marginLeft: '5px' }}>*</span>
+              {(question.is_required === 1 ||
+                question.is_required === "1" ||
+                question.is_required === true) && (
+                <span style={{ color: "red", marginLeft: "5px" }}>*</span>
+              )}
+              {!(
+                question.is_required === 1 ||
+                question.is_required === "1" ||
+                question.is_required === true
+              ) && (
+                <span
+                  style={{ color: "#999", marginLeft: "5px", fontSize: "14px" }}
+                >
+                  (optional)
+                </span>
+              )}
             </label>
 
             {/* Text Input */}
-            {question.question_type === 'text' && (
+            {question.question_type === "text" && (
               <input
                 type="text"
-                value={answers[question.id] || ''}
-                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                value={answers[question.id] || ""}
+                onChange={(e) =>
+                  handleAnswerChange(question.id, e.target.value)
+                }
                 style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  fontSize: '14px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  boxSizing: 'border-box',
+                  width: "100%",
+                  padding: "10px 12px",
+                  fontSize: "14px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  boxSizing: "border-box",
                 }}
                 placeholder="Your answer"
               />
             )}
 
             {/* Multiple Choice (Radio) */}
-            {question.question_type === 'checkbox' && (
+            {question.question_type === "checkbox" && (
               <div>
                 {question.options.map((option, optIndex) => (
-                  <div key={optIndex} style={{ marginBottom: '10px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                  <div key={optIndex} style={{ marginBottom: "10px" }}>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        cursor: "pointer",
+                      }}
+                    >
                       <input
                         type="radio"
                         name={`question_${question.id}`}
                         value={option}
                         checked={answers[question.id] === option}
-                        onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                        style={{ marginRight: '10px' }}
+                        onChange={(e) =>
+                          handleAnswerChange(question.id, e.target.value)
+                        }
+                        style={{ marginRight: "10px" }}
                       />
                       <span>{option}</span>
                     </label>
@@ -193,26 +241,38 @@ function FormDisplay({ formId }) {
             )}
 
             {/* Checkbox (Multiple Selection) */}
-            {question.question_type === 'multiple_choice' && (
+            {question.question_type === "multiple_choice" && (
               <div>
                 {question.options.map((option, optIndex) => (
-                  <div key={optIndex} style={{ marginBottom: '10px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                  <div key={optIndex} style={{ marginBottom: "10px" }}>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        cursor: "pointer",
+                      }}
+                    >
                       <input
                         type="checkbox"
                         value={option}
-                        checked={(answers[question.id] || '').split(',').includes(option)}
+                        checked={(answers[question.id] || "")
+                          .split(",")
+                          .includes(option)}
                         onChange={(e) => {
-                          const currentAnswers = answers[question.id] ? answers[question.id].split(',') : []
-                          let newAnswers
+                          const currentAnswers = answers[question.id]
+                            ? answers[question.id].split(",")
+                            : [];
+                          let newAnswers;
                           if (e.target.checked) {
-                            newAnswers = [...currentAnswers, option]
+                            newAnswers = [...currentAnswers, option];
                           } else {
-                            newAnswers = currentAnswers.filter(a => a !== option)
+                            newAnswers = currentAnswers.filter(
+                              (a) => a !== option,
+                            );
                           }
-                          handleAnswerChange(question.id, newAnswers.join(','))
+                          handleAnswerChange(question.id, newAnswers.join(","));
                         }}
-                        style={{ marginRight: '10px' }}
+                        style={{ marginRight: "10px" }}
                       />
                       <span>{option}</span>
                     </label>
@@ -228,22 +288,22 @@ function FormDisplay({ formId }) {
           type="submit"
           disabled={submitting}
           style={{
-            padding: '15px 40px',
-            fontSize: '16px',
-            background: submitting ? '#6c757d' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: submitting ? 'not-allowed' : 'pointer',
-            width: '100%',
-            fontWeight: 'bold'
+            padding: "15px 40px",
+            fontSize: "16px",
+            background: submitting ? "#6c757d" : "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: submitting ? "not-allowed" : "pointer",
+            width: "100%",
+            fontWeight: "bold",
           }}
         >
-          {submitting ? 'Submitting...' : 'Submit'}
+          {submitting ? "Submitting..." : "Submit"}
         </button>
       </form>
     </div>
-  )
+  );
 }
 
-export default FormDisplay
+export default FormDisplay;

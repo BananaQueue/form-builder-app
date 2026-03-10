@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiUrl } from "./apiBase";
 
-function FormBuilder({editFormId = null, onSaveComplete = null}) {
+function FormBuilder({ editFormId = null, onSaveComplete = null }) {
   // All state declarations
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
@@ -9,6 +9,7 @@ function FormBuilder({editFormId = null, onSaveComplete = null}) {
 
   const [newQuestionText, setNewQuestionText] = useState("");
   const [newQuestionType, setNewQuestionType] = useState("text");
+  const [isNewQuestionRequired, setIsNewQuestionRequired] = useState(true);
 
   const [newOption, setNewOption] = useState("");
   const [tempOptions, setTempOptions] = useState([]);
@@ -26,9 +27,7 @@ function FormBuilder({editFormId = null, onSaveComplete = null}) {
 
   async function fetchCategories() {
     try {
-      const response = await fetch(
-        apiUrl("/get_categories.php"),
-      );
+      const response = await fetch(apiUrl("/get_categories.php"));
       const result = await response.json();
 
       if (result.success) {
@@ -40,44 +39,49 @@ function FormBuilder({editFormId = null, onSaveComplete = null}) {
   }
 
   // Load form data if in edit mode
-useEffect(() => {
-  if (editFormId) {
-    loadFormForEditing(editFormId)
-  }
-}, [editFormId])
-
-async function loadFormForEditing(formId) {
-  setLoadingForm(true)
-  setIsEditMode(true)
-  
-  try {
-    const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}`))
-    const result = await response.json()
-    
-    if (result.success) {
-      const form = result.form
-      
-      // Set form details
-      setFormTitle(form.title)
-      setFormDescription(form.description || '')
-      setSelectedCategoryId(parseInt(form.category_id))
-      
-      // Set questions
-      setQuestions(form.questions.map(q => ({
-        id: Date.now() + Math.random(), // Generate new temp ID for React
-        text: q.question_text,
-        type: q.question_type,
-        options: q.options || []
-      })))
-    } else {
-      alert('Failed to load form: ' + (result.error || 'Unknown error'))
+  useEffect(() => {
+    if (editFormId) {
+      loadFormForEditing(editFormId);
     }
-  } catch (error) {
-    alert('Failed to load form: ' + error.message)
-  } finally {
-    setLoadingForm(false)
+  }, [editFormId]);
+
+  async function loadFormForEditing(formId) {
+    setLoadingForm(true);
+    setIsEditMode(true);
+
+    try {
+      const response = await fetch(
+        apiUrl(`/get_form_details.php?id=${formId}`),
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        const form = result.form;
+
+        // Set form details
+        setFormTitle(form.title);
+        setFormDescription(form.description || "");
+        setSelectedCategoryId(parseInt(form.category_id));
+
+        // Set questions
+        setQuestions(
+          form.questions.map((q) => ({
+            id: Date.now() + Math.random(), // Generate new temp ID for React
+            text: q.question_text,
+            type: q.question_type,
+            options: q.options || [],
+            is_required: q.is_required !== undefined ? q.is_required : 1,
+          })),
+        );
+      } else {
+        alert("Failed to load form: " + (result.error || "Unknown error"));
+      }
+    } catch (error) {
+      alert("Failed to load form: " + error.message);
+    } finally {
+      setLoadingForm(false);
+    }
   }
-}
 
   // Add a question
   function addQuestion() {
@@ -100,6 +104,7 @@ async function loadFormForEditing(formId) {
       text: newQuestionText,
       type: newQuestionType,
       options: newQuestionType === "text" ? [] : tempOptions,
+      is_required: isNewQuestionRequired ? 1 : 0,
     };
 
     setQuestions([...questions, newQuestion]);
@@ -107,6 +112,7 @@ async function loadFormForEditing(formId) {
     setNewQuestionText("");
     setNewQuestionType("text");
     setTempOptions([]);
+    setIsNewQuestionRequired(true);
   }
 
   // Add an option to the temporary options list
@@ -134,82 +140,90 @@ async function loadFormForEditing(formId) {
 
   // Save form to database
   async function saveForm() {
-  if (formTitle.trim() === '') {
-    alert('Please enter a form title')
-    return
-  }
-
-  if (questions.length === 0) {
-    alert('Please add at least one question')
-    return
-  }
-
-  const formData = {
-    title: formTitle,
-    description: formDescription,
-    category_id: selectedCategoryId,
-    questions: questions
-  }
-
-  // Add form_id if editing
-  if (isEditMode && editFormId) {
-    formData.form_id = editFormId
-  }
-
-  try {
-    // Use different endpoint based on mode
-    const endpoint = isEditMode 
-      ? apiUrl('/update_form.php')
-      : apiUrl('/save_form.php')
-
-    
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    })
-
-    const result = await response.json()
-
-    if (result.success) {
-      alert(isEditMode 
-        ? 'Form updated successfully!' 
-        : 'Form saved successfully! Form ID: ' + result.form_id
-      )
-      
-      // Clear form or call callback
-      if (isEditMode && onSaveComplete) {
-        onSaveComplete() // Go back to list
-      } else {
-        // Clear the form after creating
-        setFormTitle('')
-        setFormDescription('')
-        setQuestions([])
-      }
-    } else {
-      alert('Error saving form: ' + (result.error || 'Unknown error'))
+    if (formTitle.trim() === "") {
+      alert("Please enter a form title");
+      return;
     }
 
-  } catch (error) {
-    alert('Failed to connect to server: ' + error.message)
-    console.error('Error:', error)
+    if (questions.length === 0) {
+      alert("Please add at least one question");
+      return;
+    }
+
+    const formData = {
+      title: formTitle,
+      description: formDescription,
+      category_id: selectedCategoryId,
+      questions: questions,
+    };
+
+    // Add form_id if editing
+    if (isEditMode && editFormId) {
+      formData.form_id = editFormId;
+    }
+
+    try {
+      // Use different endpoint based on mode
+      const endpoint = isEditMode
+        ? apiUrl("/update_form.php")
+        : apiUrl("/save_form.php");
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(
+          isEditMode
+            ? "Form updated successfully!"
+            : "Form saved successfully! Form ID: " + result.form_id,
+        );
+
+        // Clear form or call callback
+        if (isEditMode && onSaveComplete) {
+          onSaveComplete(); // Go back to list
+        } else {
+          // Clear the form after creating
+          setFormTitle("");
+          setFormDescription("");
+          setQuestions([]);
+        }
+      } else {
+        alert("Error saving form: " + (result.error || "Unknown error"));
+      }
+    } catch (error) {
+      alert("Failed to connect to server: " + error.message);
+      console.error("Error:", error);
+    }
   }
-}
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px" }}>
       {loadingForm && (
-        <div style={{padding: '20px', textAlign: 'center', background: '#f0f8ff', marginBottom: '20px', borderRadius: '5px'}}>
+        <div
+          style={{
+            padding: "20px",
+            textAlign: "center",
+            background: "#f0f8ff",
+            marginBottom: "20px",
+            borderRadius: "5px",
+          }}
+        >
           Loading form data...
         </div>
       )}
       <h1>{isEditMode ? "Edit Form" : "Form Builder"}</h1>
       {isEditMode && (
         <p style={{ color: "#666", marginBottom: "20px" }}>
-          You are editing an existing form. Changes will be save when you click "Save Form".
-          </p>
+          You are editing an existing form. Changes will be save when you click
+          "Save Form".
+        </p>
       )}
 
       {/* Form Title Input */}
@@ -303,6 +317,29 @@ async function loadFormForEditing(formId) {
         </label>
       </div>
 
+      {/* Required Toggle */}
+      <div style={{ marginBottom: "15px" }}>
+        <label
+          style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+        >
+          <input
+            type="checkbox"
+            checked={isNewQuestionRequired}
+            onChange={(e) => setIsNewQuestionRequired(e.target.checked)}
+            style={{
+              marginRight: "8px",
+              width: "18px",
+              height: "18px",
+              cursor: "pointer",
+            }}
+          />
+          <strong>Required field</strong>
+          <span style={{ marginLeft: "8px", color: "#666", fontSize: "14px" }}>
+            (Users must answer this question)
+          </span>
+        </label>
+      </div>
+
       {/* Show options input only for multiple choice and checkbox */}
       {(newQuestionType === "multiple_choice" ||
         newQuestionType === "checkbox") && (
@@ -333,55 +370,66 @@ async function loadFormForEditing(formId) {
           </div>
 
           {/* Display current options */}
-{tempOptions.length > 0 && (
-  <div>
-    <p><strong>Current options:</strong></p>
-    <div style={{ 
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: '10px',
-      maxWidth: '700px',
-      justifyContent: 'center'
-    }}>
-      {tempOptions.map((option, index) => (
-        <div 
-          key={index} 
-          style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            padding: '8px 12px',
-            background: '#fff',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            minWidth: '150px',
-            maxWidth: '200px',
-            flex: '0 0 auto'
-          }}
-        >
-          <span style={{ marginRight: '10px', wordBreak: 'break-word', color: '#333', fontWeight: '500' }}>
-            {option}
-          </span>
-          <button
-            onClick={() => removeOption(index)}
-            style={{ 
-              padding: '4px 10px', 
-              fontSize: '12px',
-              background: '#dc3545',
-              color: 'white',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Remove
-          </button>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+          {tempOptions.length > 0 && (
+            <div>
+              <p>
+                <strong>Current options:</strong>
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                  maxWidth: "700px",
+                  justifyContent: "center",
+                }}
+              >
+                {tempOptions.map((option, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "8px 12px",
+                      background: "#fff",
+                      border: "1px solid #ddd",
+                      borderRadius: "4px",
+                      minWidth: "150px",
+                      maxWidth: "200px",
+                      flex: "0 0 auto",
+                    }}
+                  >
+                    <span
+                      style={{
+                        marginRight: "10px",
+                        wordBreak: "break-word",
+                        color: "#333",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {option}
+                    </span>
+                    <button
+                      onClick={() => removeOption(index)}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "12px",
+                        background: "#dc3545",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "3px",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -440,11 +488,15 @@ async function loadFormForEditing(formId) {
                   >
                     Type: <em>{question.type}</em>
                   </p>
+                  <p style={{ margin: "0 0 10px 0", fontSize: "14px", color: question.is_required ? "#dc3545" : "#28a745" }}>
+  {question.is_required ? "★ Required" : "○ Optional"}
+</p>
 
                   {question.options.length > 0 && (
                     <div>
                       <p style={{ margin: "0 0 5px 0", fontSize: "14px" }}>
-                        <strong>Options: </strong>{question.options.join(", ")}
+                        <strong>Options: </strong>
+                        {question.options.join(", ")}
                       </p>
                     </div>
                   )}
