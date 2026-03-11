@@ -63,11 +63,10 @@ function FormViewer({ formId, onBack, onDisplayForm}) {
   }
 
   useEffect(() => {
-    fetchFormDetails()
-    // we intentionally don't include fetchFormDetails in deps
-    // to avoid re-creating it on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formId])
+     if (formId) {
+    fetchFormDetails(formId);
+  }
+}, [formId]);
 
   if (loading) {
     return <div style={{ padding: '20px' }}>Loading form...</div>

@@ -20,6 +20,11 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [loadingForm, setLoadingForm] = useState(false);
 
+  const [hasCondition, setHasCondition] = useState(false);
+  const [conditionQuestionId, setConditionQuestionId] = useState("");
+  const [conditionValue, setConditionValue] = useState("");
+  const [conditionType, setConditionType] = useState("equals");
+
   // Fetch categories when component loads
   useEffect(() => {
     fetchCategories();
@@ -66,11 +71,14 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         // Set questions
         setQuestions(
           form.questions.map((q) => ({
-            id: Date.now() + Math.random(), // Generate new temp ID for React
+            id: "q_" + Date.now() + "_" + Math.floor(Math.random()*10000),
             text: q.question_text,
             type: q.question_type,
             options: q.options || [],
             is_required: q.is_required !== undefined ? q.is_required : 1,
+            condition_question_id: q.condition_question_id || null,
+            condition_type: q.condition_type || "equals",
+            condition_value: q.condition_value || null,
           })),
         );
       } else {
@@ -100,11 +108,16 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
     }
 
     const newQuestion = {
-      id: Date.now(),
+      id: "q_" +Date.now(),
       text: newQuestionText,
       type: newQuestionType,
       options: newQuestionType === "text" ? [] : tempOptions,
       is_required: isNewQuestionRequired ? 1 : 0,
+      condition_question_id:
+        hasCondition && conditionQuestionId ? conditionQuestionId : null,
+      condition_type:
+        hasCondition && conditionQuestionId ? conditionType : null,
+      condition_value: hasCondition && conditionValue ? conditionValue : null,
     };
 
     setQuestions([...questions, newQuestion]);
@@ -113,6 +126,10 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
     setNewQuestionType("text");
     setTempOptions([]);
     setIsNewQuestionRequired(true);
+    setHasCondition(false);
+    setConditionQuestionId("");
+    setConditionValue("");
+    setConditionType("equals");
   }
 
   // Add an option to the temporary options list
@@ -150,11 +167,23 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       return;
     }
 
+    const normalizedQuestions = questions.map((q, idx) => ({
+      id: q.id ?? `q_${idx}`,
+      question_text: q.text,
+      question_type: q.type,
+      position: idx,
+      options: Array.isArray(q.options) ? q.options : [],
+      is_required: q.is_required ?? 1,
+      condition_question_id: q.condition_question_id ?? null,
+      condition_type: q.condition_type ?? "equals",
+      condition_value: q.condition_value ?? null,
+    }));
+
     const formData = {
       title: formTitle,
       description: formDescription,
       category_id: selectedCategoryId,
-      questions: questions,
+      questions: normalizedQuestions,
     };
 
     // Add form_id if editing
@@ -176,7 +205,16 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         body: JSON.stringify(formData),
       });
 
-      const result = await response.json();
+      const raw = await response.text();
+      let result;
+      try {
+        result = JSON.parse(raw);
+      } catch {
+        console.error("Non-JSON response from server:", raw);
+        throw new Error(
+          "Server returned non-JSON (likely a PHP error). Check console for raw response.",
+        );
+      }
 
       if (result.success) {
         alert(
@@ -340,6 +378,226 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         </label>
       </div>
 
+      {/* Conditional Logic */}
+      <div
+        style={{
+          marginBottom: "15px",
+          padding: "15px",
+          background: "#fff3cd",
+          border: "1px solid #ffc107",
+          borderRadius: "5px",
+        }}
+      >
+        <h4 style={{ margin: "0 0 10px 0", color: "#856404" }}>
+          ⚡ Conditional Logic (Optional)
+        </h4>
+
+        <label
+          style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+        >
+          <input
+            type="checkbox"
+            checked={hasCondition}
+            onChange={(e) => {
+              setHasCondition(e.target.checked);
+              if (!e.target.checked) {
+                setConditionQuestionId("");
+                setConditionValue("");
+                setConditionType("equals");
+              }
+            }}
+            style={{
+              marginRight: "8px",
+              width: "18px",
+              height: "18px",
+              cursor: "pointer",
+            }}
+          />
+          <strong>Show this question only if...</strong>
+        </label>
+
+        {hasCondition && (
+          <div style={{ marginLeft: "26px", marginTop: "15px" }}>
+            {questions.length === 0 ? (
+              <p style={{ color: "#856404", fontSize: "14px" }}>
+                Add at least one question first to create conditions.
+              </p>
+            ) : (
+              <>
+                {/* Select Previous Question */}
+                <div style={{ marginBottom: "10px" }}>
+                  <label>
+                    <strong>Previous question:</strong>
+                    <br />
+                    <select
+                      value={conditionQuestionId}
+                      onChange={(e) => {
+                        setConditionQuestionId(e.target.value);
+                        setConditionValue("");
+                      }}
+                      style={{
+                        padding: "8px",
+                        fontSize: "14px",
+                        width: "100%",
+                        maxWidth: "500px",
+                      }}
+                    >
+                      <option value="">-- Select a question --</option>
+                      {questions.map((q, idx) => (
+                        <option key={q.id} value={q.id}>
+                          Question {idx + 1}: {q.text} ({q.type})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                {conditionQuestionId &&
+                  (() => {
+                    const selectedQ = questions.find(
+                      (q) => q.id == conditionQuestionId,
+                    );
+
+                    if (!selectedQ) return null;
+
+                    return (
+                      <div>
+                        {/* Condition Type Selector */}
+                        <div style={{ marginBottom: "10px" }}>
+                          <label>
+                            <strong>Condition type:</strong>
+                            <br />
+                            <select
+                              value={conditionType}
+                              onChange={(e) => {
+                                setConditionType(e.target.value);
+                                setConditionValue("");
+                              }}
+                              style={{
+                                padding: "8px",
+                                fontSize: "14px",
+                                width: "100%",
+                                maxWidth: "500px",
+                              }}
+                            >
+                              <option value="equals">Answer equals</option>
+                              <option value="not_equals">
+                                Answer does NOT equal
+                              </option>
+                              {selectedQ.type === "checkbox" && (
+                                <option value="option_selected">
+                                  Specific option is selected
+                                </option>
+                              )}
+                              <option value="is_answered">
+                                Question is answered (any value)
+                              </option>
+                            </select>
+                          </label>
+                        </div>
+
+                        {/* Value Input - Only show if not "is_answered" */}
+                        {conditionType !== "is_answered" && (
+                          <div>
+                            {/* For text questions */}
+                            {selectedQ.type === "text" && (
+                              <div>
+                                <label>
+                                  <strong>Value:</strong>
+                                  <br />
+                                  <input
+                                    type="text"
+                                    value={conditionValue}
+                                    onChange={(e) =>
+                                      setConditionValue(e.target.value)
+                                    }
+                                    placeholder="Enter expected answer"
+                                    style={{
+                                      padding: "8px",
+                                      fontSize: "14px",
+                                      width: "100%",
+                                      maxWidth: "500px",
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            )}
+
+                            {/* For multiple choice and checkbox */}
+                            {(selectedQ.type === "multiple_choice" ||
+                              selectedQ.type === "checkbox") && (
+                              <div>
+                                <label>
+                                  <strong>
+                                    {conditionType === "option_selected"
+                                      ? "Option:"
+                                      : "Value:"}
+                                  </strong>
+                                  <br />
+                                  <select
+                                    value={conditionValue}
+                                    onChange={(e) =>
+                                      setConditionValue(e.target.value)
+                                    }
+                                    style={{
+                                      padding: "8px",
+                                      fontSize: "14px",
+                                      width: "100%",
+                                      maxWidth: "500px",
+                                    }}
+                                  >
+                                    <option value="">
+                                      -- Select an option --
+                                    </option>
+                                    {selectedQ.options.map((opt, idx) => (
+                                      <option key={idx} value={opt}>
+                                        {opt}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Explanation Text */}
+                        <p
+                          style={{
+                            fontSize: "12px",
+                            color: "#666",
+                            marginTop: "10px",
+                            background: "#fff",
+                            padding: "8px",
+                            borderRadius: "3px",
+                          }}
+                        >
+                          {conditionType === "equals" &&
+                            "This question will show when the answer exactly matches the value above."}
+                          {conditionType === "not_equals" &&
+                            "This question will show when the answer does NOT match the value above."}
+                          {conditionType === "option_selected" &&
+                            "This question will show when the specific checkbox option is checked."}
+                          {conditionType === "is_answered" &&
+                            "This question will show when the previous question has any answer (not empty)."}
+                        </p>
+                      </div>
+                    );
+                  })()}
+              </>
+            )}
+          </div>
+        )}
+
+        {!hasCondition && (
+          <p
+            style={{ fontSize: "13px", color: "#856404", margin: "10px 0 0 0" }}
+          >
+            This question will always be visible to respondents.
+          </p>
+        )}
+      </div>
+
       {/* Show options input only for multiple choice and checkbox */}
       {(newQuestionType === "multiple_choice" ||
         newQuestionType === "checkbox") && (
@@ -488,9 +746,40 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                   >
                     Type: <em>{question.type}</em>
                   </p>
-                  <p style={{ margin: "0 0 10px 0", fontSize: "14px", color: question.is_required ? "#dc3545" : "#28a745" }}>
-  {question.is_required ? "★ Required" : "○ Optional"}
-</p>
+                  <p
+                    style={{
+                      margin: "0 0 10px 0",
+                      fontSize: "14px",
+                      color: question.is_required ? "#dc3545" : "#28a745",
+                    }}
+                  >
+                    {question.is_required ? "★ Required" : "○ Optional"}
+                  </p>
+                  {question.condition_question_id && (
+                    <p
+                      style={{
+                        margin: "0 0 10px 0",
+                        fontSize: "14px",
+                        color: "#856404",
+                        background: "#fff3cd",
+                        padding: "8px",
+                        borderRadius: "3px",
+                      }}
+                    >
+                      ⚡ Conditional: Shows only if Question{" "}
+                      {questions.findIndex(
+                        (q) => q.id == question.condition_question_id,
+                      ) + 1}
+                      {question.condition_type === "equals" &&
+                        ` equals "${question.condition_value}"`}
+                      {question.condition_type === "not_equals" &&
+                        ` does NOT equal "${question.condition_value}"`}
+                      {question.condition_type === "option_selected" &&
+                        ` has option "${question.condition_value}" selected`}
+                      {question.condition_type === "is_answered" &&
+                        ` is answered`}
+                    </p>
+                  )}
 
                   {question.options.length > 0 && (
                     <div>
