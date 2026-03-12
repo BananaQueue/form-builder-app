@@ -347,6 +347,72 @@ function FormDisplay({ formId }) {
                   ))}
                 </div>
               )}
+              {/* Rating Scale */}
+              {question.question_type === "rating" && (
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      flexWrap: "wrap",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {question.options.map((option, optIndex) => (
+                      <label
+                        key={optIndex}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          padding: "12px 20px",
+                          background:
+                            answers[question.id] === option
+                              ? "#007bff"
+                              : "#f0f0f0",
+                          color:
+                            answers[question.id] === option ? "white" : "#333",
+                          border: "2px solid",
+                          borderColor:
+                            answers[question.id] === option
+                              ? "#007bff"
+                              : "#ddd",
+                          borderRadius: "25px",
+                          fontWeight: "500",
+                          transition: "all 0.2s",
+                          minWidth: "80px",
+                          textAlign: "center",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (answers[question.id] !== option) {
+                            e.currentTarget.style.background = "#e7f3ff";
+                            e.currentTarget.style.borderColor = "#007bff";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (answers[question.id] !== option) {
+                            e.currentTarget.style.background = "#f0f0f0";
+                            e.currentTarget.style.borderColor = "#ddd";
+                          }
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name={`question_${question.id}`}
+                          value={option}
+                          checked={answers[question.id] === option}
+                          onChange={(e) =>
+                            handleAnswerChange(question.id, e.target.value)
+                          }
+                          style={{ display: "none" }}
+                        />
+                        <span>{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
 

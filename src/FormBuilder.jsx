@@ -25,6 +25,9 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
   const [conditionValue, setConditionValue] = useState("");
   const [conditionType, setConditionType] = useState("equals");
 
+  const [ratingScale, setRatingScale] = useState("numeric_5");
+  const [customRatingOptions, setCustomRatingOptions] = useState([]);
+
   // Fetch categories when component loads
   useEffect(() => {
     fetchCategories();
@@ -71,10 +74,11 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         // Set questions
         setQuestions(
           form.questions.map((q) => ({
-            id: "q_" + Date.now() + "_" + Math.floor(Math.random()*10000),
+            id: "q_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
             text: q.question_text,
             type: q.question_type,
             options: q.options || [],
+            rating_scale: q.rating_scale || null,
             is_required: q.is_required !== undefined ? q.is_required : 1,
             condition_question_id: q.condition_question_id || null,
             condition_type: q.condition_type || "equals",
@@ -107,11 +111,32 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       return;
     }
 
+    if (
+      newQuestionType === "rating" &&
+      ratingScale === "custom" &&
+      customRatingOptions.length === 0
+    ) {
+      alert("Please add at least one rating option for custom scale");
+      return;
+    }
+
+    // Determine options based on question type
+    let questionOptions = [];
+    if (newQuestionType === "rating") {
+      questionOptions =
+        ratingScale === "custom"
+          ? customRatingOptions
+          : getRatingScaleOptions(ratingScale);
+    } else if (newQuestionType !== "text") {
+      questionOptions = tempOptions;
+    }
+
     const newQuestion = {
-      id: "q_" +Date.now(),
+      id: "q_" + Date.now(),
       text: newQuestionText,
       type: newQuestionType,
-      options: newQuestionType === "text" ? [] : tempOptions,
+      options: questionOptions,
+      rating_scale: newQuestionType === "rating" ? ratingScale : null,
       is_required: isNewQuestionRequired ? 1 : 0,
       condition_question_id:
         hasCondition && conditionQuestionId ? conditionQuestionId : null,
@@ -130,6 +155,35 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
     setConditionQuestionId("");
     setConditionValue("");
     setConditionType("equals");
+    setRatingScale("numeric_5");
+    setCustomRatingOptions([]);
+  }
+
+  function getRatingScaleOptions(scale) {
+    const scales = {
+      numeric_5: ["1", "2", "3", "4", "5"],
+      numeric_10: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+      agree_5: [
+        "Strongly Disagree",
+        "Disagree",
+        "Neutral",
+        "Agree",
+        "Strongly Agree",
+      ],
+      agree_3: ["Disagree", "Neutral", "Agree"],
+      quality_5: ["Poor", "Fair", "Good", "Very Good", "Excellent"],
+      quality_3: ["Bad", "Fair", "Good"],
+      satisfaction_5: [
+        "Very Dissatisfied",
+        "Dissatisfied",
+        "Neutral",
+        "Satisfied",
+        "Very Satisfied",
+      ],
+      satisfaction_3: ["Dissatisfied", "Neutral", "Satisfied"],
+      frequency_5: ["Never", "Rarely", "Sometimes", "Often", "Always"],
+    };
+    return scales[scale] || [];
   }
 
   // Add an option to the temporary options list
@@ -345,12 +399,17 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
             onChange={(e) => {
               setNewQuestionType(e.target.value);
               setTempOptions([]);
+              if (e.target.value === "rating") {
+                setRatingScale("numeric_5");
+                setCustomRatingOptions([]);
+              }
             }}
             style={{ padding: "8px", fontSize: "16px" }}
           >
             <option value="text">Text Input</option>
             <option value="multiple_choice">Multiple Choice</option>
             <option value="checkbox">Checkbox</option>
+            <option value="rating">Rating Scale</option>
           </select>
         </label>
       </div>
@@ -484,7 +543,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                               <option value="not_equals">
                                 Answer does NOT equal
                               </option>
-                              {selectedQ.type === "checkbox" && (
+                              {(selectedQ.type === "checkbox" || selectedQ.type === "rating") && (
                                 <option value="option_selected">
                                   Specific option is selected
                                 </option>
@@ -525,7 +584,8 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
 
                             {/* For multiple choice and checkbox */}
                             {(selectedQ.type === "multiple_choice" ||
-                              selectedQ.type === "checkbox") && (
+                              selectedQ.type === "checkbox" ||
+                              selectedQ.type === "rating") && (
                               <div>
                                 <label>
                                   <strong>
@@ -549,11 +609,18 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                                     <option value="">
                                       -- Select an option --
                                     </option>
-                                    {selectedQ.options.map((opt, idx) => (
-                                      <option key={idx} value={opt}>
-                                        {opt}
+                                    {selectedQ.options &&
+                                    selectedQ.options.length > 0 ? (
+                                      selectedQ.options.map((opt, idx) => (
+                                        <option key={idx} value={opt}>
+                                          {opt}
+                                        </option>
+                                      ))
+                                    ) : (
+                                      <option disabled>
+                                        No options available
                                       </option>
-                                    ))}
+                                    )}
                                   </select>
                                 </label>
                               </div>
@@ -691,6 +758,189 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         </div>
       )}
 
+      {/* Show rating scale selector for rating type */}
+      {newQuestionType === "rating" && (
+        <div
+          style={{
+            background: "#e7f3ff9f",
+            padding: "15px",
+            marginBottom: "15px",
+            borderRadius: "5px",
+            border: "1px solid #007bff",
+          }}
+        >
+          <h3 style={{ margin: "0 0 15px 0" }}>Rating Scale</h3>
+
+          <div style={{ marginBottom: "15px" }}>
+            <label>
+              <strong>Select a scale:</strong>
+              <br />
+              <select
+                value={ratingScale}
+                onChange={(e) => {
+                  setRatingScale(e.target.value);
+                  if (e.target.value === "custom") {
+                    setCustomRatingOptions([]);
+                  }
+                }}
+                style={{
+                  padding: "8px",
+                  fontSize: "16px",
+                  width: "100%",
+                  maxWidth: "500px",
+                }}
+              >
+                <optgroup label="Numeric Scales">
+                  <option value="numeric_5">1 to 5 (5 points)</option>
+                  <option value="numeric_10">1 to 10 (10 points)</option>
+                </optgroup>
+                <optgroup label="Agreement Scales">
+                  <option value="agree_5">
+                    Strongly Disagree → Strongly Agree (5 points)
+                  </option>
+                  <option value="agree_3">Disagree → Agree (3 points)</option>
+                </optgroup>
+                <optgroup label="Quality Scales">
+                  <option value="quality_5">Poor → Excellent (5 points)</option>
+                  <option value="quality_3">Bad → Good (3 points)</option>
+                </optgroup>
+                <optgroup label="Satisfaction Scales">
+                  <option value="satisfaction_5">
+                    Very Dissatisfied → Very Satisfied (5 points)
+                  </option>
+                  <option value="satisfaction_3">
+                    Dissatisfied → Satisfied (3 points)
+                  </option>
+                </optgroup>
+                <optgroup label="Frequency Scales">
+                  <option value="frequency_5">Never → Always (5 points)</option>
+                </optgroup>
+                <option value="custom">Custom (define your own)</option>
+              </select>
+            </label>
+          </div>
+
+          {/* Preview of selected scale */}
+          {ratingScale !== "custom" && (
+            <div style={{ marginBottom: "10px" }}>
+              <p
+                style={{ margin: "0 0 8px 0", fontSize: "14px", color: "#666" }}
+              >
+                <strong>Preview:</strong>
+              </p>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {getRatingScaleOptions(ratingScale).map((opt, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: "8px 16px",
+                      background: "#fff",
+                      border: "2px solid #007bff",
+                      borderRadius: "20px",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Custom scale input */}
+          {ratingScale === "custom" && (
+            <div>
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "#666",
+                  marginBottom: "10px",
+                }}
+              >
+                Add your custom rating options in order from lowest to highest:
+              </p>
+              <div style={{ marginBottom: "10px" }}>
+                <input
+                  type="text"
+                  value={newOption}
+                  onChange={(e) => setNewOption(e.target.value)}
+                  placeholder="Enter rating option (e.g., Poor, Fair, Good)"
+                  style={{ padding: "8px", fontSize: "16px", width: "70%" }}
+                />
+                <button
+                  onClick={() => {
+                    if (newOption.trim() === "") {
+                      alert("Please enter an option");
+                      return;
+                    }
+                    setCustomRatingOptions([...customRatingOptions, newOption]);
+                    setNewOption("");
+                  }}
+                  style={{ padding: "8px 15px", marginLeft: "10px" }}
+                >
+                  Add Option
+                </button>
+              </div>
+
+              {customRatingOptions.length > 0 && (
+                <div>
+                  <p>
+                    <strong>
+                      Custom scale ({customRatingOptions.length} options):
+                    </strong>
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      flexWrap: "wrap",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    {customRatingOptions.map((option, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "8px 12px",
+                          background: "#fff",
+                          border: "2px solid #007bff",
+                          borderRadius: "20px",
+                        }}
+                      >
+                        <span style={{ fontWeight: "500" }}>{option}</span>
+                        <button
+                          onClick={() => {
+                            const updated = customRatingOptions.filter(
+                              (_, i) => i !== index,
+                            );
+                            setCustomRatingOptions(updated);
+                          }}
+                          style={{
+                            padding: "2px 8px",
+                            fontSize: "12px",
+                            background: "#dc3545",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "3px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <button
         onClick={addQuestion}
         style={{
@@ -745,6 +995,9 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                     }}
                   >
                     Type: <em>{question.type}</em>
+                    {question.type === "rating" && question.rating_scale && (
+                      <span> ({question.rating_scale})</span>
+                    )}
                   </p>
                   <p
                     style={{
