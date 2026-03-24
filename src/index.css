@@ -10,15 +10,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
   margin: 0;
   min-width: 320px;
@@ -73,10 +64,10 @@ button:hover {
   border-color: #646cff;
 }
 
-button:focus,
+/* button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
+} */
 
 /* ——————————————————————— */
 /* Card Button Group        */
@@ -93,7 +84,7 @@ button:focus-visible {
   flex: 1;             /* each button takes equal width */
   padding: 8px 0;
   border: none;
-  color: #ffffff;
+  color: #ffffffdd;
   font-weight: 600;
   font-size: 0.9em;
   cursor: pointer;
@@ -103,6 +94,7 @@ button:focus-visible {
 
 .card-btn-group .card-btn:hover {
   filter: brightness(.90);  /* slightly lighten on hover */
+  color: #ffffff;
 }
 
 /* Round only the LEFT end of the first button */
@@ -172,7 +164,7 @@ button:focus-visible {
 
 /* Background Gradient — smoother, less bright, more premium */
 body {
-  background: linear-gradient(135deg, #8FBFCC 0%, #9AA9D6 50%, #7E7BD6 100%);
+  background: linear-gradient(135deg, #59CDE9 0%, #5e5ecd 50%, #0A2A88 100%);
   background-attachment: fixed;
   font-family: system-ui, sans-serif;
 }
@@ -180,7 +172,7 @@ body {
 
 /* HEADER GLASS NAV — crisp & bright */
 .glass-nav {
-  background: rgba(255, 255, 255, 0.33);
+  background: rgba(255, 255, 255, 0.519);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-radius: 20px;
@@ -189,10 +181,13 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
+.glass-nav .glass-button:hover{
+  transform: scale(1.05);
+}
 
 /* GLASS CARDS — this is the exact mockup look */
 .glass-card {
-  background: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.545);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border-radius: 22px;
@@ -254,15 +249,15 @@ p, label, span {
 @keyframes gradientSweep {
   0% {
     background-position: -200% center;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
   }
   100% {
     background-position: 200% center;
+    opacity: 0;
   }
-}
-
-.refreshing-background {
-  position: relative;
-  overflow: hidden;
 }
 
 .refreshing-background::before {
@@ -275,13 +270,11 @@ p, label, span {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(59, 130, 246, 0.15) 25%,
-    rgba(139, 92, 246, 0.15) 50%,
-    rgba(59, 130, 246, 0.15) 75%,
+    rgba(255, 255, 255, 0.3) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
-  animation: gradientSweep 2s ease-in-out;
+  animation: gradientSweep 1s ease-in-out;
   pointer-events: none;
   z-index: 1;
 }
@@ -294,7 +287,7 @@ p, label, span {
 
 /* Refresh button styling */
 .refresh-button {
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .refresh-button:hover {

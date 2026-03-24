@@ -163,7 +163,7 @@ function FormDisplay({ formId }) {
 
   if (loading) {
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
+      <div style={{ padding: "40px", textAlign: "center", fontWeight: "700" }}>
         Loading form...
       </div>
     );

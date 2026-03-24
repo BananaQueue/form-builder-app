@@ -69,7 +69,7 @@ function FormViewer({ formId, onBack, onDisplayForm}) {
 }, [formId]);
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>Loading form...</div>
+    return <div style={{ padding: '20px', fontWeight: '700' }}>Loading form...</div>
   }
 
   if (error) {

@@ -78,14 +78,17 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
       ? forms
       : forms.filter((form) => form.category_id == selectedCategory);
 
-  if (loading) return <div style={{ padding: "20px" }}>Loading forms...</div>;
+  if (loading) return <div style={{ padding: "40px", fontWeight: "700" }}>Loading forms...</div>;
 
   if (error)
     return (
       <div style={{ padding: "20px", color: "red" }}>
         <h2>Error</h2>
         <p>{error}</p>
-        <button onClick={fetchForms}>Try Again</button>
+        <button 
+        className="glass-button refresh-button"
+        style={{ color:"black"}}
+        onClick={fetchForms}>Try Again</button>
       </div>
     );
 

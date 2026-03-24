@@ -5,6 +5,7 @@ import FormList from './FormList'
 import FormViewer from './FormViewer'
 import ResponseList from './ResponseList'
 import ResponseViewer from './ResponseViewer'
+import { useLocation } from 'react-router-dom'
 
 function AdminLayout() {
   const navigate = useNavigate()
@@ -12,6 +13,8 @@ function AdminLayout() {
   const [editingFormId, setEditingFormId] = useState(null)
   const [responsesFormId, setResponsesFormId] = useState(null)
   const [viewingResponseId, setViewingResponseId] = useState(null)
+
+  const location = useLocation()
 
   function handleViewForm(formId) {
     setViewingFormId(formId)
@@ -63,7 +66,8 @@ function AdminLayout() {
         <button
           onClick={() => navigate('/')}
           className="glass-button"
-          style={{ backgroundColor: 'rgba(52,152,219,0.45)' }}
+          style={{ backgroundColor: 
+              location.pathname === '/' ? 'rgba(52,152,219)' : 'rgba(52,152,219,0.45)' }}
         >
           My Forms
         </button>
@@ -71,7 +75,8 @@ function AdminLayout() {
         <button
           onClick={() => navigate('/create')}
           className="glass-button"
-          style={{ backgroundColor: 'rgba(46,204,113,0.45)' }}
+          style={{ backgroundColor:
+             location.pathname === '/create' ? 'rgb(62, 197, 118)' : 'rgba(46,204,113,0.45)' }}
         >
           Create New Form
         </button>
