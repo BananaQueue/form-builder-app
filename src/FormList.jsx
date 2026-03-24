@@ -8,7 +8,6 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categories, setCategories] = useState([]);
 
-  // Fetch forms and categories when component loads
   useEffect(() => {
     fetchForms();
     fetchCategories();
@@ -16,40 +15,11 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
 
   async function fetchForms() {
     try {
-      const response = await fetch(
-        apiUrl("/get_forms.php"),
-      );
+      const response = await fetch(apiUrl("/get_forms.php"));
       const result = await response.json();
 
       if (result.success) {
-        const formsData = result.forms;
-        
-        // Fetch response counts for each form in parallel
-        const formsWithCounts = await Promise.all(
-          formsData.map(async (form) => {
-            try {
-              const responseCountRes = await fetch(
-                apiUrl(`/get_responses.php?form_id=${form.id}`)
-              );
-              const responseCountResult = await responseCountRes.json();
-              
-              return {
-                ...form,
-                response_count: responseCountResult.success 
-                  ? (responseCountResult.responses?.length || 0)
-                  : 0
-              };
-            } catch (err) {
-              // If fetching response count fails, default to 0
-              return {
-                ...form,
-                response_count: 0
-              };
-            }
-          })
-        );
-        
-        setForms(formsWithCounts);
+        setForms(result.forms);
       } else {
         setError("Failed to load forms");
       }
@@ -62,65 +32,49 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
 
   async function fetchCategories() {
     try {
-      const response = await fetch(
-        apiUrl("/get_categories.php"),
-      );
-      const result = await response.json();
+      const res = await fetch(apiUrl("/get_categories.php"));
+      const result = await res.json();
 
       if (result.success) {
         setCategories(result.categories);
       }
-    } catch (error) {
-      console.error("Failed to fetch categories:", error);
+    } catch {
+      console.err("Could not load categories",err);
     }
   }
 
-  async function deleteForm(formId, formTitle) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${formTitle}"?\n\nThis will permanently delete the form and all its responses. This action cannot be undone.`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
+  async function deleteForm(formId, title) {
+    if (!window.confirm(`Delete "${title}" permanently?`)) return;
 
     try {
-      const response = await fetch(
-        apiUrl("/delete_form.php"),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ form_id: formId }),
-        },
-      );
+      const res = await fetch(apiUrl("/delete_form.php"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ form_id: formId }),
+      });
 
-      const result = await response.json();
+      const result = await res.json();
 
       if (result.success) {
-        alert("Form deleted successfully!");
+        alert("Form deleted.");
         fetchForms();
       } else {
-        alert("Error deleting form: " + (result.error || "Unknown error"));
+        alert("Error deleting form.");
       }
-    } catch (error) {
-      alert("Failed to connect to server: " + error.message);
-      console.error("Error:", error);
+    } catch (err) {
+      alert("Failed to connect: " + err.message);
     }
   }
 
-  // Filter forms by category
   const filteredForms =
     selectedCategory === "all"
       ? forms
       : forms.filter((form) => form.category_id == selectedCategory);
 
-  if (loading) {
+  if (loading)
     return <div style={{ padding: "20px" }}>Loading forms...</div>;
-  }
 
-  if (error) {
+  if (error)
     return (
       <div style={{ padding: "20px", color: "red" }}>
         <h2>Error</h2>
@@ -128,54 +82,37 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
         <button onClick={fetchForms}>Try Again</button>
       </div>
     );
-  }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px" }}>
-      <div style={{ alignItems: "center", marginBottom: "20px" }}>
-        <div>
-          <h1 style={{ margin: 0 }}>My Forms</h1>
-          <p style={{ margin: "5px 0 0 0" }}>
-            {selectedCategory === "all"
-              ? `Showing all ${forms.length} form(s)`
-              : `Showing ${filteredForms.length} of ${forms.length} form(s)`}
-          </p>
-        </div>
+    <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
+      <div style={{ marginBottom: "20px", textAlign: "center" }}>
+        <h1 style={{ marginBottom: "5px" }}>My Forms</h1>
+        <p>Showing {filteredForms.length} of {forms.length} forms</p>
+      </div>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            marginTop: "10px",
-          }}
+      {/* Filter */}
+      <div style={{ textAlign: "right", marginBottom: "20px" }}>
+        <select
+          className="glass-select"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
         >
-          <label>
-            <strong>Filter by Category:</strong>
-            <br />
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              style={{ padding: "4px", fontSize: "14px", minWidth: "150px" }}
-            >
-              <option value="all">All Categories</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+          <option value="all">All Categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {filteredForms.length === 0 ? (
-        <p style={{ color: "#666" }}>No forms in this category.</p>
+        <p>No forms found.</p>
       ) : (
         <div className="forms-grid">
           {filteredForms.map((form) => (
-            <div key={form.id} className="form-card">
-              <div>
-                <div className="form-card-header">
+            <div key={form.id} className="glass-card">
+              <div className="form-card-header">
                   <h3 className="form-card-title">{form.title}</h3>
                   <span
                     className={`category-badge ${form.category_name.toLowerCase()}`}
@@ -184,72 +121,63 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
                   </span>
                 </div>
 
-                {form.description && (
-                  <p className="form-card-description">{form.description}</p>
-                )}
+              {form.description && (
+                <p style={{ color: "#333", marginBottom: "10px" }}>
+                  {form.description}
+                </p>
+              )}
 
-                <div className="form-card-meta">
-                  <div>📝 {form.question_count} question(s)</div>
-                  <div>🕐 {new Date(form.created_at).toLocaleDateString()}</div>
-                  <div>📊 {form.response_count || 0} response(s)</div>
-                </div>
-              </div>
+              <p>
+                📝 {form.question_count} question(s)
+                <br />
+                📅 {new Date(form.created_at).toLocaleDateString()}
+                <br />
+                📊 {form.response_count || 0} responses
+              </p>
 
-              <div className="form-card-buttons">
+              <div className="card-btn-group">
                 <button
-                  className="btn-view"
+                  className="card-btn card-btn-view"
                   onClick={() => onViewForm(form.id)}
                 >
                   View
                 </button>
-                <button className="btn-edit"
+                <button
+                  className="card-btn card-btn-edit"
                   onClick={() => onEditForm(form.id)}
                 >
                   Edit
                 </button>
                 <button
-                  className="btn-delete"
+                  className="card-btn card-btn-delete"
                   onClick={() => deleteForm(form.id, form.title)}
                 >
                   Delete
                 </button>
-                <button
+                
+              </div>
+              <button
+                  className="card-btn-responses"
                   onClick={() => onViewResponses(form.id)}
-                  style={{
-                    padding: "8px 12px",
-                    flex: "1",
-                    background: "#17a2b8",
-                    color: "white",
-                    border: "none",
-                    cursor: "pointer",
-                    borderRadius: "3px",
-                    fontSize: "14px",
-                  }}
                 >
                   Responses
                 </button>
-              </div>
             </div>
           ))}
         </div>
       )}
 
-      <button
-        onClick={fetchForms}
-        style={{
-          marginTop: "20px",
-          padding: "10px 20px",
-          background: "#6c757d",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
-          borderRadius: "3px",
-        }}
-      >
-        🔄 Refresh
-      </button>
+      <div style={{ textAlign: "center", marginTop: "30px" }}>
+        <button
+          className="glass-button"
+          style={{ backgroundColor: "rgba(100,100,100,0.4)" }}
+          onClick={fetchForms}
+        >
+          ↻ Refresh
+        </button>
+      </div>
     </div>
   );
 }
 
-export default FormList;
+export default FormList

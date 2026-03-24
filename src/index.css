@@ -2,11 +2,8 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color: rgba(0,0,0,0.70);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -24,8 +21,6 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -33,76 +28,6 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
-
-/* Form grid layout with responsive breakpoints */
-.forms-grid {
-  display: grid;
-  gap: 20px;
-}
-
-/* Default: 3 columns (980px and above) */
-@media (min-width: 980px) {
-  .forms-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* 2 columns (600px - 979px) */
-@media (min-width: 600px) and (max-width: 979px) {
-  .forms-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* 1 column (below 600px) */
-@media (max-width: 599px) {
-  .forms-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Form card styling */
-.form-card {
-  background: #f9f9f9;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 }
 
 .form-card-header {
@@ -143,50 +68,184 @@ button:focus-visible {
   background: #6c757d;
 }
 
-.form-card-description {
-  margin: 0 0 15px 0;
-  color: #666;
-  font-size: 14px;
+
+button:hover {
+  border-color: #646cff;
 }
 
-.form-card-meta {
-  font-size: 13px;
-  color: #888;
-  margin-bottom: 15px;
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
 }
 
-.form-card-meta > div {
-  margin-bottom: 4px;
-}
+/* ——————————————————————— */
+/* Card Button Group        */
+/* ——————————————————————— */
 
-.form-card-buttons {
+.card-btn-group {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 0;              /* no space between buttons */
+  margin-bottom: 8px;
 }
 
-.form-card-buttons button {
-  padding: 8px 12px;
-  flex: 1;
-  color: white;
+/* All buttons inside the group share these base styles */
+.card-btn-group .card-btn {
+  flex: 1;             /* each button takes equal width */
+  padding: 8px 0;
   border: none;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9em;
   cursor: pointer;
-  border-radius: 3px;
-  font-size: 14px;
+  border-radius: 0;    /* flat by default — we'll round the ends below */
+  transition: filter 0.2s ease;
 }
 
-.form-card-buttons .btn-view {
-  background: #007bff;
+.card-btn-group .card-btn:hover {
+  filter: brightness(.90);  /* slightly lighten on hover */
 }
 
-.form-card-buttons .btn-edit {
-  background: #28a745;
+/* Round only the LEFT end of the first button */
+.card-btn-group .card-btn:first-child {
+  border-radius: 20px 0 0 20px;
 }
 
-.form-card-buttons .btn-delete {
-  background: #dc3545;
+/* Round only the RIGHT end of the last button */
+.card-btn-group .card-btn:last-child {
+  border-radius: 0 20px 20px 0;
 }
 
-.form-card-buttons button:hover {
-  opacity: 0.9;
+/* Individual button colors — solid, not transparent */
+.card-btn-view   { background-color: rgba(70, 130, 255, 0.75); }
+.card-btn-edit   { background-color: rgba(46, 220, 180, 0.75); }
+.card-btn-delete { background-color: rgba(255, 99, 99, 0.75); }
+
+/* Responses button — full width, standalone */
+.card-btn-responses {
+  width: 100%;
+  padding: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.20);
+  color: rgba(0, 0, 0, 0.65);
+  font-weight: 600;
+  font-size: 0.9em;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.card-btn-responses:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* ——————————————————————— */
+/* Responsive Form Grid       */
+/* ——————————————————————— */
+
+.forms-grid {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 980px) {
+  .forms-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 600px) and (max-width: 979px) {
+  .forms-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 599px) {
+  .forms-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ——————————————————————— */
+/* Glassmorphism Utilities    */
+/* ——————————————————————— */
+
+
+/* Background Gradient — smoother, less bright, more premium */
+body {
+  background: linear-gradient(135deg, #8FBFCC 0%, #9AA9D6 50%, #7E7BD6 100%);
+  background-attachment: fixed;
+  font-family: system-ui, sans-serif;
+}
+
+
+/* HEADER GLASS NAV — crisp & bright */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.33);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  padding: 22px 36px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+
+/* GLASS CARDS — this is the exact mockup look */
+.glass-card {
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  padding: 22px 26px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.15);
+  transition: transform 0.25s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-6px);
+}
+
+
+/* BUTTONS — vibrant, defined, modern */
+.glass-button {
+  background: rgba(255,255,255,0.38);
+  border: 1px solid rgba(255,255,255,0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 8px 18px;
+  cursor: pointer;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1em;
+  letter-spacing: 0.25px;
+  transition: all 0.2s ease;
+}
+
+.glass-button:hover {
+  background: rgba(255,255,255,0.55);
+}
+
+
+/* Dropdown */
+.glass-select {
+  background: rgba(255,255,255,0.40);
+  border: 1px solid rgba(255,255,255,0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #1a1a1a;
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-weight: 500;
+}
+
+
+/* Typography (matches mockup exactly) */
+h1, h2, h3 {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+p, label, span {
+  color: rgba(0, 0, 0, 0.70);
 }

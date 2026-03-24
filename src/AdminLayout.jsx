@@ -33,12 +33,7 @@ function AdminLayout() {
     navigate('/response-detail')
   }
 
-  function handleBackToList() {
-    navigate('/')
-  }
-
   function handleDisplayForm(formId) {
-    // Take the admin to the public form URL (no admin chrome)
     navigate(`/form/${formId}`)
   }
 
@@ -53,91 +48,109 @@ function AdminLayout() {
   }
 
   return (
-    <div>
-      {/* Navigation Bar */}
-      <nav style={{
-        background: '#343a40',
-        padding: '15px 30px',
-        marginBottom: '20px'
-      }}>
-        <h2 style={{ color: 'white', margin: '0 0 15px 0' }}>Form Builder System - Admin</h2>
-        
-        <div>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              padding: '10px 20px',
-              marginRight: '10px',
-              background: '#007bff',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              borderRadius: '3px'
-            }}
-          >
-            📋 My Forms
-          </button>
-          
-          <button
-            onClick={() => navigate('/create')}
-            style={{
-              padding: '10px 20px',
-              background: '#28a745',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              borderRadius: '3px'
-            }}
-          >
-            ➕ Create New Form
-          </button>
-        </div>
-      </nav>
+    <div style={{ paddingBottom: '40px' }}>
+      
+      {/* Glass Navigation */}
+      <div
+        className="glass-nav"
+        style={{
+          display: 'flex',
+          gap: '12px',
+          justifyContent: 'center',
+          marginTop: '30px'
+        }}
+      >
+        <button
+          onClick={() => navigate('/')}
+          className="glass-button"
+          style={{ backgroundColor: 'rgba(52,152,219,0.45)' }}
+        >
+          My Forms
+        </button>
+
+        <button
+          onClick={() => navigate('/create')}
+          className="glass-button"
+          style={{ backgroundColor: 'rgba(46,204,113,0.45)' }}
+        >
+          Create New Form
+        </button>
+      </div>
 
       {/* Page Content */}
       <Routes>
-        <Route path="/" element={
-          <FormList 
-            onViewForm={handleViewForm} 
-            onViewResponses={handleViewResponses} 
-            onEditForm={handleEditForm} 
-          />
-        } />
-        
-        <Route path="/create" element={<FormBuilder />} />
-        
-        <Route path="/edit" element={
-          <FormBuilder 
-            editFormId={editingFormId} 
-            onSaveComplete={handleEditComplete} 
-          />
-        } />
-        
-        <Route path="/view" element={
-          <FormViewer 
-            formId={viewingFormId} 
-            onBack={handleBackToList}
-            onDisplayForm={handleDisplayForm}
-          />
-        } />
-        
-        <Route path="/responses" element={
-          <ResponseList 
-            formId={responsesFormId} 
-            onBack={handleBackToList} 
-            onViewResponse={handleViewResponseDetail} 
-          />
-        } />
-        
-        <Route path="/response-detail" element={
-          <ResponseViewer 
-            responseId={viewingResponseId} 
-            onBack={handleBackToResponses} 
-          />
-        } />
+        <Route
+          path="/"
+          element={
+            <FormList
+              onViewForm={handleViewForm}
+              onEditForm={handleEditForm}
+              onViewResponses={handleViewResponses}
+            />
+          }
+        />
 
-        {/* Redirect any unknown admin routes to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/create" element={<FormBuilder />} />
+
+        <Route
+          path="/view"
+          element={
+            viewingFormId ? (
+              <FormViewer
+                formId={viewingFormId}
+                onBack={() => navigate('/')}
+                onDisplayForm={handleDisplayForm}
+              />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
+          path="/edit"
+          element={
+            editingFormId ? (
+              <FormBuilder
+                editFormId={editingFormId}
+                onSaveComplete={handleEditComplete}
+              />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
+          path="/responses"
+          element={
+            responsesFormId ? (
+              <ResponseList
+                formId={responsesFormId}
+                onBack={() => navigate('/')}
+                onViewResponse={handleViewResponseDetail}
+              />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
+          path="/response-detail"
+          element={
+            viewingResponseId ? (
+              <ResponseViewer
+                responseId={viewingResponseId}
+                onBack={handleBackToResponses}
+              />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
   )
