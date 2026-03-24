@@ -51,7 +51,9 @@ function ResponseViewer({ responseId, onBack }) {
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px' }}>
+    <div 
+    className={isRefreshing ? 'refreshing-background' : ''}
+    style={{ padding: '20px', maxWidth: '800px' }}>
       {/* Header */}
       <div style={{ marginBottom: '20px' }}>
         <button

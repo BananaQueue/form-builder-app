@@ -7,6 +7,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categories, setCategories] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     fetchForms();
@@ -14,6 +15,8 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
   }, []);
 
   async function fetchForms() {
+    setIsRefreshing(true);
+
     try {
       const response = await fetch(apiUrl("/get_forms.php"));
       const result = await response.json();
@@ -27,6 +30,10 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
       setError("Could not connect to server: " + err.message);
     } finally {
       setLoading(false);
+      // Keep animation visible for a moment
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 1000);
     }
   }
 
@@ -39,7 +46,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
         setCategories(result.categories);
       }
     } catch {
-      console.err("Could not load categories",err);
+      console.err("Could not load categories", err);
     }
   }
 
@@ -71,8 +78,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
       ? forms
       : forms.filter((form) => form.category_id == selectedCategory);
 
-  if (loading)
-    return <div style={{ padding: "20px" }}>Loading forms...</div>;
+  if (loading) return <div style={{ padding: "20px" }}>Loading forms...</div>;
 
   if (error)
     return (
@@ -84,10 +90,14 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
     );
 
   return (
-    <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
+    <div 
+    className={isRefreshing ? 'refreshing-background' : ''}
+    style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
       <div style={{ marginBottom: "20px", textAlign: "center" }}>
         <h1 style={{ marginBottom: "5px" }}>My Forms</h1>
-        <p>Showing {filteredForms.length} of {forms.length} forms</p>
+        <p>
+          Showing {filteredForms.length} of {forms.length} forms
+        </p>
       </div>
 
       {/* Filter */}
@@ -113,13 +123,13 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
           {filteredForms.map((form) => (
             <div key={form.id} className="glass-card">
               <div className="form-card-header">
-                  <h3 className="form-card-title">{form.title}</h3>
-                  <span
-                    className={`category-badge ${form.category_name.toLowerCase()}`}
-                  >
-                    {form.category_name}
-                  </span>
-                </div>
+                <h3 className="form-card-title">{form.title}</h3>
+                <span
+                  className={`category-badge ${form.category_name.toLowerCase()}`}
+                >
+                  {form.category_name}
+                </span>
+              </div>
 
               {form.description && (
                 <p style={{ color: "#333", marginBottom: "10px" }}>
@@ -154,14 +164,13 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
                 >
                   Delete
                 </button>
-                
               </div>
               <button
-                  className="card-btn-responses"
-                  onClick={() => onViewResponses(form.id)}
-                >
-                  Responses
-                </button>
+                className="card-btn-responses"
+                onClick={() => onViewResponses(form.id)}
+              >
+                Responses
+              </button>
             </div>
           ))}
         </div>
@@ -169,15 +178,23 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
 
       <div style={{ textAlign: "center", marginTop: "30px" }}>
         <button
-          className="glass-button"
-          style={{ backgroundColor: "rgba(100,100,100,0.4)" }}
+          className="glass-button refresh-button"
+          disabled={isRefreshing}
+          style={{
+            
+            background: isRefreshing ? "#28a7469f" : "#6c757d66",
+            
+            cursor: isRefreshing ? "not-allowed" : "pointer",
+            
+            fontWeight: "500",
+          }}
           onClick={fetchForms}
         >
-          ↻ Refresh
+          {isRefreshing ? '✓ Refreshing...' : '↻ Refresh'}
         </button>
       </div>
     </div>
   );
 }
 
-export default FormList
+export default FormList;

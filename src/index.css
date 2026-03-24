@@ -249,3 +249,58 @@ h1, h2, h3 {
 p, label, span {
   color: rgba(0, 0, 0, 0.70);
 }
+
+/* Animated gradient background for refresh */
+@keyframes gradientSweep {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.refreshing-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.refreshing-background::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.15) 25%,
+    rgba(139, 92, 246, 0.15) 50%,
+    rgba(59, 130, 246, 0.15) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: gradientSweep 2s ease-in-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ensure content stays above the overlay */
+.refreshing-background > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Refresh button styling */
+.refresh-button {
+  transition: all 0.3s ease;
+}
+
+.refresh-button:hover {
+  transform: scale(1.05);
+}
+
+.refresh-button:active {
+  transform: scale(0.95);
+}
