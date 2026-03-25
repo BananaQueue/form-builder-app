@@ -1,230 +1,241 @@
-import { useState, useEffect } from 'react'
-import { apiUrl } from './apiBase'
+import { useState, useEffect } from "react";
+import { apiUrl } from "./apiBase";
 
-function FormViewer({ formId, onBack, onDisplayForm}) {
-  const [form, setForm] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+function FormViewer({ formId, onBack, onDisplayForm }) {
+  const [form, setForm] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   async function copyPublicLink() {
-    const publicUrl = `${window.location.origin}/form/${formId}`
-
-    // Clipboard API may be unavailable on some http/network-host contexts or browsers.
+    const publicUrl = `${window.location.origin}/form/${formId}`;
     try {
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(publicUrl)
-        alert('Link copied to clipboard!\n\n' + publicUrl)
-        return
+        await navigator.clipboard.writeText(publicUrl);
+        alert("Link copied!\n\n" + publicUrl);
+        return;
       }
-      throw new Error('Clipboard API unavailable')
+      throw new Error("Clipboard API unavailable");
     } catch {
-      // Fallback: create a temporary textarea and use execCommand('copy')
       try {
-        const textarea = document.createElement('textarea')
-        textarea.value = publicUrl
-        textarea.setAttribute('readonly', '')
-        textarea.style.position = 'fixed'
-        textarea.style.top = '0'
-        textarea.style.left = '0'
-        textarea.style.opacity = '0'
-        document.body.appendChild(textarea)
-        textarea.focus()
-        textarea.select()
-
-        const ok = document.execCommand('copy')
-        document.body.removeChild(textarea)
-
-        if (ok) {
-          alert('Link copied to clipboard!\n\n' + publicUrl)
-        } else {
-          alert('Copy failed. Please copy this link manually:\n\n' + publicUrl)
-        }
+        const textarea = document.createElement("textarea");
+        textarea.value = publicUrl;
+        textarea.setAttribute("readonly", "");
+        textarea.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(textarea);
+        alert(
+          ok
+            ? "Link copied!\n\n" + publicUrl
+            : "Copy failed. Copy manually:\n\n" + publicUrl,
+        );
       } catch {
-        alert('Copy failed. Please copy this link manually:\n\n' + publicUrl)
+        alert("Copy failed. Copy manually:\n\n" + publicUrl);
       }
     }
   }
 
   async function fetchFormDetails() {
     try {
-      const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}`))
-      const result = await response.json()
-
+      const response = await fetch(
+        apiUrl(`/get_form_details.php?id=${formId}`),
+      );
+      const result = await response.json();
       if (result.success) {
-        setForm(result.form)
+        setForm(result.form);
+        console.log("Question sample:", result.form.questions[0]); // 👈 temporary
       } else {
-        setError(result.error || 'Failed to load form')
+        setError(result.error || "Failed to load form");
       }
     } catch (err) {
-      setError('Could not connect to server: ' + err.message)
+      setError("Could not connect to server: " + err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-     if (formId) {
-    fetchFormDetails(formId);
-  }
-}, [formId]);
+    if (formId) fetchFormDetails();
+  }, [formId]);
+
+  // ── Loading / error / empty states ──────────────────────────────────────────
+  // These three guards run before the main render.
+  // If any of them match, we return early — the main JSX below never runs.
 
   if (loading) {
-    return <div style={{ padding: '20px', fontWeight: '700' }}>Loading form...</div>
+    return (
+      <div className="fv-shell">
+        <p className="fv-meta">Loading form...</p>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div style={{ padding: '20px', color: 'red' }}>
-        <h2>Error</h2>
-        <p>{error}</p>
-        <button onClick={onBack} style={{ padding: '10px 20px', cursor: 'pointer' }}>
-          Back to List
-        </button>
+      <div className="fv-shell">
+        <div className="fv-paper">
+          <p style={{ color: "#c0392b" }}>{error}</p>
+          <button className="glass-button" onClick={onBack}>
+            ← Back to List
+          </button>
+        </div>
       </div>
-    )
+    );
   }
 
   if (!form) {
-    return <div style={{ padding: '20px' }}>Form not found</div>
+    return (
+      <div className="fv-shell">
+        <p className="fv-meta">Form not found.</p>
+      </div>
+    );
   }
 
-  return (
-    <div style={{ padding: '20px', maxWidth: '800px' }}>
-      {/* Header with Back Button */}
-      <div style={{ marginBottom: '20px' }}>
-        <button
-          onClick={onBack}
-          style={{
-            padding: '10px 20px',
-            background: '#6c757d',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            borderRadius: '3px'
-          }}
-        >
-          ← Back to List
-        </button>
+  // ── Main render ─────────────────────────────────────────────────────────────
 
-          <button
-            onClick={() => (onDisplayForm ? onDisplayForm(formId) : window.location.assign(`/form/${formId}`))}
-            style={{
-              padding: '10px 20px',
-              background: '#28a745',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer',
-              borderRadius: '3px'
-            }}
-          >
-    📝 Fill Out This Form
-  </button>
-  <button
-  onClick={copyPublicLink}
-  style={{
-    padding: '10px 20px',
-    background: '#17a2b8',
-    color: 'white',
-    border: 'none',
-    cursor: 'pointer',
-    borderRadius: '3px'
-  }}
->
-  🔗 Copy Public Link
-</button>
+  return (
+    // fv-shell: centers the paper card on the page with breathing room
+    <div className="fv-shell">
+      {/* Action bar — sits ABOVE the paper, outside it intentionally.
+          These are navigation/utility actions, not form content. */}
+      <div className="fv-action-bar">
+        <button
+          className="glass-button"
+          style={{ backgroundColor: "rgba(100,100,100,0.40)" }}
+          onClick={onBack}
+        >
+          ← Back
+        </button>
+        <button
+          className="glass-button"
+          style={{ backgroundColor: "rgba(46,204,113,0.55)" }}
+          onClick={() =>
+            onDisplayForm
+              ? onDisplayForm(formId)
+              : window.location.assign(`/form/${formId}`)
+          }
+        >
+          📝 Fill Out
+        </button>
+        <button
+          className="glass-button"
+          style={{ backgroundColor: "rgba(52,152,219,0.55)" }}
+          onClick={copyPublicLink}
+        >
+          🔗 Copy Link
+        </button>
       </div>
 
-      {/* Form Title and Info */}
-      <div style={{ marginBottom: '30px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <h1 style={{ margin: 0 }}>{form.title}</h1>
-          <span style={{
-            padding: '6px 12px',
-            background: form.category_name === 'External' ? '#007bff' : 
-                        form.category_name === 'Internal' ? '#28a745' : '#6c757d',
-            color: 'white',
-            borderRadius: '12px',
-            fontSize: '14px',
-            fontWeight: 'bold'
-          }}>
-            {form.category_name}
+      {/* fv-paper: the white "sheet of paper" that holds all form content */}
+      <div className="fv-paper">
+        {/* ── Form header ── */}
+        <div className="fv-header">
+          <div className="fv-title-row">
+            <h1 className="fv-title">{form.title}</h1>
+            {/* Reusing the category-badge class we already built */}
+            {form.category_name && (
+              <span
+                className={`category-badge ${form.category_name.toLowerCase()}`}
+              >
+                {form.category_name}
+              </span>
+            )}
+          </div>
+
+          {form.description && (
+            <p className="fv-description">{form.description}</p>
+          )}
+
+          <p className="fv-meta">
+            Created: {new Date(form.created_at).toLocaleString()}
+          </p>
+        </div>
+
+        {/* ── Divider ── */}
+        <div className="fv-divider" />
+
+        {/* ── Questions ── */}
+        <div className="fv-questions-header">
+          <h2 className="fv-section-title">Questions</h2>
+          <span
+            style={{ backgroundColor: "#ffffff" }}
+            className="fv-question-count"
+          >
+            {form.questions.length}
           </span>
         </div>
 
-        {form.description && (
-          <p style={{ color: '#666', fontSize: '16px', margin: '10px 0' }}>
-            {form.description}
-          </p>
-        )}
+        {form.questions.length === 0 ? (
+          <p className="fv-meta">No questions in this form yet.</p>
+        ) : (
+          <div className="fv-question-list">
+            {form.questions.map((question, index) => (
+              // Each question is its own self-contained block.
+              // The left accent border is the visual signal that this is one unit.
+              <div key={question.id} className="fv-question-card">
+                {/* Top row: question number + text */}
+                <div className="fv-question-top">
+                  <div style={{ flex: 1, display: "flex", gap: "12px", alignItems: "center" }}>
+                  <span className="fv-question-number">Q{index + 1}</span>
+                  <span className="fv-question-text">
+                    {question.question_text}
+                  </span>
+                  </div>
+                  <span className="fv-question-type">Type: {question.question_type}</span>
+                </div>
 
-        <p style={{ color: '#888', fontSize: '14px', margin: '10px 0' }}>
-          Created: {new Date(form.created_at).toLocaleString()}
-        </p>
-      </div>
+                {/* Badges row — required and/or condition */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                    marginBottom: "10px",
+                  }}
+                >
+                  {/* Required badge — only shows if is_required is 1 */}
+                  {question.is_required === 1 && (
+                    <span className="fv-badge fv-badge-required">Required</span>
+                  )}
 
-      <hr />
+                  {/* Condition badge — only shows if this question depends on another */}
+                  {question.condition_question_id !== null && (
+                    <span className="fv-badge fv-badge-condition">
+                      {(() => {
+                        // Find which question in the list has the matching id
+                        const referencedIndex = form.questions.findIndex(
+                          (q) => q.id === question.condition_question_id,
+                        );
+                        // findIndex returns -1 if nothing matched — guard against that
+                        const label =
+                          referencedIndex !== -1
+                            ? `Q${referencedIndex + 1}`
+                            : "another question";
+                        return `Shown when ${label} ${question.condition_type} "${question.condition_value}"`;
+                      })()}
+                    </span>
+                  )}
+                </div>
 
-      {/* Questions */}
-      <h2>Questions ({form.questions.length})</h2>
-
-      {form.questions.length === 0 ? (
-        <p style={{ color: '#666' }}>No questions in this form.</p>
-      ) : (
-        <div>
-          {form.questions.map((question, index) => (
-            <div
-              key={question.id}
-              style={{
-                background: '#f9f9f990',
-                padding: '20px',
-                marginBottom: '20px',
-                border: '1px solid #ddd',
-                borderRadius: '5px'
-              }}
-            >
-              <div style={{ marginBottom: '10px' }}>
-                <strong style={{ fontSize: '16px' }}>
-                  Question {index + 1}:
-                </strong>
-                <span style={{ fontSize: '16px', marginLeft: '10px' }}>
-                  {question.question_text}
-                </span>
-              </div>
-
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>
-                Type: <em>{question.question_type}</em>
-              </div>
-
-              {question.options && question.options.length > 0 && (
-                <div>
-                  <strong style={{ fontSize: '14px' }}>Options:</strong>
-                  <div style={{ marginTop: '8px' }}>
+                {/* Options — only for question types that have them */}
+                {question.options && question.options.length > 0 && (
+                  <div className="fv-options">
                     {question.options.map((option, optIndex) => (
-                      <div
-                        key={optIndex}
-                        style={{
-                          padding: '8px 12px',
-                          background: '#fff',
-                          border: '1px solid #ddd',
-                          borderRadius: '4px',
-                          marginBottom: '5px',
-                          display: 'inline-block',
-                          marginRight: '10px',
-                          color: '#333',
-                        }}
-                      >
+                      <span key={optIndex} className="fv-option-pill">
                         {option}
-                      </div>
+                      </span>
                     ))}
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }
 
-export default FormViewer
+export default FormViewer;

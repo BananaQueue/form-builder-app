@@ -297,3 +297,509 @@ p, label, span {
 .refresh-button:active {
   transform: scale(0.95);
 }
+/* ——————————————————————— */
+/* FormViewer               */
+/* ——————————————————————— */
+
+/* Centers the whole page content and adds vertical breathing room */
+.fv-shell {
+  padding: 20px 20px 60px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* The action buttons row above the paper */
+.fv-action-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+/* The white paper card — this is the main container */
+.fv-paper {
+  background: 	#ffffffd2;
+  border-radius: 16px;
+  padding: 36px 40px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10);
+}
+
+/* Title + badge on the same row */
+.fv-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.fv-title {
+  margin: 0;
+  font-size: 1.9em;
+  color: #1a1a2e;
+  font-weight: 700;
+}
+
+.fv-description {
+  color: #555;
+  font-size: 1em;
+  margin: 6px 0 0;
+}
+
+/* Small muted text — used for dates, loading, empty states */
+.fv-meta {
+  color: #999;
+  font-size: 0.85em;
+  margin: 8px 0 0;
+}
+
+/* Clean thin line — more intentional than <hr /> */
+.fv-divider {
+  border-top: 1px solid #a0b4f0;
+  margin: 28px 0;
+}
+
+/* "Questions" heading + count badge side by side */
+.fv-questions-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.fv-section-title {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* The small circle showing question count */
+.fv-question-count {
+  background: #ebebeb;
+  color: #555;
+  font-size: 0.8em;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 20px;
+}
+
+.fv-question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Individual question block — left border is the visual anchor */
+.fv-question-card {
+  background: #fafafa;
+  border-left: 3px solid #a0b4f0;
+  border-radius: 0 10px 10px 0;
+  padding: 16px 20px;
+}
+
+.fv-question-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+/* The "Q1", "Q2" label */
+.fv-question-number {
+  font-size: 0.75em;
+  font-weight: 700;
+  color: #a0b4f0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  min-width: 28px;
+  justify-content: flex-start;
+}
+
+.fv-question-text {
+  font-size: 1em;
+  color: #1a1a2e;
+  font-weight: 500;
+}
+
+.fv-question-type {
+  font-size: 0.8em;
+  color: #aaa;
+  margin: 0 0 10px;
+  padding-left: 38px; /* aligns with the question text, accounting for the number badge */
+}
+
+/* Options row — wraps naturally on small screens */
+.fv-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Each option as a small pill */
+.fv-option-pill {
+  background: #fff;
+  border: 1px solid #dde;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.85em;
+  color: #444;;
+}
+
+/* Required / condition badges on question cards */
+.fv-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.fv-badge-required {
+  background: #fdecea;
+  color: #c0392b;
+  border: 1px solid #f5c6c2;
+}
+
+.fv-badge-condition {
+  background: #eef3ff;
+  color: #3a5fc8;
+  border: 1px solid #c5d1f5;
+}
+
+/* ——————————————————————— */
+/* FormBuilder              */
+/* ——————————————————————— */
+
+/* Page shell — same pattern as fv-shell */
+.fb-shell {
+  padding: 20px 20px 60px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+/* Shared paper card — reused across all three zones */
+.fb-paper {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10);
+  margin-bottom: 20px;
+}
+
+/* Section heading inside a paper card */
+.fb-section-title {
+  font-size: 0.8em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #aaa;
+  margin: 0 0 20px 0;
+}
+
+/* Page-level heading */
+.fb-page-title {
+  font-size: 1.8em;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 6px;
+  text-align: center;
+}
+
+.fb-page-subtitle {
+  font-size: 0.9em;
+  color: #f9f6f6;
+  text-align: center;
+  margin: 0 0 24px;
+}
+
+/* Form field row — label above input */
+.fb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.fb-field:last-child {
+  margin-bottom: 0;
+}
+
+.fb-label {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #555;
+}
+
+/* Inputs and textareas — consistent style */
+.fb-input,
+.fb-textarea,
+.fb-select {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.95em;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  background: #fafafa;
+  color: #1a1a2e;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.fb-input:focus,
+.fb-textarea:focus,
+.fb-select:focus {
+  outline: none;
+  border-color: #a0b4f0;
+  box-shadow: 0 0 0 3px rgba(160, 180, 240, 0.20);
+  background: #fff;
+}
+
+.fb-textarea {
+  height: 90px;
+  resize: vertical;
+}
+
+/* Required toggle row */
+.fb-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #fafafa;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 18px;
+}
+
+.fb-toggle-row input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+  accent-color: #a0b4f0;
+}
+
+.fb-toggle-label {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #333;
+}
+
+.fb-toggle-hint {
+  font-size: 0.8em;
+  color: #aaa;
+}
+
+/* Conditional logic panel */
+.fb-condition-panel {
+  background: #fffbf0;
+  border: 1.5px solid #f0d080;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+
+.fb-condition-title {
+  font-size: 0.85em;
+  font-weight: 700;
+  color: #a07800;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fb-condition-hint {
+  font-size: 0.8em;
+  color: #b08800;
+  margin: 10px 0 0;
+}
+
+/* Options / rating panel */
+.fb-options-panel {
+  background: #f5f8ff;
+  border: 1.5px solid #d0daff;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+
+.fb-options-title {
+  font-size: 0.85em;
+  font-weight: 700;
+  color: #3a5fc8;
+  margin: 0 0 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Input + button side by side for adding options */
+.fb-add-option-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.fb-add-option-row .fb-input {
+  flex: 1;
+  margin: 0;
+}
+
+/* Pill list for added options */
+.fb-option-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fb-option-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1.5px solid #d0daff;
+  border-radius: 20px;
+  font-size: 0.85em;
+  color: #333;
+  font-weight: 500;
+}
+
+.fb-option-pill-remove {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  font-size: 1em;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  font-weight: 700;
+}
+
+/* Preview question card */
+.fb-preview-card {
+  background: #fafafa;
+  border-left: 3px solid #a0b4f0;
+  border-radius: 0 10px 10px 0;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.fb-preview-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fb-preview-question {
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.fb-preview-meta {
+  font-size: 0.8em;
+  color: #aaa;
+}
+
+.fb-preview-condition {
+  font-size: 0.8em;
+  color: #a07800;
+  background: #fffbf0;
+  border: 1px solid #f0d080;
+  border-radius: 6px;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+/* Save panel */
+.fb-save-panel {
+  background: #f0fff4;
+  border: 1.5px solid #a8e6c0;
+  border-radius: 16px;
+  padding: 24px 32px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.fb-save-title {
+  font-size: 1em;
+  font-weight: 700;
+  color: #1a4731;
+  margin: 0 0 4px;
+}
+
+.fb-save-count {
+  font-size: 0.85em;
+  color: #4a9a6a;
+  margin: 0 0 16px;
+}
+
+/* Add question primary button */
+.fb-btn-add {
+  width: 100%;
+  padding: 12px;
+  background: #a0b4f0;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin-top: 4px;
+}
+
+.fb-btn-add:hover {
+  background: #7a96e8;
+}
+
+/* Save button */
+.fb-btn-save {
+  padding: 12px 36px;
+  background: #2ecc71;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.fb-btn-save:hover {
+  background: #27ae60;
+}
+
+/* Debug panel */
+.fb-debug {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.fb-debug summary {
+  cursor: pointer;
+  font-size: 0.85em;
+  color: #aaa;
+  user-select: none;
+}
+
+.fb-debug pre {
+  margin: 12px 0 0;
+  font-size: 0.8em;
+  overflow: auto;
+  color: #555;
+}
