@@ -109,22 +109,27 @@ CREATE TABLE `questions` (
   `form_id` int(11) NOT NULL,
   `question_text` text NOT NULL,
   `question_type` varchar(50) NOT NULL,
-  `position` int(11) DEFAULT 0
+  `rating_scale` varchar(64) DEFAULT NULL COMMENT 'e.g. numeric_5, agree_5, custom — used when question_type is rating',
+  `position` int(11) DEFAULT 0,
+  `is_required` tinyint(1) NOT NULL DEFAULT 1,
+  `condition_question_id` int(11) DEFAULT NULL,
+  `condition_type` varchar(32) DEFAULT 'equals',
+  `condition_value` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `questions`
 --
 
-INSERT INTO `questions` (`id`, `form_id`, `question_text`, `question_type`, `position`) VALUES
-(7, 4, 'Section/Unit/Section', 'checkbox', 0),
-(8, 4, 'Full name:', 'text', 1),
-(9, 4, 'Select all that apply', 'multiple_choice', 2),
-(10, 5, 'What is your name?', 'text', 0),
-(11, 5, 'What is your favorite color?', 'multiple_choice', 1),
-(12, 3, 'What?', 'text', 0),
-(13, 3, 'Who?', 'checkbox', 1),
-(14, 3, 'Where?', 'multiple_choice', 2);
+INSERT INTO `questions` (`id`, `form_id`, `question_text`, `question_type`, `rating_scale`, `position`, `is_required`, `condition_question_id`, `condition_type`, `condition_value`) VALUES
+(7, 4, 'Section/Unit/Section', 'checkbox', NULL, 0, 1, NULL, 'equals', NULL),
+(8, 4, 'Full name:', 'text', NULL, 1, 1, NULL, 'equals', NULL),
+(9, 4, 'Select all that apply', 'multiple_choice', NULL, 2, 1, NULL, 'equals', NULL),
+(10, 5, 'What is your name?', 'text', NULL, 0, 1, NULL, 'equals', NULL),
+(11, 5, 'What is your favorite color?', 'multiple_choice', NULL, 1, 1, NULL, 'equals', NULL),
+(12, 3, 'What?', 'text', NULL, 0, 1, NULL, 'equals', NULL),
+(13, 3, 'Who?', 'checkbox', NULL, 1, 1, NULL, 'equals', NULL),
+(14, 3, 'Where?', 'multiple_choice', NULL, 2, 1, NULL, 'equals', NULL);
 
 -- --------------------------------------------------------
 

@@ -694,6 +694,36 @@ p, label, span {
   gap: 12px;
 }
 
+.fb-preview-card.fb-preview-card--dragging {
+  box-shadow: 0 8px 28px rgba(26, 26, 46, 0.12);
+  border-left-color: #6b8cff;
+  z-index: 2;
+}
+
+.fb-drag-handle {
+  cursor: grab;
+  touch-action: none;
+  align-self: center;
+  flex-shrink: 0;
+  background: #f0f0f5;
+  border: 1px solid #e0e0ea;
+  border-radius: 8px;
+  color: #888;
+  padding: 8px 6px;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+
+.fb-drag-handle:hover {
+  background: #e8e8f0;
+  color: #555;
+}
+
+.fb-drag-handle:active {
+  cursor: grabbing;
+}
+
 .fb-preview-body {
   flex: 1;
   display: flex;

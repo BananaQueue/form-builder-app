@@ -1,5 +1,99 @@
 import { useState, useEffect } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { apiUrl } from "./apiBase";
+import { isOrderValidForConditions } from "./questionOrder";
+
+function SortableQuestionRow({ question, questionIndex, questions, onDelete }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: question.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={
+        "fb-preview-card" + (isDragging ? " fb-preview-card--dragging" : "")
+      }
+    >
+      <button
+        type="button"
+        className="fb-drag-handle"
+        aria-label="Drag to reorder question"
+        title="Drag to reorder"
+        {...attributes}
+        {...listeners}
+      >
+        ⋮⋮
+      </button>
+      <div className="fb-preview-body">
+        <span className="fb-preview-question">
+          Q{questionIndex + 1}. {question.text}
+        </span>
+        <span className="fb-preview-meta">
+          Type: {question.type}
+          {question.type === "rating" &&
+            question.rating_scale &&
+            ` · ${question.rating_scale}`}
+          {" · "}
+          {question.is_required ? "★ Required" : "○ Optional"}
+        </span>
+        {question.options.length > 0 && (
+          <span className="fb-preview-meta">
+            Options: {question.options.join(", ")}
+          </span>
+        )}
+        {question.condition_question_id && (
+          <span className="fb-preview-condition">
+            ⚡ Shows only if Q
+            {questions.findIndex((q) => q.id == question.condition_question_id) +
+              1}
+            {question.condition_type === "equals" &&
+              ` equals "${question.condition_value}"`}
+            {question.condition_type === "not_equals" &&
+              ` does NOT equal "${question.condition_value}"`}
+            {question.condition_type === "option_selected" &&
+              ` has "${question.condition_value}" selected`}
+            {question.condition_type === "is_answered" && ` is answered`}
+          </span>
+        )}
+      </div>
+      <button
+        className="card-btn card-btn-delete"
+        style={{ whiteSpace: "nowrap", padding: "6px 14px", fontSize: "0.85em" }}
+        type="button"
+        onClick={() => onDelete(question.id)}
+      >
+        Delete
+      </button>
+    </div>
+  );
+}
 
 function FormBuilder({ editFormId = null, onSaveComplete = null }) {
   // All state declarations
@@ -27,6 +121,31 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
 
   const [ratingScale, setRatingScale] = useState("numeric_5");
   const [customRatingOptions, setCustomRatingOptions] = useState([]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  function handleQuestionsDragEnd(event) {
+    const { active, over } = event;
+    if (!over || active.id == over.id) return;
+    const oldIndex = questions.findIndex((q) => q.id == active.id);
+    const newIndex = questions.findIndex((q) => q.id == over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(questions, oldIndex, newIndex);
+    if (!isOrderValidForConditions(reordered)) {
+      alert(
+        "That order isn't allowed: a conditional question must stay below the question it depends on.",
+      );
+      return;
+    }
+    setQuestions(reordered);
+  }
 
   // Fetch categories when component loads
   useEffect(() => {
@@ -74,13 +193,13 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         // Set questions
         setQuestions(
           form.questions.map((q) => ({
-            id: "q_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+            id: q.id,
             text: q.question_text,
             type: q.question_type,
             options: q.options || [],
             rating_scale: q.rating_scale || null,
             is_required: q.is_required !== undefined ? q.is_required : 1,
-            condition_question_id: q.condition_question_id || null,
+            condition_question_id: q.condition_question_id ?? null,
             condition_type: q.condition_type || "equals",
             condition_value: q.condition_value || null,
           })),
@@ -209,6 +328,14 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
     setQuestions(updated);
   }
 
+  /** Use the parent row's exact `id` so PHP's client-id map always resolves after reorder/DnD. */
+  function canonicalConditionParentId(q) {
+    const raw = q.condition_question_id;
+    if (raw == null || raw === "") return null;
+    const parent = questions.find((p) => p.id == raw);
+    return parent ? parent.id : raw;
+  }
+
   // Save form to database
   async function saveForm() {
     if (formTitle.trim() === "") {
@@ -225,10 +352,11 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       id: q.id ?? `q_${idx}`,
       question_text: q.text,
       question_type: q.type,
+      rating_scale: q.rating_scale ?? null,
       position: idx,
       options: Array.isArray(q.options) ? q.options : [],
       is_required: q.is_required ?? 1,
-      condition_question_id: q.condition_question_id ?? null,
+      condition_question_id: canonicalConditionParentId(q),
       condition_type: q.condition_type ?? "equals",
       condition_value: q.condition_value ?? null,
     }));
@@ -649,47 +777,35 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
     {/* ── Zone 3: Preview ── */}
     <div className="fb-paper">
       <p className="fb-section-title">Form Preview — {questions.length} question{questions.length !== 1 ? 's' : ''}</p>
+      {questions.length > 0 && (
+        <p className="fb-reorder-hint" style={{ color: '#888', fontSize: '0.85em', marginTop: '-6px', marginBottom: '14px' }}>
+          Use the ⋮⋮ handle to drag questions into order. Conditional questions must stay below the one they depend on.
+        </p>
+      )}
 
       {questions.length === 0 ? (
         <p style={{ color: '#ccc', fontSize: '0.9em' }}>No questions yet. Add one above.</p>
       ) : (
-        questions.map((question, questionIndex) => (
-          <div key={question.id} className="fb-preview-card">
-            <div className="fb-preview-body">
-              <span className="fb-preview-question">
-                Q{questionIndex + 1}. {question.text}
-              </span>
-              <span className="fb-preview-meta">
-                Type: {question.type}
-                {question.type === 'rating' && question.rating_scale && ` · ${question.rating_scale}`}
-                {' · '}
-                {question.is_required ? '★ Required' : '○ Optional'}
-              </span>
-              {question.options.length > 0 && (
-                <span className="fb-preview-meta">
-                  Options: {question.options.join(', ')}
-                </span>
-              )}
-              {question.condition_question_id && (
-                <span className="fb-preview-condition">
-                  ⚡ Shows only if Q
-                  {questions.findIndex(q => q.id == question.condition_question_id) + 1}
-                  {question.condition_type === 'equals' && ` equals "${question.condition_value}"`}
-                  {question.condition_type === 'not_equals' && ` does NOT equal "${question.condition_value}"`}
-                  {question.condition_type === 'option_selected' && ` has "${question.condition_value}" selected`}
-                  {question.condition_type === 'is_answered' && ` is answered`}
-                </span>
-              )}
-            </div>
-            <button
-              className="card-btn card-btn-delete"
-              style={{ whiteSpace: 'nowrap', padding: '6px 14px', fontSize: '0.85em' }}
-              onClick={() => deleteQuestion(question.id)}
-            >
-              Delete
-            </button>
-          </div>
-        ))
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleQuestionsDragEnd}
+        >
+          <SortableContext
+            items={questions.map((q) => q.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {questions.map((question, questionIndex) => (
+              <SortableQuestionRow
+                key={question.id}
+                question={question}
+                questionIndex={questionIndex}
+                questions={questions}
+                onDelete={deleteQuestion}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
       )}
     </div>
 
