@@ -67,7 +67,7 @@ function AdminLayout() {
           onClick={() => navigate('/')}
           className="glass-button"
           style={{ backgroundColor: 
-              location.pathname === '/' ? 'rgba(52,152,219)' : 'rgba(52,152,219,0.45)' }}
+              location.pathname === '/' ? 'rgba(52,152,255)' : 'rgba(52,152,219,0.45)' }}
         >
           My Forms
         </button>

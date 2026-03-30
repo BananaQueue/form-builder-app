@@ -22,7 +22,7 @@ function PublicFormPage() {
           style={{
             width: '100%',
             borderRadius: '18px',
-            background: 'rgba(255, 255, 255, 0.27)',
+            background: 'rgb(255, 250, 245)',
             border: '1px solid rgba(255,255,255,0.6)',
             boxShadow: '0 18px 60px rgba(0,0,0,0.22)',
             overflow: 'hidden',
@@ -43,7 +43,7 @@ function PublicFormPage() {
           fontSize: '13px',
         }}
       >
-        <div style={{ opacity: 0.9, color: '#888' }}>Powered by Form Builder System</div>
+        <div style={{ opacity: 0.9, color: '#c7c5c5' }}>Powered by Form Builder System</div>
       </footer>
     </div>
   )

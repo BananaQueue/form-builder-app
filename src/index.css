@@ -165,6 +165,7 @@ button:focus-visible {
 /* Background Gradient — smoother, less bright, more premium */
 body {
   background: linear-gradient(135deg, #59CDE9 0%, #5e5ecd 50%, #0A2A88 100%);
+  /* background: #30308e; */
   background-attachment: fixed;
   font-family: system-ui, sans-serif;
 }

@@ -187,7 +187,7 @@ function FormDisplay({ formId }) {
   if (submitted) {
     return (
       <div style={{ padding: "40px", textAlign: "center" }}>
-        <h1 style={{ color: "#28a745" }}>✓ Thank You!</h1>
+        <h1 style={{ color: "#37da5d" }}>✓ Thank You!</h1>
         <p style={{ fontSize: "18px", marginTop: "20px" }}>
           Your response has been submitted successfully.
         </p>
@@ -223,7 +223,7 @@ function FormDisplay({ formId }) {
               style={{
                 marginBottom: "30px",
                 padding: "20px",
-                background: "#f9f9f99b",
+                background: "#a2a2a237",
                 borderRadius: "5px",
                 border: "1px solid #ddd",
               }}
@@ -275,9 +275,63 @@ function FormDisplay({ formId }) {
                 />
               )}
 
+              {/* Number Input */}
+              {question.question_type === "number" && (
+                <input
+                  type="number"
+                  value={answers[question.id] || ""}
+                  onChange={(e) =>
+                    handleAnswerChange(question.id, e.target.value)
+                  }
+                  min={question.number_min || undefined}
+                  max={question.number_max || undefined}
+                  step={
+                    question.number_step === "any"
+                      ? "any"
+                      : question.number_step || "1"
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    fontSize: "14px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
+                  placeholder={
+                    question.number_min && question.number_max
+                      ? `Enter number (${question.number_min} - ${question.number_max})`
+                      : "Enter number"
+                  }
+                />
+              )}
+
+              {/* Date/Time Input */}
+              {question.question_type === "datetime" && (
+                <input
+                  type={question.datetime_type || "date"}
+                  value={answers[question.id] || ""}
+                  onChange={(e) =>
+                    handleAnswerChange(question.id, e.target.value)
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    fontSize: "14px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
+                />
+              )}
+
               {/* Checkbox (Radio) */}
               {question.question_type === "checkbox" && (
-                <div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-evenly",
+                  }}
+                >
                   {question.options.map((option, optIndex) => (
                     <div key={optIndex} style={{ marginBottom: "10px" }}>
                       <label
@@ -306,7 +360,13 @@ function FormDisplay({ formId }) {
 
               {/* Multiple Choice (checkbox) */}
               {question.question_type === "multiple_choice" && (
-                <div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-evenly",
+                  }}
+                >
                   {question.options.map((option, optIndex) => (
                     <div key={optIndex} style={{ marginBottom: "10px" }}>
                       <label
@@ -428,7 +488,7 @@ function FormDisplay({ formId }) {
             border: "none",
             borderRadius: "5px",
             cursor: submitting ? "not-allowed" : "pointer",
-            width: "100%",
+            minWidth: "35%",
             fontWeight: "bold",
           }}
         >
