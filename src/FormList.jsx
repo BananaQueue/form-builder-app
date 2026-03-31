@@ -97,7 +97,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
     className={isRefreshing ? 'refreshing-background' : ''}
     style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
       <div style={{ marginBottom: "20px", textAlign: "center" }}>
-        <h1 style={{ marginBottom: "5px" }}>My Forms</h1>
+        <h1 style={{ marginBottom: "5px" }}>Forms</h1>
         <p>
           Showing {filteredForms.length} of {forms.length} forms
         </p>

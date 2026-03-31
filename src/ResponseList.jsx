@@ -99,9 +99,9 @@ function ResponseList({ formId, onBack, onViewResponse }) {
 
       {/* Responses List */}
       {responses.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-          <p style={{ fontSize: '18px' }}>No responses yet.</p>
-          <p>Share this form to start collecting responses!</p>
+        <div style={{ textAlign: 'center', padding: '40px'}}>
+          <p style={{ fontSize: '18px',color: '#fffafa' }}> <strong>No responses yet.</strong></p>
+          <p style={{ color: '#fffafa' }}>Share this form to start collecting responses!</p>
         </div>
       ) : (
         <div>
