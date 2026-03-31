@@ -134,11 +134,11 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
                 </span>
               </div>
 
-              {form.description && (
+              
                 <p style={{ color: "#333", marginBottom: "10px" }}>
-                  {form.description}
+                  {form.description || "\u00A0"}
                 </p>
-              )}
+              
 
               <p>
                 📝 {form.question_count} question(s)

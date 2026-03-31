@@ -32,9 +32,16 @@ h1 {
 .form-card-title {
   margin: 0;
   font-size: 18px;
-  line-height: 1.4;
   text-align: left;
   color: #333;
+
+   display: -webkit-box;
+  -webkit-line-clamp: 3;       /* 🔥 limits to 3 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  line-height: 1.2;
+  min-height: calc(1.2em * 3); /* keeps all titles same height */
 }
 
 .category-badge {

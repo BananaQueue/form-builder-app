@@ -41,40 +41,38 @@ function ResponseList({ formId, onBack, onViewResponse }) {
 }
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>Loading responses...</div>
+    return <div className="fv-shell">
+      <p className="fv-meta">Loading responses...</p>
+      </div>
   }
 
   if (error) {
     return (
-      <div style={{ padding: '20px', color: 'red' }}>
-        <h2>Error</h2>
-        <p>{error}</p>
-        <button onClick={onBack} style={{ padding: '10px 20px', cursor: 'pointer' }}>
-          Back to List
-        </button>
+      <div className="fv-shell">
+        <div className="fv-paper">
+          <p style={{ color: "#c0392b" }}>{error}</p>
+          <button className="glass-button" onClick={onBack}>
+            ← Back to List
+          </button>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '900px' }}>
+    <div className="fv-shell">
       {/* Header */}
-      <div style={{ marginBottom: '20px' }}>
+      <div className="fv-action-bar">
         <button
+          className="glass-button"
+          style={{ backgroundColor: "rgba(100,100,100,0.40)" }}
           onClick={onBack}
-          style={{
-            padding: '10px 20px',
-            background: '#6c757d',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            borderRadius: '3px'
-          }}
         >
           ← Back to List
         </button>
         <button
             onClick={handleExport}
+            className="glass-button"
             disabled={responses.length === 0}
             style={{
             padding: '10px 20px',
@@ -92,7 +90,7 @@ function ResponseList({ formId, onBack, onViewResponse }) {
       {/* Form Info */}
       <div style={{ marginBottom: '30px' }}>
         <h1 style={{ margin: '0 0 10px 0' }}>Responses: {form.title}</h1>
-        <p style={{ color: '#666', fontSize: '16px' }}>
+        <p style={{ color: '#ffffff', fontSize: '16px' }}>
           Total Responses: <strong>{responses.length}</strong>
         </p>
       </div>

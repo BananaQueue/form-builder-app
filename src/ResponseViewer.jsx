@@ -5,8 +5,10 @@ function ResponseViewer({ responseId, onBack }) {
   const [response, setResponse] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   async function fetchResponseDetails() {
+    setIsRefreshing(true);
     try {
       const res = await fetch(apiUrl(`/get_response_details.php?id=${responseId}`))
       const result = await res.json()
@@ -20,6 +22,10 @@ function ResponseViewer({ responseId, onBack }) {
       setError('Could not connect to server: ' + err.message)
     } finally {
       setLoading(false)
+      // Keep animation visible for a moment
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 1000);
     }
   }
 
@@ -31,41 +37,38 @@ function ResponseViewer({ responseId, onBack }) {
   }, [responseId])
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>Loading response...</div>
+    return <div className="fv-shell">
+      <p className="fv-meta">Loading response...</p>
+    </div>
   }
 
   if (error) {
     return (
-      <div style={{ padding: '20px', color: 'red' }}>
-        <h2>Error</h2>
-        <p>{error}</p>
-        <button onClick={onBack} style={{ padding: '10px 20px', cursor: 'pointer' }}>
-          Back
-        </button>
+      <div className="fv-shell">
+        <div className="fv-paper">
+          <p style={{ color: "#c0392b" }}>{error}</p>
+          <button className="glass-button" onClick={onBack}>
+            ← Back to List
+          </button>
+        </div>
       </div>
     )
   }
 
   if (!response) {
-    return <div style={{ padding: '20px' }}>Response not found</div>
+    return <div className="fv-shell">
+      <p className="fv-meta">Response not found</p>
+    </div>
   }
 
   return (
     <div 
-    className={isRefreshing ? 'refreshing-background' : ''}
-    style={{ padding: '20px', maxWidth: '800px' }}>
+    className={`fv-shell ${isRefreshing ? 'refreshing-background' : ''}`}>
       {/* Header */}
-      <div style={{ marginBottom: '20px' }}>
+      <div className="fv-action-bar">
         <button
           onClick={onBack}
-          style={{
-            padding: '10px 20px',
-            background: '#6c757d',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            borderRadius: '3px'
-          }}
+          className="glass-button"
         >
           ← Back to Responses
         </button>
@@ -74,10 +77,10 @@ function ResponseViewer({ responseId, onBack }) {
       {/* Response Info */}
       <div style={{ marginBottom: '30px' }}>
         <h1 style={{ margin: '0 0 10px 0' }}>Response Details</h1>
-        <p style={{ color: '#666', fontSize: '14px' }}>
+        <p style={{ color: '#ffffff', fontSize: '14px' }}>
           Form: <strong>{response.form_title}</strong>
         </p>
-        <p style={{ color: '#666', fontSize: '14px' }}>
+        <p style={{ color: '#ffffff', fontSize: '14px' }}>
           Submitted: <strong>{new Date(response.submitted_at).toLocaleString()}</strong>
         </p>
       </div>

@@ -296,6 +296,7 @@ function FormDisplay({ formId }) {
                     fontSize: "14px",
                     border: "1px solid #ccc",
                     borderRadius: "4px",
+                    boxSizing: "border-box",
                   }}
                   placeholder={
                     question.number_min && question.number_max
@@ -319,6 +320,7 @@ function FormDisplay({ formId }) {
                     fontSize: "14px",
                     border: "1px solid #ccc",
                     borderRadius: "4px",
+                    boxSizing: "border-box",
                   }}
                 />
               )}

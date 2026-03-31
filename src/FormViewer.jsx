@@ -111,11 +111,10 @@ function FormViewer({ formId, onBack, onDisplayForm }) {
         <button
           className="glass-button"
           style={{ backgroundColor: "rgba(46,204,113,0.55)" }}
-          onClick={() =>
-            onDisplayForm
-              ? onDisplayForm(formId)
-              : window.location.assign(`/form/${formId}`)
-          }
+          onClick={() => {
+            const publicUrl = `${window.location.origin}/form/${formId}`;
+            window.open(publicUrl, '_blank');
+          }}
         >
           📝 Fill Out
         </button>
