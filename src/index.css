@@ -162,6 +162,15 @@ button:focus-visible {
   .forms-grid {
     grid-template-columns: 1fr;
   }
+  .fv-question-top {
+    flex-wrap: wrap; /* allows children to wrap to next line */       
+  }
+  .fv-question-type {
+    width:100%; /*forces it onto its own line */
+    white-space: normal;
+    padding-top: 0;
+    padding-left: 38px; /*aligns with the question text, past the Q number */
+  }
 }
 
 /* ——————————————————————— */

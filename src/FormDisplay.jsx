@@ -119,6 +119,7 @@ function FormDisplay({ formId }) {
       return;
     }
 
+
     setSubmitting(true);
 
     // Prepare data for submission
@@ -229,7 +230,13 @@ function FormDisplay({ formId }) {
               }}
             >
               {/* Question Text */}
-              <label style={{ display: "block", marginBottom: "15px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "15px",
+                  textAlign: "left",
+                }}
+              >
                 <strong style={{ fontSize: "16px" }}>
                   {visibleIndex + 1}. {question.question_text}
                 </strong>
@@ -272,6 +279,25 @@ function FormDisplay({ formId }) {
                     boxSizing: "border-box",
                   }}
                   placeholder="Your answer"
+                />
+              )}
+              {/* Email Input */}
+              {question.question_type === "email" && (
+                <input
+                  type="email"
+                  value={answers[question.id] || ""}
+                  onChange={(e) =>
+                    handleAnswerChange(question.id, e.target.value)
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    fontSize: "14px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
+                  placeholder="Enter your email address"
+                  required={question.is_required}
                 />
               )}
 

@@ -401,7 +401,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       options: Array.isArray(q.options) ? q.options : [],
       is_required: q.is_required ?? 1,
       number_min: q.number_min ?? null,
-      number_max: q.number_max ?? null, 
+      number_max: q.number_max ?? null,
       number_step: q.number_step ?? null,
       datetime_type: q.datetime_type ?? null,
       condition_question_id: canonicalConditionParentId(q),
@@ -573,6 +573,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
             style={{ padding: "8px", fontSize: "16px" }}
           >
             <option value="text">Text Input</option>
+            <option value="email">Email Address</option>
             <option value="number">Number</option>
             <option value="datetime">Date/Time</option>
             <option value="multiple_choice">Multiple Choice</option>
@@ -742,6 +743,30 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                                     </option>
                                   )}
                                 </select>
+                              )}
+
+                              {/* For email questions */}
+                              {selectedQ.type === "email" && (
+                                <div>
+                                  <label>
+                                    <strong>Value:</strong>
+                                    <br />
+                                    <input
+                                      type="email"
+                                      value={conditionValue}
+                                      onChange={(e) =>
+                                        setConditionValue(e.target.value)
+                                      }
+                                      placeholder="Enter expected email address"
+                                      style={{
+                                        padding: "8px",
+                                        fontSize: "14px",
+                                        width: "100%",
+                                        maxWidth: "500px",  
+                                      }}
+                                    />
+                                  </label>
+                                </div>
                               )}
                               {/* For number questions */}
                               {selectedQ.type === "number" && (
