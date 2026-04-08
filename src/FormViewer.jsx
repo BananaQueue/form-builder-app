@@ -6,12 +6,40 @@ function FormViewer({ formId, onBack, onDisplayForm }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  function slugifyTitle(title) {
+    // Keep this aligned with the PHP slug rules (lowercase, non-alnum -> hyphen)
+    if (!title) return "form";
+    const slug = String(title)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    return slug || "form";
+  }
+
+  function buildPublicUrl() {
+    const rawCode = form?.form_code;
+    const uniqueCode = rawCode
+      ? rawCode.includes("-")
+        ? rawCode.split("-").pop()
+        : rawCode
+      : null;
+    const slug = form?.title ? slugifyTitle(form.title) : null;
+
+    // Prefer `/form/<title-slug>-<uniqueCode>` for nicer URLs.
+    if (slug && uniqueCode) {
+      return `${window.location.origin}/form/${slug}-${uniqueCode}`;
+    }
+
+    // Fallback to the old behavior.
+    return `${window.location.origin}/form/${rawCode || formId}`;
+  }
+
   async function copyPublicLink() {
-    const publicUrl = `${window.location.origin}/form/${form.form_code || formId}`;
+    const publicUrl = buildPublicUrl();
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(publicUrl);
-        alert("Link copied!\n\n" + publicUrl);1
+        alert("Link copied!\n\n" + publicUrl);
         return;
       }
       throw new Error("Clipboard API unavailable");
@@ -112,7 +140,7 @@ function FormViewer({ formId, onBack, onDisplayForm }) {
           className="glass-button"
           style={{ backgroundColor: "rgba(46,204,113,0.55)" }}
           onClick={() => {
-            const publicUrl = `${window.location.origin}/form/${form.form_code || formId}`;
+            const publicUrl = buildPublicUrl();
             window.open(publicUrl, '_blank');
           }}
         >

@@ -126,7 +126,7 @@ function FormDisplay({ formCode, formId }) {
 
     // Prepare data for submission
     const submissionData = {
-      form_id: formId,
+      form_id: form.id,
       answers: form.questions.map((q) => ({
         question_id: q.id,
         answer_text: answers[q.id],
