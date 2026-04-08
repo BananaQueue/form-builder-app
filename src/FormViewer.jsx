@@ -7,11 +7,11 @@ function FormViewer({ formId, onBack, onDisplayForm }) {
   const [error, setError] = useState(null);
 
   async function copyPublicLink() {
-    const publicUrl = `${window.location.origin}/form/${formId}`;
+    const publicUrl = `${window.location.origin}/form/${form.form_code || formId}`;
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(publicUrl);
-        alert("Link copied!\n\n" + publicUrl);
+        alert("Link copied!\n\n" + publicUrl);1
         return;
       }
       throw new Error("Clipboard API unavailable");
@@ -112,7 +112,7 @@ function FormViewer({ formId, onBack, onDisplayForm }) {
           className="glass-button"
           style={{ backgroundColor: "rgba(46,204,113,0.55)" }}
           onClick={() => {
-            const publicUrl = `${window.location.origin}/form/${formId}`;
+            const publicUrl = `${window.location.origin}/form/${form.form_code || formId}`;
             window.open(publicUrl, '_blank');
           }}
         >

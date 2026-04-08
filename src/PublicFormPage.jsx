@@ -29,7 +29,7 @@ function PublicFormPage() {
           }}
         >
           <div style={{ padding: '18px 14px', color: '#333' }}>
-            <FormDisplay formId={formId}/>
+            <FormDisplay formCode={formId}/>
           </div>
         </div>
       </main>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiUrl } from "./apiBase";
 
-function FormDisplay({ formId }) {
+function FormDisplay({ formCode, formId }) {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,9 +11,12 @@ function FormDisplay({ formId }) {
 
   async function fetchFormDetails() {
     try {
-      const response = await fetch(
-        apiUrl(`/get_form_details.php?id=${formId}`),
-      );
+      // Use form code if available, otherwise use form ID (for backward compatibility)
+      const url = formCode
+        ? apiUrl(`/get_form_by_code.php?code=${formCode}`)
+        : apiUrl(`/get_form_details.php?id=${formId}`);
+
+      const response = await fetch(url);
       const result = await response.json();
 
       if (result.success) {
@@ -119,7 +122,6 @@ function FormDisplay({ formId }) {
       return;
     }
 
-
     setSubmitting(true);
 
     // Prepare data for submission
@@ -160,7 +162,7 @@ function FormDisplay({ formId }) {
     // we intentionally don't include fetchFormDetails in deps
     // to avoid re-creating it on every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formId]);
+  }, [formCode, formId]);
 
   if (loading) {
     return (
