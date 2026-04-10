@@ -8,6 +8,8 @@ function FormDisplay({ formCode, formId }) {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const DATE_RANGE_SEPARATOR = " to ";
+  const [dateRangeEnabled, setDateRangeEnabled] = useState({});
 
   async function fetchFormDetails() {
     try {
@@ -42,6 +44,32 @@ function FormDisplay({ formCode, formId }) {
       ...answers,
       [questionId]: value,
     });
+  }
+
+  function parseDateRangeAnswer(value) {
+    const raw = value || "";
+    const idx = raw.indexOf(DATE_RANGE_SEPARATOR);
+    if (idx === -1) return { start: raw, end: "" };
+    return {
+      start: raw.slice(0, idx),
+      end: raw.slice(idx + DATE_RANGE_SEPARATOR.length),
+    };
+  }
+
+  function buildDateRangeAnswer(start, end) {
+    const s = (start || "").trim();
+    const e = (end || "").trim();
+    if (!s && !e) return "";
+    return `${s}${DATE_RANGE_SEPARATOR}${e}`;
+  }
+
+  function isAnsweredForQuestion(question, value) {
+    const raw = (value ?? "").toString();
+    if (question.question_type === "datetime" && dateRangeEnabled[question.id]) {
+      const { start, end } = parseDateRangeAnswer(raw);
+      return start.trim() !== "" && end.trim() !== "";
+    }
+    return raw.trim() !== "";
   }
   function isQuestionVisible(question) {
     // No condition = always visible
@@ -108,7 +136,7 @@ function FormDisplay({ formCode, formId }) {
       const isRequired =
         q.is_required === 1 || q.is_required === "1" || q.is_required === true;
       const isVisible = isQuestionVisible(q);
-      const isAnswered = answers[q.id] && answers[q.id].trim() !== "";
+      const isAnswered = isAnsweredForQuestion(q, answers[q.id]);
       return isRequired && isVisible && !isAnswered;
     });
 
@@ -336,21 +364,136 @@ function FormDisplay({ formCode, formId }) {
 
               {/* Date/Time Input */}
               {question.question_type === "datetime" && (
-                <input
-                  type={question.datetime_type || "date"}
-                  value={answers[question.id] || ""}
-                  onChange={(e) =>
-                    handleAnswerChange(question.id, e.target.value)
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    fontSize: "14px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    boxSizing: "border-box",
-                  }}
-                />
+                <>
+                  <label
+                    style={{
+                      display: "inline-flex",
+                      gap: "10px",
+                      alignItems: "center",
+                      marginBottom: "10px",
+                      userSelect: "none",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!dateRangeEnabled[question.id]}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setDateRangeEnabled((prev) => ({
+                          ...prev,
+                          [question.id]: checked,
+                        }));
+
+                        if (!checked) {
+                          const { start } = parseDateRangeAnswer(
+                            answers[question.id] || "",
+                          );
+                          handleAnswerChange(question.id, (start || "").trim());
+                        }
+                      }}
+                    />
+                    <span style={{ fontWeight: 600 }}>Range</span>
+                    <span style={{ color: "#666", fontSize: "13px" }}>
+                      (pick start and end)
+                    </span>
+                  </label>
+
+                  {!!dateRangeEnabled[question.id] ? (
+                    (() => {
+                      const inputType = question.datetime_type || "date";
+                      const { start, end } = parseDateRangeAnswer(
+                        answers[question.id] || "",
+                      );
+                      return (
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: "12px",
+                          }}
+                        >
+                          <div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#555",
+                                marginBottom: "6px",
+                                textAlign: "left",
+                              }}
+                            >
+                              Start
+                            </div>
+                            <input
+                              type={inputType}
+                              value={start}
+                              onChange={(e) =>
+                                handleAnswerChange(
+                                  question.id,
+                                  buildDateRangeAnswer(e.target.value, end),
+                                )
+                              }
+                              style={{
+                                width: "100%",
+                                padding: "10px",
+                                fontSize: "14px",
+                                border: "1px solid #ccc",
+                                borderRadius: "4px",
+                                boxSizing: "border-box",
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#555",
+                                marginBottom: "6px",
+                                textAlign: "left",
+                              }}
+                            >
+                              End
+                            </div>
+                            <input
+                              type={inputType}
+                              value={end}
+                              min={start || undefined}
+                              onChange={(e) =>
+                                handleAnswerChange(
+                                  question.id,
+                                  buildDateRangeAnswer(start, e.target.value),
+                                )
+                              }
+                              style={{
+                                width: "100%",
+                                padding: "10px",
+                                fontSize: "14px",
+                                border: "1px solid #ccc",
+                                borderRadius: "4px",
+                                boxSizing: "border-box",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <input
+                      type={question.datetime_type || "date"}
+                      value={answers[question.id] || ""}
+                      onChange={(e) =>
+                        handleAnswerChange(question.id, e.target.value)
+                      }
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        fontSize: "14px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  )}
+                </>
               )}
 
               {/* Checkbox (Radio) */}
