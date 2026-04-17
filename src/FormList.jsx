@@ -16,6 +16,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
 
   async function fetchForms() {
     setIsRefreshing(true);
+    setError(null);
 
     try {
       const response = await fetch(apiUrl("/get_forms.php"));
@@ -23,6 +24,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
 
       if (result.success) {
         setForms(result.forms);
+        setError(null);
       } else {
         setError("Failed to load forms");
       }
@@ -45,9 +47,14 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
       if (result.success) {
         setCategories(result.categories);
       }
-    } catch {
-      console.err("Could not load categories", err);
+    } catch (err) {
+      console.error("Could not load categories", err);
     }
+  }
+
+  function retryLoad() {
+    fetchForms();
+    fetchCategories();
   }
 
   async function deleteForm(formId, title) {
@@ -88,7 +95,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
         <button 
         className="glass-button refresh-button"
         style={{ color:"black"}}
-        onClick={fetchForms}>Try Again</button>
+        onClick={retryLoad}>Try Again</button>
       </div>
     );
 
