@@ -92,6 +92,10 @@ function SortableQuestionRow({ question, questionIndex, questions, onDelete }) {
               ` does NOT equal "${question.condition_value}"`}
             {question.condition_type === "option_selected" &&
               ` has "${question.condition_value}" selected`}
+            {question.condition_type === "contains" &&
+              ` contains "${question.condition_value}"`}
+            {question.condition_type === "not_contains" &&
+              ` does NOT contain "${question.condition_value}"`}
             {question.condition_type === "is_answered" && ` is answered`}
           </span>
         )}
@@ -152,6 +156,14 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+
+  function getAllowedConditionTypes(questionType) {
+    const baseTypes = ["equals", "not_equals", "is_answered"];
+    if (questionType === "multiple_choice") {
+      return [...baseTypes, "contains", "not_contains"];
+    }
+    return baseTypes;
+  }
 
   function handleQuestionsDragEnd(event) {
     const { active, over } = event;
@@ -653,6 +665,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                       value={conditionQuestionId}
                       onChange={(e) => {
                         setConditionQuestionId(e.target.value);
+                        setConditionType("equals");
                         setConditionValue("");
                       }}
                     >
@@ -671,13 +684,20 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                         (q) => q.id == conditionQuestionId,
                       );
                       if (!selectedQ) return null;
+                      const allowedConditionTypes = getAllowedConditionTypes(
+                        selectedQ.type,
+                      );
+                      const effectiveConditionType =
+                        allowedConditionTypes.includes(conditionType)
+                          ? conditionType
+                          : "equals";
                       return (
                         <>
                           <div className="fb-field" style={{ marginBottom: 0 }}>
                             <label className="fb-label">Condition type</label>
                             <select
                               className="fb-select"
-                              value={conditionType}
+                              value={effectiveConditionType}
                               onChange={(e) => {
                                 setConditionType(e.target.value);
                                 setConditionValue("");
@@ -687,11 +707,15 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                               <option value="not_equals">
                                 Answer does NOT equal
                               </option>
-                              {(selectedQ.type === "checkbox" ||
-                                selectedQ.type === "rating") && (
-                                <option value="option_selected">
-                                  Specific option is selected
-                                </option>
+                              {selectedQ.type === "multiple_choice" && (
+                                <>
+                                  <option value="contains">
+                                    Selected answers contain
+                                  </option>
+                                  <option value="not_contains">
+                                    Selected answers do NOT contain
+                                  </option>
+                                </>
                               )}
                               <option value="is_answered">
                                 Question is answered (any value)
@@ -699,13 +723,14 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                             </select>
                           </div>
 
-                          {conditionType !== "is_answered" && (
+                          {effectiveConditionType !== "is_answered" && (
                             <div
                               className="fb-field"
                               style={{ marginBottom: 0 }}
                             >
                               <label className="fb-label">
-                                {conditionType === "option_selected"
+                                {effectiveConditionType === "contains" ||
+                                effectiveConditionType === "not_contains"
                                   ? "Option"
                                   : "Value"}
                               </label>
@@ -828,13 +853,15 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                             className="fb-condition-hint"
                             style={{ margin: 0 }}
                           >
-                            {conditionType === "equals" &&
+                            {effectiveConditionType === "equals" &&
                               "Shows when answer exactly matches the value above."}
-                            {conditionType === "not_equals" &&
+                            {effectiveConditionType === "not_equals" &&
                               "Shows when answer does NOT match the value above."}
-                            {conditionType === "option_selected" &&
-                              "Shows when the specific checkbox option is checked."}
-                            {conditionType === "is_answered" &&
+                            {effectiveConditionType === "contains" &&
+                              "Shows when the selected answers include the option above."}
+                            {effectiveConditionType === "not_contains" &&
+                              "Shows when the selected answers do not include the option above."}
+                            {effectiveConditionType === "is_answered" &&
                               "Shows when the previous question has any answer."}
                           </p>
                         </>

@@ -93,6 +93,15 @@ function FormDisplay({ formCode, formId }) {
     const conditionQuestion = form.questions.find(
       (q) => q.id === question.condition_question_id,
     );
+    const selectedOptionsForParent =
+      conditionQuestion &&
+      (conditionQuestion.question_type === "checkbox" ||
+        conditionQuestion.question_type === "multiple_choice")
+        ? conditionAnswer
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
 
     // For checkbox with "option_selected" condition
     if (
@@ -100,29 +109,51 @@ function FormDisplay({ formCode, formId }) {
       conditionQuestion &&
       conditionQuestion.question_type === "checkbox"
     ) {
-      const selectedOptions = conditionAnswer.split(",").map((s) => s.trim());
-      return selectedOptions.includes(question.condition_value);
+      return selectedOptionsForParent.includes(question.condition_value);
+    }
+
+    // For multiple-choice membership checks
+    if (
+      conditionType === "contains" &&
+      conditionQuestion &&
+      conditionQuestion.question_type === "multiple_choice"
+    ) {
+      return selectedOptionsForParent.includes(question.condition_value);
+    }
+
+    if (
+      conditionType === "not_contains" &&
+      conditionQuestion &&
+      conditionQuestion.question_type === "multiple_choice"
+    ) {
+      return !selectedOptionsForParent.includes(question.condition_value);
     }
 
     // For "equals" condition
     if (conditionType === "equals") {
-      // For checkboxes (when not using option_selected)
-      if (conditionQuestion && conditionQuestion.question_type === "checkbox") {
-        const selectedOptions = conditionAnswer.split(",").map((s) => s.trim());
-        return selectedOptions.includes(question.condition_value);
+      // For choice questions, treat equals as "selected answer includes value"
+      if (
+        conditionQuestion &&
+        (conditionQuestion.question_type === "checkbox" ||
+          conditionQuestion.question_type === "multiple_choice")
+      ) {
+        return selectedOptionsForParent.includes(question.condition_value);
       }
-      // For text and multiple choice
+      // For scalar answers
       return conditionAnswer.trim() === question.condition_value.trim();
     }
 
     // For "not_equals" condition
     if (conditionType === "not_equals") {
-      // For checkboxes
-      if (conditionQuestion && conditionQuestion.question_type === "checkbox") {
-        const selectedOptions = conditionAnswer.split(",").map((s) => s.trim());
-        return !selectedOptions.includes(question.condition_value);
+      // For choice questions, treat not_equals as "selected answer excludes value"
+      if (
+        conditionQuestion &&
+        (conditionQuestion.question_type === "checkbox" ||
+          conditionQuestion.question_type === "multiple_choice")
+      ) {
+        return !selectedOptionsForParent.includes(question.condition_value);
       }
-      // For text and multiple choice
+      // For scalar answers
       return conditionAnswer.trim() !== question.condition_value.trim();
     }
 

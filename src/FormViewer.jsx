@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiUrl } from "./apiBase";
 
-function FormViewer({ formId, onBack, onDisplayForm }) {
+function FormViewer({ formId, onBack }) {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -73,7 +73,6 @@ function FormViewer({ formId, onBack, onDisplayForm }) {
       const result = await response.json();
       if (result.success) {
         setForm(result.form);
-        console.log("Question sample:", result.form.questions[0]); // 👈 temporary
       } else {
         setError(result.error || "Failed to load form");
       }
