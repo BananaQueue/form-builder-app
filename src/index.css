@@ -489,6 +489,56 @@ p, label, span {
 }
 
 /* ——————————————————————— */
+/* Section Block Cards      */
+/* ——————————————————————— */
+
+.fb-section-card {
+  background: linear-gradient(135deg, #eef3ff 0%, #f5f8ff 100%);
+  border-left: 4px solid #a0b4f0;
+  border-radius: 0 10px 10px 0;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fb-section-card-label {
+  font-size: 0.65em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #a0b4f0;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fb-section-card-title {
+  font-size: 1em;
+  font-weight: 700;
+  color: #3a5fc8;
+}
+
+/* Add section button */
+.fb-btn-section {
+  width: 100%;
+  padding: 12px;
+  background: #eef3ff;
+  color: #3a5fc8;
+  border: 2px dashed #a0b4f0;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  margin-top: 4px;
+}
+
+.fb-btn-section:hover {
+  background: #dce6ff;
+  border-color: #3a5fc8;
+}
+
+/* ——————————————————————— */
 /* FormBuilder              */
 /* ——————————————————————— */
 

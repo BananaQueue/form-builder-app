@@ -140,7 +140,7 @@ function FormViewer({ formId, onBack }) {
           style={{ backgroundColor: "rgba(46,204,113,0.55)" }}
           onClick={() => {
             const publicUrl = buildPublicUrl();
-            window.open(publicUrl, '_blank');
+            window.open(publicUrl, "_blank");
           }}
         >
           📝 Fill Out
@@ -197,66 +197,118 @@ function FormViewer({ formId, onBack }) {
           <p className="fv-meta">No questions in this form yet.</p>
         ) : (
           <div className="fv-question-list">
-            {form.questions.map((question, index) => (
-              // Each question is its own self-contained block.
-              // The left accent border is the visual signal that this is one unit.
-              <div key={question.id} className="fv-question-card">
-                {/* Top row: question number + text */}
-                <div className="fv-question-top">
-                  <div style={{ flex: 1, display: "flex", gap: "12px", alignItems: "center" }}>
-                  <span className="fv-question-number">Q{index + 1}</span>
-                  <span className="fv-question-text">
-                    {question.question_text}
-                  </span>
-                  </div>
-                  <span className="fv-question-type">Type: {question.question_type}</span>
-                </div>
+            {(() => {
+              let counter = 0;
+              return form.questions.map((question) => {
+                if (question.question_type === "section") {
+                  return (
+                    <div
+                      key={question.id}
+                      style={{
+                        margin: "30px 0 10px 0",
+                        borderBottom: "2px solid #a0b4f0",
+                        paddingBottom: "8px",
+                      }}
+                    >
+                      <h3
+                        style={{
+                          margin: "0 0 4px 0",
+                          color: "#3a5fc8",
+                          fontSize: "1.1em",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {question.question_text}
+                      </h3>
+                      {question.description && (
+                        <p
+                          style={{
+                            margin: 0,
+                            color: "#777",
+                            fontSize: "0.85em",
+                          }}
+                        >
+                          {question.description}
+                        </p>
+                      )}
+                    </div>
+                  );
+                }
 
-                {/* Badges row — required and/or condition */}
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                    marginBottom: "10px",
-                  }}
-                >
-                  {/* Required badge — only shows if is_required is 1 */}
-                  {question.is_required === 1 && (
-                    <span className="fv-badge fv-badge-required">Required</span>
-                  )}
-
-                  {/* Condition badge — only shows if this question depends on another */}
-                  {question.condition_question_id !== null && (
-                    <span className="fv-badge fv-badge-condition">
-                      {(() => {
-                        // Find which question in the list has the matching id
-                        const referencedIndex = form.questions.findIndex(
-                          (q) => q.id === question.condition_question_id,
-                        );
-                        // findIndex returns -1 if nothing matched — guard against that
-                        const label =
-                          referencedIndex !== -1
-                            ? `Q${referencedIndex + 1}`
-                            : "another question";
-                        return `Shown when ${label} ${question.condition_type} "${question.condition_value}"`;
-                      })()}
-                    </span>
-                  )}
-                </div>
-
-                {/* Options — only for question types that have them */}
-                {question.options && question.options.length > 0 && (
-                  <div className="fv-options">
-                    {question.options.map((option, optIndex) => (
-                      <span key={optIndex} className="fv-option-pill">
-                        {option}
+                counter++;
+                return (
+                  // Each question is its own self-contained block.
+                  // The left accent border is the visual signal that this is one unit.
+                  <div key={question.id} className="fv-question-card">
+                    {/* Top row: question number + text */}
+                    <div className="fv-question-top">
+                      <div
+                        style={{
+                          flex: 1,
+                          display: "flex",
+                          gap: "12px",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span className="fv-question-number">Q{index + 1}</span>
+                        <span className="fv-question-text">
+                          {question.question_text}
+                        </span>
+                      </div>
+                      <span className="fv-question-type">
+                        Type: {question.question_type}
                       </span>
-                    ))}
+                    </div>
+
+                    {/* Badges row — required and/or condition */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      {/* Required badge — only shows if is_required is 1 */}
+                      {question.is_required === 1 && (
+                        <span className="fv-badge fv-badge-required">
+                          Required
+                        </span>
+                      )}
+
+                      {/* Condition badge — only shows if this question depends on another */}
+                      {question.condition_question_id !== null && (
+                        <span className="fv-badge fv-badge-condition">
+                          {(() => {
+                            // Find which question in the list has the matching id
+                            const referencedIndex = form.questions.findIndex(
+                              (q) => q.id === question.condition_question_id,
+                            );
+                            // findIndex returns -1 if nothing matched — guard against that
+                            const label =
+                              referencedIndex !== -1
+                                ? `Q${referencedIndex + 1}`
+                                : "another question";
+                            return `Shown when ${label} ${question.condition_type} "${question.condition_value}"`;
+                          })()}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Options — only for question types that have them */}
+                    {question.options && question.options.length > 0 && (
+                      <div className="fv-options">
+                        {question.options.map((option, optIndex) => (
+                          <span key={optIndex} className="fv-option-pill">
+                            {option}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                );
+              });
+            })()}
           </div>
         )}
       </div>

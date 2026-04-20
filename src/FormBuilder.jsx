@@ -33,6 +33,50 @@ function SortableQuestionRow({ question, questionIndex, questions, onDelete }) {
     transition,
   };
 
+  // Section block card
+  if (question.type === "section") {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={
+          "fb-section-card" + (isDragging ? " fb-preview-card--dragging" : "")
+        }
+      >
+        <button
+          type="button"
+          className="fb-drag-handle"
+          aria-label="Drag to reorder section"
+          title="Drag to reorder"
+          {...attributes}
+          {...listeners}
+        >
+          ⋮⋮
+        </button>
+        <div className="fb-preview-body">
+          <span className="fb-section-card-label">SECTION</span>
+          <span className="fb-section-card-title">{question.text}</span>
+          {question.description && (
+            <span className="fb-preview-meta">{question.description}</span>
+          )}
+        </div>
+        <button
+          className="card-btn card-btn-delete"
+          style={{
+            whiteSpace: "nowrap",
+            padding: "6px 14px",
+            fontSize: "0.85em",
+          }}
+          type="button"
+          onClick={() => onDelete(question.id)}
+        >
+          Delete
+        </button>
+      </div>
+    );
+  }
+
+  // Regular question card (existing code unchanged)
   return (
     <div
       ref={setNodeRef}
@@ -93,9 +137,9 @@ function SortableQuestionRow({ question, questionIndex, questions, onDelete }) {
             {question.condition_type === "option_selected" &&
               ` has "${question.condition_value}" selected`}
             {question.condition_type === "contains" &&
-              ` contains "${question.condition_value}"`}
+              ` includes "${question.condition_value}" among selected`}
             {question.condition_type === "not_contains" &&
-              ` does NOT contain "${question.condition_value}"`}
+              ` does NOT include "${question.condition_value}" among selected`}
             {question.condition_type === "is_answered" && ` is answered`}
           </span>
         )}
@@ -147,6 +191,9 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
   const [numberMax, setNumberMax] = useState("");
   const [numberStep, setNumberStep] = useState("1");
   const [dateTimeType, setDateTimeType] = useState("date");
+
+  const [newSectionTitle, setNewSectionTitle] = useState("");
+  const [newSectionDescription, setNewSectionDescription] = useState("");
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -332,6 +379,34 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
     setNumberMax("");
     setNumberStep("1");
     setDateTimeType("date");
+  }
+
+  function addSection() {
+    if (newSectionTitle.trim() === "") {
+      alert("Please enter a section title");
+      return;
+    }
+
+    const newSection = {
+      id: "s_" + Date.now(),
+      type: "section",
+      text: newSectionTitle,
+      description: newSectionDescription.trim(),
+      options: [],
+      is_required: 0,
+      condition_question_id: null,
+      condition_type: null,
+      condition_value: null,
+      rating_scale: null,
+      number_min: null,
+      number_max: null,
+      number_step: null,
+      datetime_type: null,
+    };
+
+    setQuestions([...questions, newSection]);
+    setNewSectionTitle("");
+    setNewSectionDescription("");
   }
 
   function getRatingScaleOptions(scale) {
@@ -670,11 +745,19 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                       }}
                     >
                       <option value="">-- Select a question --</option>
-                      {questions.map((q, idx) => (
-                        <option key={q.id} value={q.id}>
-                          Q{idx + 1}: {q.text} ({q.type})
-                        </option>
-                      ))}
+                      {(() => {
+                        let counter = 0;
+                        return questions
+                          .filter((q) => q.type !== "section")
+                          .map((q) => {
+                            counter++;
+                            return (
+                              <option key={q.id} value={q.id}>
+                                Q{counter}: {q.text} ({q.type})
+                              </option>
+                            );
+                          });
+                      })()}
                     </select>
                   </div>
 
@@ -787,7 +870,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                                         padding: "8px",
                                         fontSize: "14px",
                                         width: "100%",
-                                        maxWidth: "500px",  
+                                        maxWidth: "500px",
                                       }}
                                     />
                                   </label>
@@ -1175,6 +1258,47 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         </button>
       </div>
 
+      {/* ── Zone 2b: Add section block ── */}
+      <div className="fb-paper">
+        <p className="fb-section-title">Add Section</p>
+        <p
+          style={{
+            fontSize: "0.85em",
+            color: "#888",
+            marginTop: "-12px",
+            marginBottom: "18px",
+          }}
+        >
+          Section blocks act as visual dividers between groups of questions.
+          They collect no answer.
+        </p>
+
+        <div className="fb-field">
+          <label className="fb-label">Section Title</label>
+          <input
+            className="fb-input"
+            type="text"
+            value={newSectionTitle}
+            onChange={(e) => setNewSectionTitle(e.target.value)}
+            placeholder="e.g. Employment Details"
+          />
+        </div>
+
+        <div className="fb-field">
+          <label className="fb-label">Description (optional)</label>
+          <textarea
+            className="fb-textarea"
+            value={newSectionDescription}
+            onChange={(e) => setNewSectionDescription(e.target.value)}
+            placeholder="Optional subtitle or instruction for this section"
+          />
+        </div>
+
+        <button className="fb-btn-section" onClick={addSection}>
+          + Add Section Block
+        </button>
+      </div>
+
       {/* ── Zone 3: Preview ── */}
       <div className="fb-paper">
         <p className="fb-section-title">
@@ -1210,15 +1334,23 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
               items={questions.map((q) => q.id)}
               strategy={verticalListSortingStrategy}
             >
-              {questions.map((question, questionIndex) => (
-                <SortableQuestionRow
-                  key={question.id}
-                  question={question}
-                  questionIndex={questionIndex}
-                  questions={questions}
-                  onDelete={deleteQuestion}
-                />
-              ))}
+              {(() => {
+                let questionCounter = 0;
+                return questions.map((question) => {
+                  if (question.type !== "section") questionCounter++;
+                  return (
+                    <SortableQuestionRow
+                      key={question.id}
+                      question={question}
+                      questionIndex={
+                        question.type === "section" ? -1 : questionCounter - 1
+                      }
+                      questions={questions}
+                      onDelete={deleteQuestion}
+                    />
+                  );
+                });
+              })()}
             </SortableContext>
           </DndContext>
         )}
