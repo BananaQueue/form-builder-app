@@ -189,7 +189,7 @@ function FormViewer({ formId, onBack }) {
             style={{ backgroundColor: "#ffffff" }}
             className="fv-question-count"
           >
-            {form.questions.length}
+            {form.questions.filter(q => q.question_type !== "section").length}
           </span>
         </div>
 
@@ -250,7 +250,7 @@ function FormViewer({ formId, onBack }) {
                           alignItems: "center",
                         }}
                       >
-                        <span className="fv-question-number">Q{index + 1}</span>
+                        <span className="fv-question-number">Q{counter}</span>
                         <span className="fv-question-text">
                           {question.question_text}
                         </span>

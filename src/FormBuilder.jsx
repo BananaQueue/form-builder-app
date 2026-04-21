@@ -491,6 +491,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       number_max: q.number_max ?? null,
       number_step: q.number_step ?? null,
       datetime_type: q.datetime_type ?? null,
+      description: q.description ?? null, 
       condition_question_id: canonicalConditionParentId(q),
       condition_type: q.condition_type ?? "equals",
       condition_value: q.condition_value ?? null,

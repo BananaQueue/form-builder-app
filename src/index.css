@@ -510,6 +510,7 @@ p, label, span {
   color: #a0b4f0;
   text-transform: uppercase;
   white-space: nowrap;
+  align-items: start;
 }
 
 .fb-section-card-title {
