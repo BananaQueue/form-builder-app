@@ -195,6 +195,8 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
   const [newSectionTitle, setNewSectionTitle] = useState("");
   const [newSectionDescription, setNewSectionDescription] = useState("");
 
+  const [privacyNotice, setPrivacyNotice] = useState(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -270,6 +272,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         setFormTitle(form.title);
         setFormDescription(form.description || "");
         setSelectedCategoryId(parseInt(form.category_id));
+        setPrivacyNotice(form.privacy_notice == 1);
 
         // Set questions
         setQuestions(
@@ -500,6 +503,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
     const formData = {
       title: formTitle,
       description: formDescription,
+      privacy_notice: privacyNotice ? 1 : 0,
       category_id: selectedCategoryId,
       questions: normalizedQuestions,
     };
@@ -548,6 +552,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
           // Clear the form after creating
           setFormTitle("");
           setFormDescription("");
+          setPrivacyNotice("false");
           setQuestions([]);
         }
       } else {
@@ -605,6 +610,57 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
             placeholder="Enter form description"
           />
         </div>
+
+        <div className="fb-field" style={{ marginBottom: 0 }}>
+          <label className="fb-label">Privacy Notice</label>
+ 
+          <label className="fb-toggle-row">
+            <input
+              type="checkbox"
+              checked={privacyNotice}
+              onChange={(e) => setPrivacyNotice(e.target.checked)}
+            />
+            <span className="fb-toggle-label">Show privacy notice on this form</span>
+            <span className="fb-toggle-hint">Respondents must agree before submitting</span>
+          </label>
+ 
+          {/* Preview — only shown when the toggle is ON.
+              {condition && <JSX />} is React's shorthand for:
+              if condition is true, render this JSX; otherwise render nothing. */}
+          {privacyNotice && (
+            <div
+              style={{
+                marginTop: "12px",
+                background: "#f7f8fc",
+                border: "1px solid #e0e4f0",
+                borderRadius: "8px",
+                padding: "14px 16px",
+              }}
+            >
+              <p style={{
+                margin: "0 0 8px 0",
+                fontSize: "0.75em",
+                fontWeight: "700",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                color: "#a0b4f0",
+              }}>
+                🔒 Preview — what respondents will see
+              </p>
+              <p style={{ margin: 0, fontSize: "0.82em", color: "#555", lineHeight: "1.6" }}>
+                By submitting this form, you consent to the collection and processing
+                of your personal information in accordance with the Data Privacy Act
+                of 2012 (Republic Act No. 10173) of the Philippines. Your responses
+                will be kept confidential and used only for the purposes stated in
+                this form...
+              </p>
+              <p style={{ margin: "8px 0 0 0", fontSize: "0.78em", color: "#aaa" }}>
+                Full statement shown to respondents in the popup.
+              </p>
+            </div>
+          )}
+        </div>
+
 
         <div className="fb-field">
           <label className="fb-label">Category</label>
@@ -1377,6 +1433,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
             {
               title: formTitle,
               description: formDescription,
+              category_id: selectedCategoryId,
               category_id: selectedCategoryId,
               questions,
             },
