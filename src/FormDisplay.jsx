@@ -11,13 +11,10 @@ function FormDisplay({ formCode, formId }) {
   const DATE_RANGE_SEPARATOR = " to ";
   const [dateRangeEnabled, setDateRangeEnabled] = useState({});
 
-  // NEW: showPrivacyModal controls whether the modal is visible.
-  // It starts as false — the modal is hidden until the user clicks Submit.
+
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
-  // NEW: privacyAccepted tracks whether the checkbox inside the modal
-  // has been ticked. Starts false — the Confirm button will be disabled
-  // until this becomes true.
+  
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   async function fetchFormDetails() {
@@ -127,16 +124,7 @@ function FormDisplay({ formCode, formId }) {
     return true;
   }
 
-  // ── handleSubmit ──────────────────────────────────────────────────────────
-  // CHANGED: This function no longer sends data to the server directly.
-  // Its only jobs are now:
-  //   1. Validate that required questions are answered
-  //   2a. If the form has a privacy_notice → show the modal, stop here
-  //   2b. If no privacy_notice → go straight to the actual submission
-  //
-  // Why split it this way? Because the modal needs to appear AFTER
-  // validation passes. We don't want to show the privacy notice only
-  // for the user to then be told they missed required questions.
+
   async function handleSubmit(e) {
     e.preventDefault();
 
@@ -159,9 +147,7 @@ function FormDisplay({ formCode, formId }) {
       return;
     }
  
-    // FIXED: was form.privacy_notice.trim() !== "" which crashes when
-    // privacy_notice is an integer (0 or 1) instead of a string.
-    // Now we use == 1 which safely handles "1", 1, or true from PHP.
+
     if (form.privacy_notice == 1) {
       setPrivacyAccepted(false);
       setShowPrivacyModal(true);
@@ -384,7 +370,7 @@ function FormDisplay({ formCode, formId }) {
         </div>
       )}
 
-      {/* ── Form Header ───────────────────────────────────────────────────── */}
+      {/* ── Form Header ── */}
       <div
         style={{
           marginBottom: "40px",
@@ -400,379 +386,223 @@ function FormDisplay({ formCode, formId }) {
         )}
       </div>
 
-      {/* ── Form ─────────────────────────────────────────────────────────── */}
+      {/* ── Form ── */}
       <form onSubmit={handleSubmit}>
-        {form.questions
-          .filter((q) => isQuestionVisible(q))
-          .map((question, visibleIndex) => (
+        {(() => {
+          // We need a counter that only increments for real questions,
+          // not section blocks. Sections are visual dividers — they don't
+          // get a number, they don't get an input, they aren't validated.
+          let questionCounter = 0;
+ 
+          return form.questions
+            .filter((q) => isQuestionVisible(q))
+            .map((question) => {
+ 
+              // ── Section block ─────────────────────────────────────────
+              // Render a glassmorphism divider instead of a question card.
+              // No input, no number, no required marker.
+              if (question.question_type === "section") {
+                return (
+                  <div
+                    key={question.id}
+                    style={{
+                      marginBottom: "10px",
+                      marginTop: "10px",
+                      padding: "18px 24px",
+                    }}
+                  >
+                    {/* SECTION label — small all-caps tag above the title */}
+                    <span
+                      style={{
+                        display: "block",
+                        fontSize: "0.68em",
+                        fontWeight: "700",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: "rgba(100, 140, 255)",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      
+                    </span>
+ 
+                    {/* Section title */}
+                    <h3
+                      style={{
+                        margin: "0",
+                        fontSize: "1.15em",
+                        fontWeight: "700",
+                        color: "#1a1a2e",
+                      }}
+                    >
+                      {question.question_text}
+                    </h3>
+ 
+                    {/* Optional description below the title */}
+                    {question.description && (
+                      <p
+                        style={{
+                          margin: "6px 0 0 0",
+                          fontSize: "0.88em",
+                          color: "#555",
+                          lineHeight: "1.5",
+                        }}
+                      >
+                        {question.description}
+                      </p>
+                    )}
+                  </div>
+                );
+              }
+ 
+              // ── Regular question ──────────────────────────────────────
+              // Only real questions get a number
+              questionCounter++;
+              const visibleIndex = questionCounter;
+ 
+              return (
             <div
               key={question.id}
               style={{
-                marginBottom: "30px",
-                padding: "20px",
-                background: "#a2a2a237",
-                borderRadius: "5px",
+                marginBottom: "30px", padding: "20px",
+                background: "#a2a2a237", borderRadius: "5px",
                 border: "1px solid #ddd",
               }}
             >
-              {/* Question Text */}
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "15px",
-                  textAlign: "left",
-                }}
-              >
+              <label style={{ display: "block", marginBottom: "15px", textAlign: "left" }}>
                 <strong style={{ fontSize: "16px" }}>
-                  {visibleIndex + 1}. {question.question_text}
+                  {visibleIndex}. {question.question_text}
                 </strong>
-                {(question.is_required === 1 ||
-                  question.is_required === "1" ||
-                  question.is_required === true) && (
+                {(question.is_required === 1 || question.is_required === "1" || question.is_required === true) && (
                   <span style={{ color: "red", marginLeft: "5px" }}>*</span>
                 )}
-                {!(
-                  question.is_required === 1 ||
-                  question.is_required === "1" ||
-                  question.is_required === true
-                ) && (
-                  <span
-                    style={{
-                      color: "#999",
-                      marginLeft: "5px",
-                      fontSize: "14px",
-                    }}
-                  >
-                    (optional)
-                  </span>
+                {!(question.is_required === 1 || question.is_required === "1" || question.is_required === true) && (
+                  <span style={{ color: "#999", marginLeft: "5px", fontSize: "14px" }}>(optional)</span>
                 )}
               </label>
-
-              {/* Text Input */}
+ 
               {question.question_type === "text" && (
-                <input
-                  type="text"
-                  value={answers[question.id] || ""}
-                  onChange={(e) =>
-                    handleAnswerChange(question.id, e.target.value)
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    fontSize: "14px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    boxSizing: "border-box",
-                  }}
-                  placeholder="Your answer"
-                />
+                <input type="text" value={answers[question.id] || ""}
+                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "4px", boxSizing: "border-box" }}
+                  placeholder="Your answer" />
               )}
-
-              {/* Email Input */}
+ 
               {question.question_type === "email" && (
-                <input
-                  type="email"
-                  value={answers[question.id] || ""}
-                  onChange={(e) =>
-                    handleAnswerChange(question.id, e.target.value)
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    fontSize: "14px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                  }}
-                  placeholder="Enter your email address"
-                  required={question.is_required}
-                />
+                <input type="email" value={answers[question.id] || ""}
+                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                  style={{ width: "100%", padding: "10px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "4px" }}
+                  placeholder="Enter your email address" required={question.is_required} />
               )}
-
-              {/* Number Input */}
+ 
               {question.question_type === "number" && (
-                <input
-                  type="number"
-                  value={answers[question.id] || ""}
-                  onChange={(e) =>
-                    handleAnswerChange(question.id, e.target.value)
-                  }
-                  min={question.number_min || undefined}
-                  max={question.number_max || undefined}
-                  step={
-                    question.number_step === "any"
-                      ? "any"
-                      : question.number_step || "1"
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    fontSize: "14px",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    boxSizing: "border-box",
-                  }}
-                  placeholder={
-                    question.number_min && question.number_max
-                      ? `Enter number (${question.number_min} - ${question.number_max})`
-                      : "Enter number"
-                  }
-                />
+                <input type="number" value={answers[question.id] || ""}
+                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                  min={question.number_min || undefined} max={question.number_max || undefined}
+                  step={question.number_step === "any" ? "any" : question.number_step || "1"}
+                  style={{ width: "100%", padding: "10px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "4px", boxSizing: "border-box" }}
+                  placeholder={question.number_min && question.number_max
+                    ? `Enter number (${question.number_min} - ${question.number_max})`
+                    : "Enter number"} />
               )}
-
-              {/* Date/Time Input */}
+ 
               {question.question_type === "datetime" && (
                 <>
-                  <label
-                    style={{
-                      display: "inline-flex",
-                      gap: "10px",
-                      alignItems: "center",
-                      marginBottom: "10px",
-                      userSelect: "none",
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!!dateRangeEnabled[question.id]}
+                  <label style={{ display: "inline-flex", gap: "10px", alignItems: "center", marginBottom: "10px", userSelect: "none" }}>
+                    <input type="checkbox" checked={!!dateRangeEnabled[question.id]}
                       onChange={(e) => {
                         const checked = e.target.checked;
-                        setDateRangeEnabled((prev) => ({
-                          ...prev,
-                          [question.id]: checked,
-                        }));
+                        setDateRangeEnabled((prev) => ({ ...prev, [question.id]: checked }));
                         if (!checked) {
-                          const { start } = parseDateRangeAnswer(
-                            answers[question.id] || "",
-                          );
+                          const { start } = parseDateRangeAnswer(answers[question.id] || "");
                           handleAnswerChange(question.id, (start || "").trim());
                         }
-                      }}
-                    />
+                      }} />
                     <span style={{ fontWeight: 600 }}>Range</span>
-                    <span style={{ color: "#666", fontSize: "13px" }}>
-                      (pick start and end)
-                    </span>
+                    <span style={{ color: "#666", fontSize: "13px" }}>(pick start and end)</span>
                   </label>
-
+ 
                   {!!dateRangeEnabled[question.id] ? (
                     (() => {
                       const inputType = question.datetime_type || "date";
-                      const { start, end } = parseDateRangeAnswer(
-                        answers[question.id] || "",
-                      );
+                      const { start, end } = parseDateRangeAnswer(answers[question.id] || "");
                       return (
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "12px",
-                          }}
-                        >
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                           <div>
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "#555",
-                                marginBottom: "6px",
-                                textAlign: "left",
-                              }}
-                            >
-                              Start
-                            </div>
-                            <input
-                              type={inputType}
-                              value={start}
-                              onChange={(e) =>
-                                handleAnswerChange(
-                                  question.id,
-                                  buildDateRangeAnswer(e.target.value, end),
-                                )
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "10px",
-                                fontSize: "14px",
-                                border: "1px solid #ccc",
-                                borderRadius: "4px",
-                                boxSizing: "border-box",
-                              }}
-                            />
+                            <div style={{ fontSize: "12px", color: "#555", marginBottom: "6px", textAlign: "left" }}>Start</div>
+                            <input type={inputType} value={start}
+                              onChange={(e) => handleAnswerChange(question.id, buildDateRangeAnswer(e.target.value, end))}
+                              style={{ width: "100%", padding: "10px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "4px", boxSizing: "border-box" }} />
                           </div>
                           <div>
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "#555",
-                                marginBottom: "6px",
-                                textAlign: "left",
-                              }}
-                            >
-                              End
-                            </div>
-                            <input
-                              type={inputType}
-                              value={end}
-                              min={start || undefined}
-                              onChange={(e) =>
-                                handleAnswerChange(
-                                  question.id,
-                                  buildDateRangeAnswer(start, e.target.value),
-                                )
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "10px",
-                                fontSize: "14px",
-                                border: "1px solid #ccc",
-                                borderRadius: "4px",
-                                boxSizing: "border-box",
-                              }}
-                            />
+                            <div style={{ fontSize: "12px", color: "#555", marginBottom: "6px", textAlign: "left" }}>End</div>
+                            <input type={inputType} value={end} min={start || undefined}
+                              onChange={(e) => handleAnswerChange(question.id, buildDateRangeAnswer(start, e.target.value))}
+                              style={{ width: "100%", padding: "10px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "4px", boxSizing: "border-box" }} />
                           </div>
                         </div>
                       );
                     })()
                   ) : (
-                    <input
-                      type={question.datetime_type || "date"}
-                      value={answers[question.id] || ""}
-                      onChange={(e) =>
-                        handleAnswerChange(question.id, e.target.value)
-                      }
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        fontSize: "14px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        boxSizing: "border-box",
-                      }}
-                    />
+                    <input type={question.datetime_type || "date"} value={answers[question.id] || ""}
+                      onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                      style={{ width: "100%", padding: "10px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "4px", boxSizing: "border-box" }} />
                   )}
                 </>
               )}
-
-              {/* Checkbox (Radio) */}
+ 
               {question.question_type === "checkbox" && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-evenly",
-                  }}
-                >
+                <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-evenly" }}>
                   {question.options.map((option, optIndex) => (
                     <div key={optIndex} style={{ marginBottom: "10px" }}>
-                      <label
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <input
-                          type="radio"
-                          name={`question_${question.id}`}
-                          value={option}
+                      <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                        <input type="radio" name={`question_${question.id}`} value={option}
                           checked={answers[question.id] === option}
-                          onChange={(e) =>
-                            handleAnswerChange(question.id, e.target.value)
-                          }
-                          style={{ marginRight: "10px" }}
-                        />
+                          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                          style={{ marginRight: "10px" }} />
                         <span>{option}</span>
                       </label>
                     </div>
                   ))}
                 </div>
               )}
-
-              {/* Multiple Choice */}
+ 
               {question.question_type === "multiple_choice" && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-evenly",
-                  }}
-                >
+                <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-evenly" }}>
                   {question.options.map((option, optIndex) => (
                     <div key={optIndex} style={{ marginBottom: "10px" }}>
-                      <label
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          value={option}
-                          checked={(answers[question.id] || "")
-                            .split(",")
-                            .includes(option)}
+                      <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                        <input type="checkbox" value={option}
+                          checked={(answers[question.id] || "").split(",").includes(option)}
                           onChange={(e) => {
-                            const currentAnswers = answers[question.id]
-                              ? answers[question.id].split(",")
-                              : [];
-                            let newAnswers;
-                            if (e.target.checked) {
-                              newAnswers = [...currentAnswers, option];
-                            } else {
-                              newAnswers = currentAnswers.filter(
-                                (a) => a !== option,
-                              );
-                            }
-                            handleAnswerChange(
-                              question.id,
-                              newAnswers.join(","),
-                            );
+                            const currentAnswers = answers[question.id] ? answers[question.id].split(",") : [];
+                            const newAnswers = e.target.checked
+                              ? [...currentAnswers, option]
+                              : currentAnswers.filter((a) => a !== option);
+                            handleAnswerChange(question.id, newAnswers.join(","));
                           }}
-                          style={{ marginRight: "10px" }}
-                        />
+                          style={{ marginRight: "10px" }} />
                         <span>{option}</span>
                       </label>
                     </div>
                   ))}
                 </div>
               )}
-
-              {/* Rating Scale */}
+ 
               {question.question_type === "rating" && (
                 <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      flexWrap: "wrap",
-                      justifyContent: "center",
-                    }}
-                  >
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
                     {question.options.map((option, optIndex) => (
-                      <label
-                        key={optIndex}
+                      <label key={optIndex}
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "pointer",
-                          padding: "12px 20px",
-                          background:
-                            answers[question.id] === option
-                              ? "#007bff"
-                              : "#f0f0f0",
-                          color:
-                            answers[question.id] === option ? "white" : "#333",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          cursor: "pointer", padding: "12px 20px",
+                          background: answers[question.id] === option ? "#007bff" : "#f0f0f0",
+                          color: answers[question.id] === option ? "white" : "#333",
                           border: "2px solid",
-                          borderColor:
-                            answers[question.id] === option
-                              ? "#007bff"
-                              : "#ddd",
-                          borderRadius: "25px",
-                          fontWeight: "500",
-                          transition: "all 0.2s",
-                          minWidth: "80px",
-                          textAlign: "center",
+                          borderColor: answers[question.id] === option ? "#007bff" : "#ddd",
+                          borderRadius: "25px", fontWeight: "500",
+                          transition: "all 0.2s", minWidth: "80px", textAlign: "center",
                         }}
                         onMouseEnter={(e) => {
                           if (answers[question.id] !== option) {
@@ -787,16 +617,10 @@ function FormDisplay({ formCode, formId }) {
                           }
                         }}
                       >
-                        <input
-                          type="radio"
-                          name={`question_${question.id}`}
-                          value={option}
+                        <input type="radio" name={`question_${question.id}`} value={option}
                           checked={answers[question.id] === option}
-                          onChange={(e) =>
-                            handleAnswerChange(question.id, e.target.value)
-                          }
-                          style={{ display: "none" }}
-                        />
+                          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                          style={{ display: "none" }} />
                         <span>{option}</span>
                       </label>
                     ))}
@@ -804,7 +628,9 @@ function FormDisplay({ formCode, formId }) {
                 </div>
               )}
             </div>
-          ))}
+              );
+            });
+        })()}
 
         {/* Submit Button — unchanged in appearance.
             The privacy modal intercepts the submit event when needed,

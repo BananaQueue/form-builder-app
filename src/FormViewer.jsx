@@ -205,9 +205,7 @@ function FormViewer({ formId, onBack }) {
                     <div
                       key={question.id}
                       style={{
-                        margin: "30px 0 10px 0",
-                        borderBottom: "2px solid #a0b4f0",
-                        paddingBottom: "8px",
+                        margin: "30px 0 0 0",
                       }}
                     >
                       <h3
