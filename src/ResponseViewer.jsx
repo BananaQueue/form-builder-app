@@ -91,7 +91,7 @@ function ResponseViewer({ responseId, onBack }) {
                 background: 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                borderRadius: '10px',
+                borderRadius: '5px',
                 border: '1px solid rgba(255, 255, 255, 0.30)',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
               }}

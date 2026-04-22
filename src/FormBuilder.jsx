@@ -1434,7 +1434,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
               title: formTitle,
               description: formDescription,
               category_id: selectedCategoryId,
-              category_id: selectedCategoryId,
               questions,
             },
             null,
