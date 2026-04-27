@@ -675,7 +675,7 @@ function FormDisplay({ formCode, formId }) {
                       position: "relative",
                       flexShrink: 0,
                       boxShadow: isCurrent ? "0 0 0 3px rgba(0,123,255,0.15)" : "none",
-                      transition: "all 0.3s ease"
+                      transition: "all 0.3s ease",
                     }}>
                       {isCompleted ? "✓" : idx + 1}
                     </div>

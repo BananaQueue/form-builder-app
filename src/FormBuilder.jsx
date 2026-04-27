@@ -684,7 +684,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
               onChange={(e) => setStepMode(e.target.checked)}
             />
             <span className="fb-toggle-label">Enable multi-step form</span>
-            <span classname="fb-toggle-hint">
+            <span className="fb-toggle-hint">
                 Setion blocks become step boundaries
             </span>
           </label>
@@ -1021,7 +1021,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                                     <strong>Value:</strong>
                                     <br />
                                     <input
-                                      className="fb-input"
                                       type="email"
                                       value={conditionValue}
                                       onChange={(e) =>
