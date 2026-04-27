@@ -847,7 +847,7 @@ p, label, span {
 .fb-btn-add {
   width: 100%;
   padding: 12px;
-  background: #a0b4f0;
+  background: #668bfa;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -859,7 +859,7 @@ p, label, span {
 }
 
 .fb-btn-add:hover {
-  background: #7a96e8;
+  background: #275bf5;
 }
 
 /* Save button */

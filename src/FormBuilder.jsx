@@ -197,6 +197,8 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
 
   const [privacyNotice, setPrivacyNotice] = useState(false);
 
+  const [stepMode, setStepMode] = useState(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -273,6 +275,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         setFormDescription(form.description || "");
         setSelectedCategoryId(parseInt(form.category_id));
         setPrivacyNotice(form.privacy_notice == 1);
+        setStepMode(form.step_mode == 1);
 
         // Set questions
         setQuestions(
@@ -504,6 +507,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       title: formTitle,
       description: formDescription,
       privacy_notice: privacyNotice ? 1 : 0,
+      step_mode: stepMode ? 1 : 0,
       category_id: selectedCategoryId,
       questions: normalizedQuestions,
     };
@@ -553,6 +557,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
           setFormTitle("");
           setFormDescription("");
           setPrivacyNotice("false");
+          setStepMode("false");
           setQuestions([]);
         }
       } else {
@@ -563,6 +568,8 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       console.error("Error:", error);
     }
   }
+
+  const hasSections = questions.some((q) => q.type === "section");
 
   return (
     <div className="fb-shell">
@@ -657,6 +664,103 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
               <p style={{ margin: "8px 0 0 0", fontSize: "0.78em", color: "#aaa" }}>
                 Full statement shown to respondents in the popup.
               </p>
+            </div>
+          )}
+        </div>
+
+         {/* NEW: Step Mode toggle
+            Sits right below Privacy Notice since both are form-level
+            behaviour toggles. The pattern is identical to privacyNotice.
+ 
+            When the toggle is ON and no sections exist yet, we show a
+            yellow warning. This is purely informational — we don't block
+            saving, since the user might add sections next. */}
+        <div className= "fb-field" style={{ marginBottom: 0 }}>
+          <label className= "fb-label"> Step Mode</label>
+          <label className="fb-toggle-row">
+            <input
+              type="checkbox"
+              checked={stepMode}
+              onChange={(e) => setStepMode(e.target.checked)}
+            />
+            <span className="fb-toggle-label">Enable multi-step form</span>
+            <span classname="fb-toggle-hint">
+                Setion blocks become step boundaries
+            </span>
+          </label>
+
+          {/*Info panel - shown when step mode is ON*/}
+          {stepMode && (
+            <div 
+              style={{
+                marginTop: "12px",
+                borderRadius: "8px",
+                padding: "14px 16px",
+                //Yellow Warning Section if no sections, blue info if sections exist
+                background: hasSections ? "#f0f9ff" : "#fffbf0",
+                border: hasSections 
+                ? "1px solid #a0b4f0"
+                :"1px solid #f0d080", 
+              }}
+            >
+               {!hasSections ? (
+                // Warning — step mode is on but there are no section blocks
+                <>
+                  <p style={{
+                    margin: "0 0 6px 0",
+                    fontSize: "0.78em",
+                    fontWeight: "700",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    color: "#a07800",
+                  }}>
+                    ⚠️ No section blocks yet
+                  </p>
+                  <p style={{ margin: 0, fontSize: "0.82em", color: "#7a5800", lineHeight: "1.5" }}>
+                    Step mode is on but your form has no section blocks.
+                    Add section blocks below to define where each step begins.
+                    Without sections, the form will render as a single step.
+                  </p>
+                </>
+              ) : (
+                // Info — step mode is on and sections exist, show step count
+                <>
+                  <p style={{
+                    margin: "0 0 6px 0",
+                    fontSize: "0.78em",
+                    fontWeight: "700",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    color: "#3a5fc8",
+                  }}>
+                    🪜 Step mode active
+                  </p>
+                  <p style={{ margin: 0, fontSize: "0.82em", color: "#333", lineHeight: "1.5" }}>
+                    This form will have{" "}
+                    <strong>
+                      {/* Count steps: questions before first section = step 1,
+                          then one step per section block after that.
+                          We add 1 for the initial "General" step only if there
+                          are questions before the first section. */}
+                      {(() => {
+                        const firstSectionIdx = questions.findIndex(
+                          (q) => q.type === "section"
+                        );
+                        const questionsBeforeFirst = questions
+                          .slice(0, firstSectionIdx)
+                          .filter((q) => q.type !== "section").length;
+                        const sectionCount = questions.filter(
+                          (q) => q.type === "section"
+                        ).length;
+                        return sectionCount + (questionsBeforeFirst > 0 ? 1 : 0);
+                      })()}{" "}
+                      steps
+                    </strong>
+                    . Each section block marks the start of a new step.
+                    Respondents must complete each step before moving forward.
+                  </p>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -1328,6 +1432,12 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         >
           Section blocks act as visual dividers between groups of questions.
           They collect no answer.
+          {/* NEW: context-aware hint when step mode is on */}
+          {stepMode && (
+            <strong style={{ color: "#3a5fc8" }}>
+              In step mode, each section block marks the start of a new step.
+            </strong>
+          )}
         </p>
 
         <div className="fb-field">
@@ -1417,8 +1527,16 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       <div className="fb-save-panel">
         <p className="fb-save-title">Ready to Save?</p>
         <p className="fb-save-count">
-          Your form has {questions.length} question
-          {questions.length !== 1 ? "s" : ""}
+         Your form has {questions.filter(q => q.type !== "section").length} question
+          {questions.filter(q => q.type !== "section").length !== 1 ? "s" : ""}
+          {stepMode && hasSections && ` across ${
+            (() => {
+              const firstSectionIdx = questions.findIndex(q => q.type === "section");
+              const before = questions.slice(0, firstSectionIdx).filter(q => q.type !== "section").length;
+              const sections = questions.filter(q => q.type === "section").length;
+              return sections + (before > 0 ? 1 : 0);
+            })()
+          } steps`}
         </p>
         <button className="fb-btn-save" onClick={saveForm}>
           💾 {isEditMode ? "Update Form" : "Save Form to Database"}
