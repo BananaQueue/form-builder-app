@@ -383,7 +383,7 @@ function FormDisplay({ formCode, formId }) {
         {question.question_type === "email" && (
           <input type="email" value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-            style={{ width: "100%", padding: "10px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "4px" }}
+            style={{ width: "100%", padding: "10px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "4px", boxSizing: "border-box" }}
             placeholder="Enter your email address" />
         )}
 
@@ -636,6 +636,7 @@ function FormDisplay({ formCode, formId }) {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
+                    marginTop: "3px",
                     flex: 1,
                     minWidth: "60px",
                     position: "relative",
@@ -674,7 +675,7 @@ function FormDisplay({ formCode, formId }) {
                       position: "relative",
                       flexShrink: 0,
                       boxShadow: isCurrent ? "0 0 0 3px rgba(0,123,255,0.15)" : "none",
-                      transition: "all 0.3s ease",
+                      transition: "all 0.3s ease"
                     }}>
                       {isCompleted ? "✓" : idx + 1}
                     </div>
@@ -837,24 +838,16 @@ function FormDisplay({ formCode, formId }) {
                     <div
                       key={question.id}
                       style={{
-                        marginBottom: "30px",
+                        marginBottom: "10px",
                         marginTop: "10px",
-                        padding: "18px 24px",
-                        background: "rgba(255, 255, 255, 0.18)",
-                        backdropFilter: "blur(12px)",
-                        WebkitBackdropFilter: "blur(12px)",
-                        borderRadius: "12px",
-                        border: "1px solid rgba(255, 255, 255, 0.35)",
-                        boxShadow: "0 4px 18px rgba(0, 0, 0, 0.08)",
-                        borderLeft: "4px solid rgba(100, 140, 255, 0.7)",
-                      }}
+                        }}
                     >
                       <span style={{
                         display: "block", fontSize: "0.68em", fontWeight: "700",
                         letterSpacing: "0.1em", textTransform: "uppercase",
                         color: "rgba(100, 140, 255, 0.9)", marginBottom: "6px",
                       }}>
-                        Section
+                        
                       </span>
                       <h3 style={{ margin: "0", fontSize: "1.15em", fontWeight: "700", color: "#1a1a2e" }}>
                         {question.question_text}

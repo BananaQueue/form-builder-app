@@ -1021,6 +1021,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                                     <strong>Value:</strong>
                                     <br />
                                     <input
+                                      className="fb-input"
                                       type="email"
                                       value={conditionValue}
                                       onChange={(e) =>
