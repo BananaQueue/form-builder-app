@@ -189,7 +189,7 @@ function FormViewer({ formId, onBack }) {
             style={{ backgroundColor: "#ffffff" }}
             className="fv-question-count"
           >
-            {form.questions.filter(q => q.question_type !== "section").length}
+            {form.question_count}
           </span>
         </div>
 
