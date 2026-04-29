@@ -202,6 +202,11 @@ body {
   transform: scale(1.05);
 }
 
+span .glass-button:hover {
+  background-color: rgb(243, 5, 29) !important;
+}
+
+
 /* GLASS CARDS — this is the exact mockup look */
 .glass-card {
   background: rgba(255, 255, 255, 0.545);
@@ -236,9 +241,8 @@ body {
 }
 
 .glass-button:hover {
-  background: rgba(255,255,255,0.55);
+  background-color: rgba(255,255,255,0.55);
 }
-
 
 /* Dropdown */
 .glass-select {

@@ -1,85 +1,116 @@
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom'
-import { useState } from 'react'
-import FormBuilder from './FormBuilder'
-import FormList from './FormList'
-import FormViewer from './FormViewer'
-import ResponseList from './ResponseList'
-import ResponseViewer from './ResponseViewer'
-import { useLocation } from 'react-router-dom'
+import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
+import { useState } from "react";
+import FormBuilder from "./FormBuilder";
+import FormList from "./FormList";
+import FormViewer from "./FormViewer";
+import ResponseList from "./ResponseList";
+import ResponseViewer from "./ResponseViewer";
+import { useLocation } from "react-router-dom";
 
-function AdminLayout() {
-  const navigate = useNavigate()
-  const [viewingFormId, setViewingFormId] = useState(null)
-  const [editingFormId, setEditingFormId] = useState(null)
-  const [responsesFormId, setResponsesFormId] = useState(null)
-  const [viewingResponseId, setViewingResponseId] = useState(null)
+function AdminLayout( {onLogout, currentUser} ) {
+  const navigate = useNavigate();
+  const [viewingFormId, setViewingFormId] = useState(null);
+  const [editingFormId, setEditingFormId] = useState(null);
+  const [responsesFormId, setResponsesFormId] = useState(null);
+  const [viewingResponseId, setViewingResponseId] = useState(null);
 
-  const location = useLocation()
+  const location = useLocation();
 
   function handleViewForm(formId) {
-    setViewingFormId(formId)
-    navigate('/view')
+    setViewingFormId(formId);
+    navigate("/view");
   }
 
   function handleEditForm(formId) {
-    setEditingFormId(formId)
-    navigate('/edit')
+    setEditingFormId(formId);
+    navigate("/edit");
   }
 
   function handleViewResponses(formId) {
-    setResponsesFormId(formId)
-    navigate('/responses')
+    setResponsesFormId(formId);
+    navigate("/responses");
   }
 
   function handleViewResponseDetail(responseId) {
-    setViewingResponseId(responseId)
-    navigate('/response-detail')
+    setViewingResponseId(responseId);
+    navigate("/response-detail");
   }
 
   function handleDisplayForm(formId) {
-    navigate(`/form/${formId}`)
+    navigate(`/form/${formId}`);
   }
 
   function handleEditComplete() {
-    setEditingFormId(null)
-    navigate('/')
+    setEditingFormId(null);
+    navigate("/");
   }
 
   function handleBackToResponses() {
-    setViewingResponseId(null)
-    navigate('/responses')
+    setViewingResponseId(null);
+    navigate("/responses");
   }
 
   return (
-    <div style={{ paddingBottom: '40px' }}>
-      
+    <div style={{ paddingBottom: "40px" }}>
       {/* Glass Navigation */}
       <div
         className="glass-nav"
         style={{
-          display: 'flex',
-          gap: '12px',
-          justifyContent: 'center',
-          marginTop: '30px'
+          display: "flex",
+          gap: "12px",
+          justifyContent: "center",
+          marginTop: "30px",
         }}
       >
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           className="glass-button"
-          style={{ backgroundColor: 
-              location.pathname === '/' ? 'rgba(0,0,255)' : 'rgba(52,152,219,0.45)' }}
+          style={{
+            backgroundColor:
+              location.pathname === "/"
+                ? "rgba(0,0,255)"
+                : "rgba(52,152,219,0.45)",
+          }}
         >
           My Forms
         </button>
 
         <button
-          onClick={() => navigate('/create')}
+          onClick={() => navigate("/create")}
           className="glass-button"
-          style={{ backgroundColor:
-             location.pathname === '/create' ? 'rgb(62, 197, 118)' : 'rgba(46,204,113,0.45)' }}
+          style={{
+            backgroundColor:
+              location.pathname === "/create"
+                ? "rgb(9, 181, 80)"
+                : "rgba(46,204,113,0.45)",
+          }}
         >
           Create New Form
         </button>
+
+        <span
+          style={{
+            color: "rgb(255, 255, 255)",
+            fontSize: "0.88em",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            marginLeft: "auto",
+          }}
+        >
+          👤 {currentUser}
+          <button
+            onClick={onLogout}
+            className="glass-button"
+            style={{
+              backgroundColor: "rgba(220,53,69,0.45)",
+              fontSize: "0.88em",
+              padding: "6px 14px",
+            }}
+          >
+            Sign Out
+          </button>
+        </span>
       </div>
 
       {/* Page Content */}
@@ -103,7 +134,7 @@ function AdminLayout() {
             viewingFormId ? (
               <FormViewer
                 formId={viewingFormId}
-                onBack={() => navigate('/')}
+                onBack={() => navigate("/")}
                 onDisplayForm={handleDisplayForm}
               />
             ) : (
@@ -132,7 +163,7 @@ function AdminLayout() {
             responsesFormId ? (
               <ResponseList
                 formId={responsesFormId}
-                onBack={() => navigate('/')}
+                onBack={() => navigate("/")}
                 onViewResponse={handleViewResponseDetail}
               />
             ) : (
@@ -158,7 +189,7 @@ function AdminLayout() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
-  )
+  );
 }
 
-export default AdminLayout
+export default AdminLayout;
