@@ -782,7 +782,54 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         </div>
       </div>
 
-      {/* ── Zone 2: Add question ── */}
+      {/* ── Zone 2A: Add section block ── */}
+      <div className="fb-paper">
+        <p className="fb-section-title">Add Section</p>
+        <p
+          style={{
+            fontSize: "0.85em",
+            color: "#888",
+            marginTop: "-12px",
+            marginBottom: "18px",
+          }}
+        >
+          Section blocks act as visual dividers between groups of questions.
+          They collect no answer.
+          {/* NEW: context-aware hint when step mode is on */}
+          {stepMode && (
+            <strong style={{ color: "#3a5fc8" }}>
+              In step mode, each section block marks the start of a new step.
+            </strong>
+          )}
+        </p>
+
+        <div className="fb-field">
+          <label className="fb-label">Section Title</label>
+          <input
+            className="fb-input"
+            type="text"
+            value={newSectionTitle}
+            onChange={(e) => setNewSectionTitle(e.target.value)}
+            placeholder="e.g. Employment Details"
+          />
+        </div>
+
+        <div className="fb-field">
+          <label className="fb-label">Description (optional)</label>
+          <textarea
+            className="fb-textarea"
+            value={newSectionDescription}
+            onChange={(e) => setNewSectionDescription(e.target.value)}
+            placeholder="Optional subtitle or instruction for this section"
+          />
+        </div>
+
+        <button className="fb-btn-section" onClick={addSection}>
+          + Add Section Block
+        </button>
+      </div>
+
+      {/* ── Zone 2B: Add question ── */}
       <div className="fb-paper">
         <p className="fb-section-title">Add Question</p>
 
@@ -1416,53 +1463,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
 
         <button className="fb-btn-add" onClick={addQuestion}>
           + Add Question to Form
-        </button>
-      </div>
-
-      {/* ── Zone 2b: Add section block ── */}
-      <div className="fb-paper">
-        <p className="fb-section-title">Add Section</p>
-        <p
-          style={{
-            fontSize: "0.85em",
-            color: "#888",
-            marginTop: "-12px",
-            marginBottom: "18px",
-          }}
-        >
-          Section blocks act as visual dividers between groups of questions.
-          They collect no answer.
-          {/* NEW: context-aware hint when step mode is on */}
-          {stepMode && (
-            <strong style={{ color: "#3a5fc8" }}>
-              In step mode, each section block marks the start of a new step.
-            </strong>
-          )}
-        </p>
-
-        <div className="fb-field">
-          <label className="fb-label">Section Title</label>
-          <input
-            className="fb-input"
-            type="text"
-            value={newSectionTitle}
-            onChange={(e) => setNewSectionTitle(e.target.value)}
-            placeholder="e.g. Employment Details"
-          />
-        </div>
-
-        <div className="fb-field">
-          <label className="fb-label">Description (optional)</label>
-          <textarea
-            className="fb-textarea"
-            value={newSectionDescription}
-            onChange={(e) => setNewSectionDescription(e.target.value)}
-            placeholder="Optional subtitle or instruction for this section"
-          />
-        </div>
-
-        <button className="fb-btn-section" onClick={addSection}>
-          + Add Section Block
         </button>
       </div>
 
