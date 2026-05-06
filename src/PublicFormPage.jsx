@@ -16,8 +16,6 @@ function PublicFormPage() {
   // internal padding and max-width — without that, the form content would
   // still be constrained even if the shell is full-width.
   if (isMobile) {
-    const isMobile = useIsMobile()
-    console.log('isMobile:', isMobile)  // add this
     return (
       <div
         style={{

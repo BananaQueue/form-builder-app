@@ -917,9 +917,9 @@ function FormDisplay({ formCode, formId, isMobile = false }) {
           paddingBottom: "20px",
         }}
       >
-        <h1 style={{ margin: "0 0 10px 0" }}>{form.title}</h1>
+        <h1 style={{ margin: "0 0 10px 0", fontSize: isMobile ? "1.6em" : "2em" }}>{form.title}</h1>
         {form.description && (
-          <p style={{ color: "#333", fontSize: isMobile ? "1.6em" : "2em", margin: "0" }}>
+          <p style={{ color: "#333", fontSize: "16px" , margin: "0" }}>
             {form.description}
           </p>
         )}
