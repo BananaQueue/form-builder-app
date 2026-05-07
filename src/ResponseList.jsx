@@ -124,9 +124,6 @@ function ResponseList({ formId, onBack, onViewResponse }) {
                 <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
                   Submitted: {new Date(response.submitted_at).toLocaleString()}
                 </p>
-                <p style={{ margin: '5px 0 0 0', color: '#888', fontSize: '14px' }}>
-                  {response.answer_count} answer(s)
-                </p>
               </div>
 
               <button
