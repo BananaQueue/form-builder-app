@@ -195,8 +195,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
   const [newSectionTitle, setNewSectionTitle] = useState("");
   const [newSectionDescription, setNewSectionDescription] = useState("");
 
-  const [privacyNotice, setPrivacyNotice] = useState(false);
-
   const [stepMode, setStepMode] = useState(false);
 
   const sensors = useSensors(
@@ -274,7 +272,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         setFormTitle(form.title);
         setFormDescription(form.description || "");
         setSelectedCategoryId(parseInt(form.category_id));
-        setPrivacyNotice(form.privacy_notice == 1);
         setStepMode(form.step_mode == 1);
 
         // Set questions
@@ -506,7 +503,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
     const formData = {
       title: formTitle,
       description: formDescription,
-      privacy_notice: privacyNotice ? 1 : 0,
+      privacy_notice: 1,
       step_mode: stepMode ? 1 : 0,
       category_id: selectedCategoryId,
       questions: normalizedQuestions,
@@ -556,7 +553,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
           // Clear the form after creating
           setFormTitle("");
           setFormDescription("");
-          setPrivacyNotice("false");
           setStepMode("false");
           setQuestions([]);
         }
@@ -620,21 +616,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
 
         <div className="fb-field" style={{ marginBottom: 0 }}>
           <label className="fb-label">Privacy Notice</label>
- 
-          <label className="fb-toggle-row">
-            <input
-              type="checkbox"
-              checked={privacyNotice}
-              onChange={(e) => setPrivacyNotice(e.target.checked)}
-            />
-            <span className="fb-toggle-label">Show privacy notice on this form</span>
-            <span className="fb-toggle-hint">Respondents must agree before submitting</span>
-          </label>
- 
-          {/* Preview — only shown when the toggle is ON.
-              {condition && <JSX />} is React's shorthand for:
-              if condition is true, render this JSX; otherwise render nothing. */}
-          {privacyNotice && (
             <div
               style={{
                 marginTop: "12px",
@@ -652,7 +633,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                 letterSpacing: "0.06em",
                 color: "#a0b4f0",
               }}>
-                🔒 Preview — what respondents will see
+                🔒 Required on all forms — what respondents will see
               </p>
               <p style={{ margin: 0, fontSize: "0.82em", color: "#555", lineHeight: "1.6" }}>
                 By submitting this form, you consent to the collection and processing
@@ -665,7 +646,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                 Full statement shown to respondents in the popup.
               </p>
             </div>
-          )}
+          
         </div>
 
          {/* NEW: Step Mode toggle
