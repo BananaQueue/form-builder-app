@@ -1524,7 +1524,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         </button>
       </div>
 
-      {/* ── Debug panel ── */}
+      {/* ── Debug panel ──
       <details className="fb-debug">
         <summary> View Form Data (debugging)</summary>
         <pre>
@@ -1539,7 +1539,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
             2,
           )}
         </pre>
-      </details>
+      </details> */}
     </div>
   );
 }
