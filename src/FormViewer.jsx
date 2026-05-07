@@ -518,10 +518,19 @@ function FormViewer({ formId, onBack }) {
                             const referencedIndex = form.questions.findIndex(
                               (q) => q.id === question.condition_question_id,
                             );
-                            const label =
-                              referencedIndex !== -1
-                                ? `Q${referencedIndex + 1}`
-                                : "another question";
+                            
+                            let label;
+
+                            if(referencedIndex ===-1) {
+                              label = "another question";
+                            } else{
+                                const visibleNumber = form.questions
+                                  .slice(0, referencedIndex +1)
+                                  .filter((q) => q.question_type !== "section")
+                                  .length;
+                                label = `Q${visibleNumber}`;
+                            }
+                            
                             return `Shown when ${label} ${question.condition_type} "${question.condition_value}"`;
                           })()}
                         </span>

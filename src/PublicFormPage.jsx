@@ -1,5 +1,5 @@
 // src/PublicFormPage.jsx
-
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import FormDisplay from './FormDisplay'
 import { useIsMobile } from './useIsMobile.js'
@@ -7,6 +7,18 @@ import { useIsMobile } from './useIsMobile.js'
 function PublicFormPage() {
   const { formId } = useParams()
   const isMobile = useIsMobile()
+  
+  // Override the body background on mobile so the gradient
+// from index.css doesn't bleed through
+useEffect(() => {
+  if (isMobile) {
+    document.body.style.background = '#ffffff'
+  }
+  return () => {
+    // Clean up when leaving the page — restore the gradient
+    document.body.style.background = ''
+  }
+}, [isMobile])
 
   
 
