@@ -160,7 +160,7 @@ function SortableQuestionRow({ question, questionIndex, questions, onDelete }) {
   );
 }
 
-function FormBuilder({ editFormId = null, onSaveComplete = null }) {
+function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
   // All state declarations
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
@@ -222,8 +222,9 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
     if (oldIndex === -1 || newIndex === -1) return;
     const reordered = arrayMove(questions, oldIndex, newIndex);
     if (!isOrderValidForConditions(reordered)) {
-      alert(
+      showToast(
         "That order isn't allowed: a conditional question must stay below the question it depends on.",
+        "error"
       );
       return;
     }
@@ -293,10 +294,10 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
           })),
         );
       } else {
-        alert("Failed to load form: " + (result.error || "Unknown error"));
+        showToast("Failed to load form: " + (result.error || "Unknown error"), "error");
       }
     } catch (error) {
-      alert("Failed to load form: " + error.message);
+      showToast("Failed to load form: " + error.message, "error");
     } finally {
       setLoadingForm(false);
     }
@@ -305,7 +306,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
   // Add a question
   function addQuestion() {
     if (newQuestionText.trim() === "") {
-      alert("Please enter a question");
+      showToast("Please enter a question.", "warning");
       return;
     }
 
@@ -314,7 +315,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
         newQuestionType === "checkbox") &&
       tempOptions.length === 0
     ) {
-      alert("Please add at least one option for this question type");
+      showToast("Please add at least one option for this question type.", "warning");
       return;
     }
 
@@ -323,7 +324,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       ratingScale === "custom" &&
       customRatingOptions.length === 0
     ) {
-      alert("Please add at least one rating option for custom scale");
+      showToast("Please add at least one rating option for custom scale.", "warning");
       return;
     }
 
@@ -386,7 +387,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
 
   function addSection() {
     if (newSectionTitle.trim() === "") {
-      alert("Please enter a section title");
+      showToast("Please enter a section title.", "warning"); 
       return;
     }
 
@@ -442,7 +443,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
   // Add an option to the temporary options list
   function addOption() {
     if (newOption.trim() === "") {
-      alert("Please enter an option");
+      showToast("Please enter an option.", "warning"); 
       return;
     }
 
@@ -473,12 +474,12 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
   // Save form to database
   async function saveForm() {
     if (formTitle.trim() === "") {
-      alert("Please enter a form title");
+      showToast("Please enter a form title.", "warning"); 
       return;
     }
 
     if (questions.length === 0) {
-      alert("Please add at least one question");
+      showToast("Please add at least one question.", "warning");
       return;
     }
 
@@ -540,10 +541,11 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
       }
 
       if (result.success) {
-        alert(
+        showToast(
           isEditMode
             ? "Form updated successfully!"
             : "Form saved successfully! Form ID: " + result.form_id,
+          "success"
         );
 
         // Clear form or call callback
@@ -557,10 +559,10 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
           setQuestions([]);
         }
       } else {
-        alert("Error saving form: " + (result.error || "Unknown error"));
+        showToast("Error saving form: " + (result.error || "Unknown error"), "error");
       }
     } catch (error) {
-      alert("Failed to connect to server: " + error.message);
+      showToast("Failed to connect to server: " + error.message, "error");
       console.error("Error:", error);
     }
   }
@@ -1264,7 +1266,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null }) {
                     style={{ width: "auto", padding: "10px 18px" }}
                     onClick={() => {
                       if (newOption.trim() === "") {
-                        alert("Please enter an option");
+                        showToast("Please enter an option.", "warning");
                         return;
                       }
                       setCustomRatingOptions([

@@ -1,3 +1,10 @@
+// src/AdminLayout.jsx
+//
+// AdminLayout receives showToast and showConfirm from App.jsx and
+// passes them down to whichever child component is currently rendered.
+// This is called "prop drilling" — threading props through intermediate
+// components so deeply nested children can access them.
+
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { useState } from "react";
 import FormBuilder from "./FormBuilder";
@@ -7,7 +14,8 @@ import ResponseList from "./ResponseList";
 import ResponseViewer from "./ResponseViewer";
 import { useLocation } from "react-router-dom";
 
-function AdminLayout( {onLogout, currentUser} ) {
+// We add showToast and showConfirm to the destructured props
+function AdminLayout({ onLogout, currentUser, showToast, showConfirm }) {
   const navigate = useNavigate();
   const [viewingFormId, setViewingFormId] = useState(null);
   const [editingFormId, setEditingFormId] = useState(null);
@@ -36,10 +44,6 @@ function AdminLayout( {onLogout, currentUser} ) {
     navigate("/response-detail");
   }
 
-  function handleDisplayForm(formId) {
-    navigate(`/form/${formId}`);
-  }
-
   function handleEditComplete() {
     setEditingFormId(null);
     navigate("/");
@@ -52,7 +56,7 @@ function AdminLayout( {onLogout, currentUser} ) {
 
   return (
     <div style={{ paddingBottom: "40px" }}>
-      {/* Glass Navigation */}
+      {/* Glass Navigation — unchanged */}
       <div
         className="glass-nav"
         style={{
@@ -113,7 +117,7 @@ function AdminLayout( {onLogout, currentUser} ) {
         </span>
       </div>
 
-      {/* Page Content */}
+      {/* Page Content — showToast and showConfirm passed to each route */}
       <Routes>
         <Route
           path="/"
@@ -122,11 +126,16 @@ function AdminLayout( {onLogout, currentUser} ) {
               onViewForm={handleViewForm}
               onEditForm={handleEditForm}
               onViewResponses={handleViewResponses}
+              showToast={showToast}
+              showConfirm={showConfirm}
             />
           }
         />
 
-        <Route path="/create" element={<FormBuilder />} />
+        <Route
+          path="/create"
+          element={<FormBuilder showToast={showToast} />}
+        />
 
         <Route
           path="/view"
@@ -135,7 +144,7 @@ function AdminLayout( {onLogout, currentUser} ) {
               <FormViewer
                 formId={viewingFormId}
                 onBack={() => navigate("/")}
-                onDisplayForm={handleDisplayForm}
+                showToast={showToast}
               />
             ) : (
               <Navigate to="/" />
@@ -150,6 +159,7 @@ function AdminLayout( {onLogout, currentUser} ) {
               <FormBuilder
                 editFormId={editingFormId}
                 onSaveComplete={handleEditComplete}
+                showToast={showToast}
               />
             ) : (
               <Navigate to="/" />
@@ -165,6 +175,7 @@ function AdminLayout( {onLogout, currentUser} ) {
                 formId={responsesFormId}
                 onBack={() => navigate("/")}
                 onViewResponse={handleViewResponseDetail}
+                showToast={showToast}
               />
             ) : (
               <Navigate to="/" />
@@ -179,6 +190,7 @@ function AdminLayout( {onLogout, currentUser} ) {
               <ResponseViewer
                 responseId={viewingResponseId}
                 onBack={handleBackToResponses}
+                showToast={showToast}
               />
             ) : (
               <Navigate to="/" />

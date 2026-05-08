@@ -49,7 +49,7 @@ function buildSteps(questions) {
   return steps.map((step, idx) => ({ ...step, index: idx }));
 }
 
-function FormDisplay({ formCode, formId, isMobile = false }) {
+function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -194,6 +194,7 @@ function FormDisplay({ formCode, formId, isMobile = false }) {
         }
         return "?";
       });
+      showToast?.(`Please answer required questions: ${questionNumbers.join(", ")}`, "warning");
       return questionNumbers;
     }
     return [];
@@ -205,9 +206,7 @@ function FormDisplay({ formCode, formId, isMobile = false }) {
   function handleNext(steps) {
     const missing = validateStep(steps[currentStep].questions);
     if (missing.length > 0) {
-      alert(
-        `Please answer the following required questions: ${missing.join(", ")}`,
-      );
+       showToast?.(`Please answer required questions: ${missing.join(", ")}`, "warning");
       return;
     }
     setCurrentStep(currentStep + 1);
@@ -249,9 +248,7 @@ function FormDisplay({ formCode, formId, isMobile = false }) {
         }
         return "?";
       });
-      alert(
-        `Please answer the following required questions: ${questionNumbers.join(", ")}`,
-      );
+      showToast?.(`Please answer required questions: ${questionNumbers.join(", ")}`, "warning");
       return;
     }
 
@@ -292,10 +289,10 @@ function FormDisplay({ formCode, formId, isMobile = false }) {
       if (result.success) {
         setSubmitted(true);
       } else {
-        alert("Error submitting form: " + (result.error || "Unknown error"));
+        showToast?.("Error submitting form: " + (result.error || "Unknown error"), "error");
       }
     } catch (error) {
-      alert("Failed to connect to server: " + error.message);
+       showToast?.("Failed to connect to server: " + error.message, "error");
       console.error("Error:", error);
     } finally {
       setSubmitting(false);

@@ -1,7 +1,16 @@
+// src/FormList.jsx
+//
+// CHANGES FROM ORIGINAL:
+// - Accepts showToast and showConfirm as props
+// - Replaces alert() with showToast()
+// - Replaces window.confirm() with showConfirm()
+//
+// Every other line of logic is identical to what you had before.
+
 import { useState, useEffect } from "react";
 import { apiUrl } from "./apiBase";
 
-function FormList({ onViewForm, onViewResponses, onEditForm }) {
+function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConfirm }) {
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,10 +41,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
       setError("Could not connect to server: " + err.message);
     } finally {
       setLoading(false);
-      // Keep animation visible for a moment
-      setTimeout(() => {
-        setIsRefreshing(false);
-      }, 1000);
+      setTimeout(() => setIsRefreshing(false), 1000);
     }
   }
 
@@ -43,10 +49,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
     try {
       const res = await fetch(apiUrl("/get_categories.php"));
       const result = await res.json();
-
-      if (result.success) {
-        setCategories(result.categories);
-      }
+      if (result.success) setCategories(result.categories);
     } catch (err) {
       console.error("Could not load categories", err);
     }
@@ -58,26 +61,35 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
   }
 
   async function deleteForm(formId, title) {
-    if (!window.confirm(`Delete "${title}" permanently?`)) return;
+    // BEFORE: if (!window.confirm(`Delete "${title}" permanently?`)) return;
+    // AFTER:  showConfirm() — the second argument is what runs on "Confirm"
+    showConfirm(
+      `Delete "${title}" permanently? This cannot be undone.`,
+      async () => {
+        // This async function only runs if the user clicks Confirm.
+        try {
+          const res = await fetch(apiUrl("/delete_form.php"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ form_id: formId }),
+          });
 
-    try {
-      const res = await fetch(apiUrl("/delete_form.php"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ form_id: formId }),
-      });
+          const result = await res.json();
 
-      const result = await res.json();
-
-      if (result.success) {
-        alert("Form deleted.");
-        fetchForms();
-      } else {
-        alert("Error deleting form.");
+          if (result.success) {
+            // BEFORE: alert("Form deleted.")
+            showToast("Form deleted successfully.", "success");
+            fetchForms();
+          } else {
+            // BEFORE: alert("Error deleting form.")
+            showToast("Error deleting form.", "error");
+          }
+        } catch (err) {
+          // BEFORE: alert("Failed to connect: " + err.message)
+          showToast("Failed to connect: " + err.message, "error");
+        }
       }
-    } catch (err) {
-      alert("Failed to connect: " + err.message);
-    }
+    );
   }
 
   const filteredForms =
@@ -92,19 +104,25 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
       <div style={{ padding: "20px", color: "red" }}>
         <h2>Error</h2>
         <p>{error}</p>
-        <button 
-        className="glass-button refresh-button"
-        style={{ color:"black"}}
-        onClick={retryLoad}>Try Again</button>
+        <button
+          className="glass-button refresh-button"
+          style={{ color: "black" }}
+          onClick={retryLoad}
+        >
+          Try Again
+        </button>
       </div>
     );
 
   return (
-    <div 
-    className={isRefreshing ? 'refreshing-background' : ''}
-    style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
+    <div
+      className={isRefreshing ? "refreshing-background" : ""}
+      style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}
+    >
       <div style={{ marginBottom: "20px", textAlign: "center" }}>
-        <h1 style={{ marginBottom: "5px", textShadow: "2px 2px 4px rgba(19, 0, 82, 0.5)" }}>Forms</h1>
+        <h1 style={{ marginBottom: "5px", textShadow: "2px 2px 4px rgba(19, 0, 82, 0.5)" }}>
+          Forms
+        </h1>
         <p>
           Showing {filteredForms.length} of {forms.length} forms
         </p>
@@ -134,18 +152,14 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
             <div key={form.id} className="glass-card">
               <div className="form-card-header">
                 <h3 className="form-card-title">{form.title}</h3>
-                <span
-                  className={`category-badge ${form.category_name.toLowerCase()}`}
-                >
+                <span className={`category-badge ${form.category_name.toLowerCase()}`}>
                   {form.category_name}
                 </span>
               </div>
 
-              
-                <p style={{ color: "#333", marginBottom: "10px" }}>
-                  {form.description || "\u00A0"}
-                </p>
-              
+              <p style={{ color: "#333", marginBottom: "10px" }}>
+                {form.description || "\u00A0"}
+              </p>
 
               <p>
                 📝 {form.question_count} question(s)
@@ -156,16 +170,10 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
               </p>
 
               <div className="card-btn-group">
-                <button
-                  className="card-btn card-btn-view"
-                  onClick={() => onViewForm(form.id)}
-                >
+                <button className="card-btn card-btn-view" onClick={() => onViewForm(form.id)}>
                   View
                 </button>
-                <button
-                  className="card-btn card-btn-edit"
-                  onClick={() => onEditForm(form.id)}
-                >
+                <button className="card-btn card-btn-edit" onClick={() => onEditForm(form.id)}>
                   Edit
                 </button>
                 <button
@@ -175,10 +183,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
                   Delete
                 </button>
               </div>
-              <button
-                className="card-btn-responses"
-                onClick={() => onViewResponses(form.id)}
-              >
+              <button className="card-btn-responses" onClick={() => onViewResponses(form.id)}>
                 Responses
               </button>
             </div>
@@ -191,16 +196,13 @@ function FormList({ onViewForm, onViewResponses, onEditForm }) {
           className="glass-button refresh-button"
           disabled={isRefreshing}
           style={{
-            
             background: isRefreshing ? "#28a7469f" : "#6c757d66",
-            
             cursor: isRefreshing ? "not-allowed" : "pointer",
-            
             fontWeight: "500",
           }}
           onClick={fetchForms}
         >
-          {isRefreshing ? '✓ Refreshing...' : '↻ Refresh'}
+          {isRefreshing ? "✓ Refreshing..." : "↻ Refresh"}
         </button>
       </div>
     </div>

@@ -8,7 +8,7 @@ import QRCode from "qrcode";
 // ↑ This imports the qrcode library we installed with `npm install qrcode`.
 // `QRCode` is the object the library gives us — it has methods like toCanvas().
 
-function FormViewer({ formId, onBack }) {
+function FormViewer({ formId, onBack, showToast }) {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -60,7 +60,7 @@ function FormViewer({ formId, onBack }) {
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(publicUrl);
-        alert("Link copied!\n\n" + publicUrl);
+        showToast("Link copied to clipboard!", "success");
         return;
       }
       throw new Error("Clipboard API unavailable");
@@ -75,13 +75,10 @@ function FormViewer({ formId, onBack }) {
         textarea.select();
         const ok = document.execCommand("copy");
         document.body.removeChild(textarea);
-        alert(
-          ok
-            ? "Link copied!\n\n" + publicUrl
-            : "Copy failed. Copy manually:\n\n" + publicUrl,
-        );
+        if (ok) { showToast("Link copied to clipboard!", "success") }
+        else    { showToast("Copy failed. Please copy manually: " + publicUrl, "warning") }
       } catch {
-        alert("Copy failed. Copy manually:\n\n" + publicUrl);
+        showToast("Copy failed. Please copy manually: " + publicUrl, "warning");
       }
     }
   }

@@ -1,32 +1,20 @@
 // src/PublicFormPage.jsx
-import { useState, useEffect } from 'react'
+//
+// CHANGES FROM ORIGINAL:
+// - Accepts showToast as a prop (passed from App.jsx)
+// - Passes showToast into both FormDisplay instances (mobile + desktop)
+// - Removed the duplicate `const isMobile = useIsMobile()` call that
+//   was inside the if(isMobile) branch (that was a React rules violation —
+//   you can't call hooks conditionally or inside branches)
+
 import { useParams } from 'react-router-dom'
 import FormDisplay from './FormDisplay'
 import { useIsMobile } from './useIsMobile.js'
 
-function PublicFormPage() {
+function PublicFormPage({ showToast }) {
   const { formId } = useParams()
   const isMobile = useIsMobile()
-  
-  // Override the body background on mobile so the gradient
-// from index.css doesn't bleed through
-useEffect(() => {
-  if (isMobile) {
-    document.body.style.background = '#ffffff'
-  }
-  return () => {
-    // Clean up when leaving the page — restore the gradient
-    document.body.style.background = ''
-  }
-}, [isMobile])
 
-  
-
-  // ── Mobile layout ──────────────────────────────────────────────────────
-  // The outer wrapper becomes a plain white full-screen container.
-  // We pass isMobile={true} into FormDisplay so it can remove its own
-  // internal padding and max-width — without that, the form content would
-  // still be constrained even if the shell is full-width.
   if (isMobile) {
     return (
       <div
@@ -38,16 +26,12 @@ useEffect(() => {
         }}
       >
         <div style={{ flex: 1 }}>
-          <FormDisplay formCode={formId} isMobile={true} />
+          <FormDisplay formCode={formId} isMobile={true} showToast={showToast} />
         </div>
       </div>
     )
   }
 
-  
-
-  // ── Desktop layout ─────────────────────────────────────────────────────
-  // Original layout, completely unchanged.
   return (
     <div
       style={{
@@ -69,7 +53,7 @@ useEffect(() => {
           }}
         >
           <div style={{ padding: '18px 14px', color: '#333' }}>
-            <FormDisplay formCode={formId} isMobile={false} />
+            <FormDisplay formCode={formId} isMobile={false} showToast={showToast} />
           </div>
         </div>
       </main>
