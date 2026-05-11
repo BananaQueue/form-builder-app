@@ -1183,6 +1183,7 @@ p, label, span {
 
 .fd-notice-box p {
   margin: 0 0 10px 0;
+  text-align: justify;
 }
 
 .fd-notice-box p:first-child {
