@@ -383,6 +383,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
     setNumberMax("");
     setNumberStep("1");
     setDateTimeType("date");
+    showToast("Question added.", "success");
   }
 
   function addSection() {
@@ -461,6 +462,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
   function deleteQuestion(questionId) {
     const updated = questions.filter((q) => q.id !== questionId);
     setQuestions(updated);
+    showToast("Question deleted.", "success");
   }
 
   /** Use the parent row's exact `id` so PHP's client-id map always resolves after reorder/DnD. */
