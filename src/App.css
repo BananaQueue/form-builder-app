@@ -37,10 +37,6 @@
   padding: 2em;
 }
 
-.read-the-docs {
-  color: #888;
-}
-
 /* Public form page layout: full-width on mobile, capped with min-width on larger screens */
 .public-main {
   width: 100%;

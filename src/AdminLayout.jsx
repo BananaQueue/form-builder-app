@@ -134,7 +134,7 @@ function AdminLayout({ onLogout, currentUser, showToast, showConfirm }) {
 
         <Route
           path="/create"
-          element={<FormBuilder showToast={showToast} />}
+          element={<FormBuilder key="create" showToast={showToast} />}
         />
 
         <Route
@@ -157,6 +157,7 @@ function AdminLayout({ onLogout, currentUser, showToast, showConfirm }) {
           element={
             editingFormId ? (
               <FormBuilder
+                key={editingFormId}
                 editFormId={editingFormId}
                 onSaveComplete={handleEditComplete}
                 showToast={showToast}

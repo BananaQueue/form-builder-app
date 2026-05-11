@@ -306,7 +306,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
   if (loading) {
     return (
-      <div style={{ padding: "40px", textAlign: "center", fontWeight: "700" }}>
+      <div className="fd-state-screen fd-state-screen--loading">
         Loading form...
       </div>
     );
@@ -314,7 +314,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
   if (error) {
     return (
-      <div style={{ padding: "40px", textAlign: "center", color: "red" }}>
+      <div className="fd-state-screen fd-state-screen--error">
         <h2>Error</h2>
         <p>{error}</p>
       </div>
@@ -322,16 +322,14 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   }
 
   if (!form) {
-    return (
-      <div style={{ padding: "40px", textAlign: "center" }}>Form not found</div>
-    );
+    return <div className="fd-state-screen">Form not found</div>;
   }
 
   if (submitted) {
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
-        <h1 style={{ color: "#37da5d" }}>✓ Thank You!</h1>
-        <p style={{ fontSize: "18px", marginTop: "20px" }}>
+      <div className="fd-state-screen">
+        <h1 className="fd-submitted-title">✓ Thank You!</h1>
+        <p className="fd-submitted-message">
           Your response has been submitted successfully.
         </p>
       </div>
@@ -355,37 +353,22 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
     if (!isQuestionVisible(question)) return null;
 
     return (
-      <div
-        key={question.id}
-        style={{
-          marginBottom: "30px",
-          padding: "20px",
-          background: "#a2a2a237",
-          borderRadius: "5px",
-          border: "1px solid #ddd",
-        }}
-      >
-        <label
-          style={{ display: "block", marginBottom: "15px", textAlign: "left" }}
-        >
-          <strong style={{ fontSize: "16px" }}>
+      <div key={question.id} className="fd-question-card">
+        <label className="fd-question-label">
+          <strong className="fd-question-title">
             {visibleIndex}. {question.question_text}
           </strong>
           {(question.is_required === 1 ||
             question.is_required === "1" ||
             question.is_required === true) && (
-            <span style={{ color: "red", marginLeft: "5px" }}>*</span>
+            <span className="fd-required-star">*</span>
           )}
           {!(
             question.is_required === 1 ||
             question.is_required === "1" ||
             question.is_required === true
           ) && (
-            <span
-              style={{ color: "#999", marginLeft: "5px", fontSize: "14px" }}
-            >
-              (optional)
-            </span>
+            <span className="fd-optional-text">(optional)</span>
           )}
         </label>
 
@@ -394,14 +377,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
             type="text"
             value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              fontSize: "14px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              boxSizing: "border-box",
-            }}
+            className="fd-input"
             placeholder="Your answer"
           />
         )}
@@ -411,14 +387,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
             type="email"
             value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px",
-              fontSize: "14px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              boxSizing: "border-box",
-            }}
+            className="fd-input"
             placeholder="Enter your email address"
           />
         )}
@@ -435,14 +404,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                 ? "any"
                 : question.number_step || "1"
             }
-            style={{
-              width: "100%",
-              padding: "10px",
-              fontSize: "14px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              boxSizing: "border-box",
-            }}
+            className="fd-input"
             placeholder={
               question.number_min && question.number_max
                 ? `Enter number (${question.number_min} - ${question.number_max})`
@@ -453,15 +415,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
         {question.question_type === "datetime" && (
           <>
-            <label
-              style={{
-                display: "inline-flex",
-                gap: "10px",
-                alignItems: "center",
-                marginBottom: "10px",
-                userSelect: "none",
-              }}
-            >
+            <label className="fd-date-range-toggle">
               <input
                 type="checkbox"
                 checked={!!dateRangeEnabled[question.id]}
@@ -479,8 +433,8 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                   }
                 }}
               />
-              <span style={{ fontWeight: 600 }}>Range</span>
-              <span style={{ color: "#666", fontSize: "13px" }}>
+              <span className="fd-date-range-toggle-label">Range</span>
+              <span className="fd-date-range-toggle-hint">
                 (pick start and end)
               </span>
             </label>
@@ -492,24 +446,9 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                   answers[question.id] || "",
                 );
                 return (
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "12px",
-                    }}
-                  >
+                  <div className="fd-date-range-grid">
                     <div>
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#555",
-                          marginBottom: "6px",
-                          textAlign: "left",
-                        }}
-                      >
-                        Start
-                      </div>
+                      <div className="fd-date-range-sublabel">Start</div>
                       <input
                         type={inputType}
                         value={start}
@@ -519,27 +458,11 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                             buildDateRangeAnswer(e.target.value, end),
                           )
                         }
-                        style={{
-                          width: "100%",
-                          padding: "10px",
-                          fontSize: "14px",
-                          border: "1px solid #ccc",
-                          borderRadius: "4px",
-                          boxSizing: "border-box",
-                        }}
+                        className="fd-input"
                       />
                     </div>
                     <div>
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#555",
-                          marginBottom: "6px",
-                          textAlign: "left",
-                        }}
-                      >
-                        End
-                      </div>
+                      <div className="fd-date-range-sublabel">End</div>
                       <input
                         type={inputType}
                         value={end}
@@ -550,14 +473,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                             buildDateRangeAnswer(start, e.target.value),
                           )
                         }
-                        style={{
-                          width: "100%",
-                          padding: "10px",
-                          fontSize: "14px",
-                          border: "1px solid #ccc",
-                          borderRadius: "4px",
-                          boxSizing: "border-box",
-                        }}
+                        className="fd-input"
                       />
                     </div>
                   </div>
@@ -570,36 +486,17 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                 onChange={(e) =>
                   handleAnswerChange(question.id, e.target.value)
                 }
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  fontSize: "14px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  boxSizing: "border-box",
-                }}
+                className="fd-input"
               />
             )}
           </>
         )}
 
-        {question.question_type === "checkbox" && (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-evenly",
-            }}
-          >
+        {question.question_type === "multiple_choice" && (
+          <div className="fd-options-row">
             {question.options.map((option, optIndex) => (
-              <div key={optIndex} style={{ marginBottom: "10px" }}>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    cursor: "pointer",
-                  }}
-                >
+              <div key={optIndex} className="fd-option-item">
+                <label className="fd-option-label">
                   <input
                     type="radio"
                     name={`question_${question.id}`}
@@ -608,7 +505,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                     onChange={(e) =>
                       handleAnswerChange(question.id, e.target.value)
                     }
-                    style={{ marginRight: "10px" }}
+                    className="fd-option-input"
                   />
                   <span>{option}</span>
                 </label>
@@ -617,23 +514,11 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
           </div>
         )}
 
-        {question.question_type === "multiple_choice" && (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-evenly",
-            }}
-          >
+        {question.question_type === "checkbox" && (
+          <div className="fd-options-row">
             {question.options.map((option, optIndex) => (
-              <div key={optIndex} style={{ marginBottom: "10px" }}>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    cursor: "pointer",
-                  }}
-                >
+              <div key={optIndex} className="fd-option-item">
+                <label className="fd-option-label">
                   <input
                     type="checkbox"
                     value={option}
@@ -649,7 +534,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                         : currentAnswers.filter((a) => a !== option);
                       handleAnswerChange(question.id, newAnswers.join(","));
                     }}
-                    style={{ marginRight: "10px" }}
+                    className="fd-option-input"
                   />
                   <span>{option}</span>
                 </label>
@@ -659,63 +544,29 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
         )}
 
         {question.question_type === "rating" && (
-          <div>
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
-            >
-              {question.options.map((option, optIndex) => (
-                <label
-                  key={optIndex}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    padding: "12px 20px",
-                    background:
-                      answers[question.id] === option ? "#007bff" : "#f0f0f0",
-                    color: answers[question.id] === option ? "white" : "#333",
-                    border: "2px solid",
-                    borderColor:
-                      answers[question.id] === option ? "#007bff" : "#ddd",
-                    borderRadius: "25px",
-                    fontWeight: "500",
-                    transition: "all 0.2s",
-                    minWidth: "80px",
-                    textAlign: "center",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (answers[question.id] !== option) {
-                      e.currentTarget.style.background = "#e7f3ff";
-                      e.currentTarget.style.borderColor = "#007bff";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (answers[question.id] !== option) {
-                      e.currentTarget.style.background = "#f0f0f0";
-                      e.currentTarget.style.borderColor = "#ddd";
-                    }
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name={`question_${question.id}`}
-                    value={option}
-                    checked={answers[question.id] === option}
-                    onChange={(e) =>
-                      handleAnswerChange(question.id, e.target.value)
-                    }
-                    style={{ display: "none" }}
-                  />
-                  <span>{option}</span>
-                </label>
-              ))}
-            </div>
+          <div className="fd-rating-row">
+            {question.options.map((option, optIndex) => (
+              <label
+                key={optIndex}
+                className={`fd-rating-label ${
+                  answers[question.id] === option
+                    ? "fd-rating-label--selected"
+                    : "fd-rating-label--unselected"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`question_${question.id}`}
+                  value={option}
+                  checked={answers[question.id] === option}
+                  onChange={(e) =>
+                    handleAnswerChange(question.id, e.target.value)
+                  }
+                  style={{ display: "none" }}
+                />
+                <span>{option}</span>
+              </label>
+            ))}
           </div>
         )}
       </div>
@@ -723,79 +574,19 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   }
 
   return (
-    <div
-      style={
-        isMobile
-          ? { padding: "20px 16px", width: "100%", boxSizing: "border-box" }
-          : { padding: "32px 16px", maxWidth: "900px", margin: "0 auto" }
-      }
-    >
+    <div className={isMobile ? "fd-shell fd-shell--mobile" : "fd-shell"}>
+
       {/* ── Privacy Modal ── */}
       {showPrivacyModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            background: "rgba(0, 0, 0, 0.55)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "20px",
-            boxSizing: "border-box",
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: "14px",
-              padding: "36px 32px",
-              maxWidth: "520px",
-              width: "100%",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-              maxHeight: "90vh",
-              overflowY: "auto",
-            }}
-          >
-            <h2
-              style={{
-                margin: "0 0 8px 0",
-                fontSize: "1.3em",
-                color: "#1a1a2e",
-              }}
-            >
-              🔒 Privacy Notice
-            </h2>
-            <p
-              style={{
-                margin: "0 0 20px 0",
-                fontSize: "0.85em",
-                color: "#999",
-              }}
-            >
+        <div className="fd-modal-overlay">
+          <div className="fd-modal-card">
+            <h2 className="fd-modal-title">🔒 Privacy Notice</h2>
+            <p className="fd-modal-subtitle">
               Please read the following before submitting your response.
             </p>
-            <div
-              style={{
-                background: "#f7f8fc",
-                border: "1px solid #e0e4f0",
-                borderRadius: "8px",
-                padding: "16px 18px",
-                marginBottom: "24px",
-                fontSize: "0.92em",
-                color: "#333",
-                lineHeight: "1.7",
-                maxHeight: "260px",
-                overflowY: "auto",
-              }}
-            >
-              <p style={{ margin: "0 0 12px 0", fontWeight: "600" }}>
-                Data Privacy Notice
-              </p>
-              <p style={{ margin: "0 0 10px 0" }}>
+            <div className="fd-notice-box">
+              <p>Data Privacy Notice</p>
+              <p>
                 In compliance with the{" "}
                 <strong>
                   Data Privacy Act of 2012 (Republic Act No. 10173)
@@ -803,101 +594,67 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                 of the Philippines, we are committed to protecting and
                 respecting your privacy.
               </p>
-              <p style={{ margin: "0 0 10px 0" }}>
+              <p>
                 <strong>What we collect:</strong> By completing and submitting
                 this form, you consent to the collection of the personal
                 information you provide. This may include, but is not limited
                 to, your name, contact details, and any other information
                 entered in this form.
               </p>
-              <p style={{ margin: "0 0 10px 0" }}>
+              <p>
                 <strong>How we use it:</strong> Your information will be used
                 solely for the purpose for which this form was created. It may
                 be shared with authorized third parties where necessary to
                 fulfill that purpose, and will not be used for any other purpose
                 without your consent.
               </p>
-              <p style={{ margin: "0 0 10px 0" }}>
+              <p>
                 <strong>How we store it:</strong> Your responses will be stored
                 securely and accessed only by authorized personnel. We apply
                 reasonable technical and organizational measures to protect your
                 data against unauthorized access, loss, or misuse.
               </p>
-              <p style={{ margin: "0 0 10px 0" }}>
+              <p>
                 <strong>Your rights:</strong> Under the Data Privacy Act of
                 2012, you have the right to access, correct, and request the
                 deletion of your personal data. To exercise these rights, please
                 contact the administrator of this form.
               </p>
-              <p style={{ margin: "0" }}>
+              <p>
                 By clicking <strong>"Confirm & Submit"</strong>, you acknowledge
                 that you have read and understood this notice and give your
                 informed consent to the collection and processing of your
                 personal information as described above.
               </p>
             </div>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "12px",
-                marginBottom: "28px",
-                cursor: "pointer",
-              }}
-            >
+            <label className="fd-privacy-label">
               <input
                 type="checkbox"
                 checked={privacyAccepted}
                 onChange={(e) => setPrivacyAccepted(e.target.checked)}
-                style={{
-                  width: "18px",
-                  height: "18px",
-                  marginTop: "2px",
-                  cursor: "pointer",
-                  accentColor: "#007bff",
-                  flexShrink: 0,
-                }}
+                className="fd-privacy-checkbox"
               />
-              <span
-                style={{ fontSize: "0.9em", color: "#333", lineHeight: "1.5" }}
-              >
+              <span className="fd-consent-text">
                 I have read and understood the privacy notice above, and I give
                 my consent to the collection and processing of my personal
                 information.
               </span>
             </label>
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div className="fd-modal-btn-row">
               <button
                 onClick={() => setShowPrivacyModal(false)}
-                style={{
-                  flex: 1,
-                  padding: "12px",
-                  fontSize: "0.95em",
-                  background: "#f0f0f0",
-                  color: "#555",
-                  border: "1px solid #ddd",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                }}
+                className="fd-btn-cancel"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmSubmit}
                 disabled={!privacyAccepted || submitting}
-                style={{
-                  flex: 1,
-                  padding: "12px",
-                  fontSize: "0.95em",
-                  background: privacyAccepted ? "#007bff" : "#cce0ff",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: privacyAccepted ? "pointer" : "not-allowed",
-                  fontWeight: "700",
-                  transition: "background 0.2s ease",
-                }}
+                className={`fd-btn-confirm ${
+                  privacyAccepted
+                    ? "fd-btn-confirm--active"
+                    : "fd-btn-confirm--disabled"
+                }`}
               >
                 {submitting ? "Submitting..." : "Confirm & Submit"}
               </button>
@@ -907,18 +664,10 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
       )}
 
       {/* ── Form Header ── */}
-      <div
-        style={{
-          marginBottom: "32px",
-          borderBottom: "3px solid #007bff",
-          paddingBottom: "20px",
-        }}
-      >
-        <h1 style={{ margin: "0 0 10px 0", fontSize: isMobile ? "1.6em" : "2em" }}>{form.title}</h1>
+      <div className="fd-form-header">
+        <h1 className="fd-form-title">{form.title}</h1>
         {form.description && (
-          <p style={{ color: "#333", fontSize: "16px" , margin: "0" }}>
-            {form.description}
-          </p>
+          <p className="fd-form-description">{form.description}</p>
         )}
       </div>
 
@@ -935,102 +684,45 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
               - Current step: outlined circle, bold label, blue accent
               - Upcoming steps: dimmed circle and label
               Not clickable — read-only progress indicator. */}
-          <div style={{ marginBottom: "8px" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "0",
-                overflowX: "auto",
-                paddingBottom: "4px",
-              }}
-            >
+          <div className="fd-stepper">
+            <div className="fd-stepper-row">
               {steps.map((step, idx) => {
                 const isCompleted = idx < currentStep;
                 const isCurrent = idx === currentStep;
-                const isUpcoming = idx > currentStep;
 
                 return (
-                  <div
-                    key={idx}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      marginTop: "3px",
-                      flex: 1,
-                      minWidth: "60px",
-                      position: "relative",
-                    }}
-                  >
+                  <div key={idx} className="fd-step-item">
                     {/* Connector line between steps */}
                     {idx < steps.length - 1 && (
                       <div
-                        style={{
-                          position: "absolute",
-                          top: "16px",
-                          left: "50%",
-                          width: "100%",
-                          height: "2px",
-                          background: isCompleted ? "#007bff" : "#dde1ec",
-                          zIndex: 0,
-                        }}
+                        className={`fd-step-connector ${
+                          isCompleted ? "fd-step-connector--done" : ""
+                        }`}
                       />
                     )}
 
                     {/* Step circle */}
                     <div
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "50%",
-                        border: isCurrent
-                          ? "2px solid #007bff"
-                          : "2px solid transparent",
-                        background: isCompleted
-                          ? "#007bff"
+                      className={`fd-step-circle ${
+                        isCompleted
+                          ? "fd-step-circle--completed"
                           : isCurrent
-                            ? "#fff"
-                            : "#dde1ec",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "13px",
-                        fontWeight: "700",
-                        color: isCompleted
-                          ? "#fff"
-                          : isCurrent
-                            ? "#007bff"
-                            : "#999",
-                        zIndex: 1,
-                        position: "relative",
-                        flexShrink: 0,
-                        boxShadow: isCurrent
-                          ? "0 0 0 3px rgba(0,123,255,0.15)"
-                          : "none",
-                        transition: "all 0.3s ease",
-                      }}
+                            ? "fd-step-circle--current"
+                            : "fd-step-circle--upcoming"
+                      }`}
                     >
                       {isCompleted ? "✓" : idx + 1}
                     </div>
 
                     {/* Step label */}
                     <span
-                      style={{
-                        marginTop: "6px",
-                        fontSize: "0.72em",
-                        fontWeight: isCurrent ? "700" : "400",
-                        color: isCompleted
-                          ? "#007bff"
+                      className={`fd-step-label ${
+                        isCompleted
+                          ? "fd-step-label--completed"
                           : isCurrent
-                            ? "#1a1a2e"
-                            : "#aaa",
-                        textAlign: "center",
-                        maxWidth: "80px",
-                        lineHeight: "1.3",
-                        wordBreak: "break-word",
-                        transition: "all 0.3s ease",
-                      }}
+                            ? "fd-step-label--current"
+                            : "fd-step-label--upcoming"
+                      }`}
                     >
                       {step.title}
                     </span>
@@ -1041,35 +733,15 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
           </div>
 
           {/* ── Progress Bar ──────────────────────────────────────────────── */}
-          <div
-            style={{
-              height: "6px",
-              background: "#e8ecf4",
-              borderRadius: "3px",
-              marginBottom: "6px",
-              overflow: "hidden",
-            }}
-          >
+          <div className="fd-progress-track">
             <div
-              style={{
-                height: "100%",
-                width: `${progressPercent}%`,
-                background: "linear-gradient(90deg, #007bff, #4dabf7)",
-                borderRadius: "3px",
-                transition: "width 0.4s ease",
-              }}
+              className="fd-progress-fill"
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
 
           {/* ── Step Counter ──────────────────────────────────────────────── */}
-          <p
-            style={{
-              textAlign: "right",
-              fontSize: "0.8em",
-              color: "#888",
-              margin: "0 0 28px 0",
-            }}
-          >
+          <p className="fd-step-counter">
             Step {currentStep + 1} of {steps.length}
           </p>
 
@@ -1093,34 +765,15 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
           })()}
 
           {/* ── Step Navigation ───────────────────────────────────────────── */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: "24px",
-              gap: "12px",
-            }}
-          >
+          <div className="fd-step-nav">
             {/* Back button — hidden on the first step */}
             <button
               type="button"
               onClick={handleBack}
               disabled={currentStep === 0}
-              style={{
-                padding: "12px 28px",
-                fontSize: "15px",
-                background:
-                  currentStep === 0 ? "#f0f0f0" : "rgba(255,255,255,0.25)",
-                color: currentStep === 0 ? "#bbb" : "#333",
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                cursor: currentStep === 0 ? "not-allowed" : "pointer",
-                fontWeight: "600",
-                backdropFilter: "blur(6px)",
-                transition: "all 0.2s ease",
-                visibility: currentStep === 0 ? "hidden" : "visible",
-              }}
+              className={`fd-btn-back ${
+                currentStep === 0 ? "fd-btn-back--hidden" : "fd-btn-back--visible"
+              }`}
             >
               ← Back
             </button>
@@ -1131,17 +784,9 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                 type="button"
                 onClick={handleSubmit}
                 disabled={submitting}
-                style={{
-                  padding: "12px 36px",
-                  fontSize: "15px",
-                  background: submitting ? "#6c757d" : "#007bff",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: submitting ? "not-allowed" : "pointer",
-                  fontWeight: "700",
-                  transition: "background 0.2s ease",
-                }}
+                className={`fd-btn-submit ${
+                  submitting ? "fd-btn-submit--submitting" : "fd-btn-submit--ready"
+                }`}
               >
                 {submitting ? "Submitting..." : "Submit"}
               </button>
@@ -1149,17 +794,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
               <button
                 type="button"
                 onClick={() => handleNext(steps)}
-                style={{
-                  padding: "12px 36px",
-                  fontSize: "15px",
-                  background: "#007bff",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontWeight: "700",
-                  transition: "background 0.2s ease",
-                }}
+                className="fd-btn-next"
               >
                 Next →
               </button>
@@ -1181,43 +816,13 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
               .map((question) => {
                 if (question.question_type === "section") {
                   return (
-                    <div
-                      key={question.id}
-                      style={{
-                        marginBottom: "10px",
-                        marginTop: "10px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "block",
-                          fontSize: "0.68em",
-                          fontWeight: "700",
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                          color: "rgba(100, 140, 255, 0.9)",
-                          marginBottom: "6px",
-                        }}
-                      ></span>
-                      <h3
-                        style={{
-                          margin: "0",
-                          fontSize: "1.15em",
-                          fontWeight: "700",
-                          color: "#1a1a2e",
-                        }}
-                      >
+                    <div key={question.id} className="fd-section-divider">
+                      <span className="fd-section-label"></span>
+                      <h3 className="fd-section-heading">
                         {question.question_text}
                       </h3>
                       {question.description && (
-                        <p
-                          style={{
-                            margin: "6px 0 0 0",
-                            fontSize: "0.88em",
-                            color: "#555",
-                            lineHeight: "1.5",
-                          }}
-                        >
+                        <p className="fd-section-description">
                           {question.description}
                         </p>
                       )}
@@ -1233,17 +838,11 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
           <button
             type="submit"
             disabled={submitting}
-            style={{
-              padding: "15px 40px",
-              fontSize: "16px",
-              background: submitting ? "#6c757d" : "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: submitting ? "not-allowed" : "pointer",
-              minWidth: "35%",
-              fontWeight: "bold",
-            }}
+            className={`fd-btn-submit-continuous ${
+              submitting
+                ? "fd-btn-submit-continuous--submitting"
+                : "fd-btn-submit-continuous--ready"
+            }`}
           >
             {submitting ? "Submitting..." : "Submit"}
           </button>
