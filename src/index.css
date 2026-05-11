@@ -1499,3 +1499,97 @@ p, label, span {
   background: #6c757d;
   cursor: not-allowed;
 }
+
+/* ── Agency Banner (FormDisplay) ─────────────────────────────────────────── */
+.fd-banner {
+  margin-bottom: 24px;
+}
+
+.fd-banner-img {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+}
+
+/* ── Banner Settings page ────────────────────────────────────────────────── */
+.bs-shell {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.bs-heading {
+  color: #fff;
+  margin-bottom: 24px;
+}
+
+.bs-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.bs-card-title {
+  margin: 0 0 16px;
+  font-size: 1em;
+  color: #333;
+  font-weight: 700;
+}
+
+.bs-banner-preview {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+  border: 1px solid #e8ecf4;
+}
+
+.bs-empty {
+  color: #888;
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.bs-hint {
+  color: #666;
+  font-size: 0.85em;
+  margin: 0 0 16px;
+}
+
+.bs-preview-wrap {
+  margin-bottom: 16px;
+}
+
+.bs-preview-label {
+  font-size: 0.85em;
+  color: #555;
+  margin: 0 0 8px;
+}
+
+.bs-file-input {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 0.9em;
+  width: 100%;
+}
+
+.bs-upload-btn {
+  padding: 12px 28px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.bs-upload-btn:hover:not(.bs-upload-btn--disabled) {
+  background: #0062cc;
+}
+
+.bs-upload-btn--disabled {
+  background: #a0c4ff;
+  cursor: not-allowed;
+}

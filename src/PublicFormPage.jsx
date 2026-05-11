@@ -7,6 +7,7 @@
 //   was inside the if(isMobile) branch (that was a React rules violation —
 //   you can't call hooks conditionally or inside branches)
 
+import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import FormDisplay from './FormDisplay'
 import { useIsMobile } from './useIsMobile.js'
@@ -14,6 +15,15 @@ import { useIsMobile } from './useIsMobile.js'
 function PublicFormPage({ showToast }) {
   const { formId } = useParams()
   const isMobile = useIsMobile()
+
+  useEffect(() => {
+    if (isMobile) {
+      document.body.style.background = '#ffffff'
+    }
+    return () => {
+      document.body.style.background = ''
+    }
+  }, [isMobile])
 
   if (isMobile) {
     return (

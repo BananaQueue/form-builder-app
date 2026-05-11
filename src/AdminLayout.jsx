@@ -12,6 +12,7 @@ import FormList from "./FormList";
 import FormViewer from "./FormViewer";
 import ResponseList from "./ResponseList";
 import ResponseViewer from "./ResponseViewer";
+import BannerSettings from "./BannerSettings";
 import { useLocation } from "react-router-dom";
 
 // We add showToast and showConfirm to the destructured props
@@ -90,6 +91,19 @@ function AdminLayout({ onLogout, currentUser, showToast, showConfirm }) {
           }}
         >
           Create New Form
+        </button>
+
+        <button
+          onClick={() => navigate("/settings")}
+          className="glass-button"
+          style={{
+            backgroundColor:
+              location.pathname === "/settings"
+                ? "rgba(142,68,173,1)"
+                : "rgba(142,68,173,0.45)",
+          }}
+        >
+          Settings
         </button>
 
         <span
@@ -197,6 +211,11 @@ function AdminLayout({ onLogout, currentUser, showToast, showConfirm }) {
               <Navigate to="/" />
             )
           }
+        />
+
+        <Route
+          path="/settings"
+          element={<BannerSettings showToast={showToast} />}
         />
 
         <Route path="*" element={<Navigate to="/" />} />

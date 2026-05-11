@@ -65,6 +65,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [bannerLoaded, setBannerLoaded] = useState(false);
 
   async function fetchFormDetails() {
     try {
@@ -288,6 +289,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
       if (result.success) {
         setSubmitted(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         showToast?.("Error submitting form: " + (result.error || "Unknown error"), "error");
       }
@@ -575,6 +577,17 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
   return (
     <div className={isMobile ? "fd-shell fd-shell--mobile" : "fd-shell"}>
+
+      {/* ── Agency Banner ── */}
+      <div className="fd-banner" style={{ display: bannerLoaded ? 'block' : 'none' }}>
+        <img
+          src={apiUrl('/uploads/banner.png')}
+          alt="Agency banner"
+          className="fd-banner-img"
+          onLoad={() => setBannerLoaded(true)}
+          onError={() => setBannerLoaded(false)}
+        />
+      </div>
 
       {/* ── Privacy Modal ── */}
       {showPrivacyModal && (
