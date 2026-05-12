@@ -49,7 +49,13 @@ import { useIsMobile } from "./useIsMobile";
 //   perfectly valid. React tracks which hooks belong to which component
 //   automatically.
 // ─────────────────────────────────────────────────────────────────────────────
-function SortableQuestionRow({ question, questionIndex, questions, onDelete, onEdit }) {
+function SortableQuestionRow({
+  question,
+  questionIndex,
+  questions,
+  onDelete,
+  onEdit,
+}) {
   const isMobile = useIsMobile();
 
   const {
@@ -188,9 +194,9 @@ function SortableQuestionRow({ question, questionIndex, questions, onDelete, onE
           <span>
             {question.number_min && ` (min: ${question.number_min})`}
             {question.number_max && ` (max: ${question.number_max})`}
-            {question.number_step &&
+            {/* {question.number_step &&
               question.number_step !== "any" &&
-              ` step: ${question.number_step}`}
+              ` step: ${question.number_step}`} */}
           </span>
         )}
         {question.type === "datetime" && question.datetime_type && (
@@ -246,7 +252,6 @@ function SortableQuestionRow({ question, questionIndex, questions, onDelete, onE
 //   onClose   — called when the modal should be dismissed
 // ─────────────────────────────────────────────────────────────────────────────
 function EditQuestionModal({ question, questions, onSave, onClose }) {
-
   // ── Local draft state ──────────────────────────────────────────────────────
   // Each piece of the question gets its own state variable.
   // We initialise them from the `question` prop when the modal first opens.
@@ -257,7 +262,7 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
   const [text, setText] = useState(question.text);
   const [type, setType] = useState(question.type);
   const [isRequired, setIsRequired] = useState(
-    question.is_required === 1 || question.is_required === true
+    question.is_required === 1 || question.is_required === true,
   );
 
   // Options (for checkbox / multiple_choice / custom rating)
@@ -266,22 +271,22 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
 
   // Rating-specific
   const [ratingScale, setRatingScale] = useState(
-    question.rating_scale || "numeric_5"
+    question.rating_scale || "numeric_5",
   );
   const [customRatingOptions, setCustomRatingOptions] = useState(
     // If the stored rating_scale is "custom", the options ARE the custom list.
     // Otherwise the options come from a preset and we start custom as empty.
-    question.rating_scale === "custom" ? [...(question.options || [])] : []
+    question.rating_scale === "custom" ? [...(question.options || [])] : [],
   );
 
   // Number-specific
   const [numberMin, setNumberMin] = useState(question.number_min ?? "");
   const [numberMax, setNumberMax] = useState(question.number_max ?? "");
-  const [numberStep, setNumberStep] = useState(question.number_step || "1");
+  // const [numberStep, setNumberStep] = useState(question.number_step || "1");
 
   // Datetime-specific
   const [dateTimeType, setDateTimeType] = useState(
-    question.datetime_type || "date"
+    question.datetime_type || "date",
   );
 
   // Section-specific (sections only have text + description)
@@ -289,16 +294,16 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
 
   // Conditional logic
   const [hasCondition, setHasCondition] = useState(
-    !!question.condition_question_id
+    !!question.condition_question_id,
   );
   const [conditionQuestionId, setConditionQuestionId] = useState(
-    question.condition_question_id ?? ""
+    question.condition_question_id ?? "",
   );
   const [conditionType, setConditionType] = useState(
-    question.condition_type || "equals"
+    question.condition_type || "equals",
   );
   const [conditionValue, setConditionValue] = useState(
-    question.condition_value ?? ""
+    question.condition_value ?? "",
   );
 
   // ── Helper: which condition types are valid for a given question type ──────
@@ -315,11 +320,23 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
     const scales = {
       numeric_5: ["1", "2", "3", "4", "5"],
       numeric_10: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-      agree_5: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+      agree_5: [
+        "Strongly Disagree",
+        "Disagree",
+        "Neutral",
+        "Agree",
+        "Strongly Agree",
+      ],
       agree_3: ["Disagree", "Neutral", "Agree"],
       quality_5: ["Poor", "Fair", "Good", "Very Good", "Excellent"],
       quality_3: ["Bad", "Fair", "Good"],
-      satisfaction_5: ["Very Dissatisfied", "Dissatisfied", "Neutral", "Satisfied", "Very Satisfied"],
+      satisfaction_5: [
+        "Very Dissatisfied",
+        "Dissatisfied",
+        "Neutral",
+        "Satisfied",
+        "Very Satisfied",
+      ],
       satisfaction_3: ["Dissatisfied", "Neutral", "Satisfied"],
       frequency_5: ["Never", "Rarely", "Sometimes", "Often", "Always"],
     };
@@ -343,11 +360,17 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
         ratingScale === "custom"
           ? customRatingOptions
           : getRatingScaleOptions(ratingScale);
-    } else if (
-      type === "multiple_choice" ||
-      type === "checkbox"
-    ) {
+    } else if (type === "multiple_choice" || type === "checkbox") {
       finalOptions = options;
+    }
+
+    const parsedMin = numberMin !== "" ? parseFloat(numberMin) : null;
+
+    const parsedMax = numberMax !== "" ? parseFloat(numberMax) : null;
+
+    if (parsedMin !== null && parsedMax !== null && parsedMin > parsedMax) {
+      alert("Minimum value cannot be greater than maximum value.");
+      return;
     }
 
     // Build the updated question object.
@@ -357,12 +380,15 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
       ...question,
       text: text.trim(),
       type,
-      description: type === "section" ? description : (question.description ?? null),
+      description:
+        type === "section" ? description : (question.description ?? null),
       options: finalOptions,
       rating_scale: type === "rating" ? ratingScale : null,
-      number_min: type === "number" && numberMin !== "" ? parseFloat(numberMin) : null,
-      number_max: type === "number" && numberMax !== "" ? parseFloat(numberMax) : null,
-      number_step: type === "number" ? numberStep : null,
+      number_min:
+        type === "number" && numberMin !== "" ? parseFloat(numberMin) : null,
+      number_max:
+        type === "number" && numberMax !== "" ? parseFloat(numberMax) : null,
+      // number_step: type === "number" ? numberStep : null,
       datetime_type: type === "datetime" ? dateTimeType : null,
       is_required: isRequired ? 1 : 0,
       condition_question_id:
@@ -428,7 +454,9 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
         }}
       >
         {/* ── Header ── */}
-        <div style={{ borderBottom: "2px solid #eef3ff", paddingBottom: "14px" }}>
+        <div
+          style={{ borderBottom: "2px solid #eef3ff", paddingBottom: "14px" }}
+        >
           <h2 style={{ margin: 0, fontSize: "1.25em", color: "#1a1a2e" }}>
             {isSection ? "✏️ Edit Section" : "✏️ Edit Question"}
           </h2>
@@ -447,7 +475,9 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={isSection ? "e.g. Employment Details" : "Enter your question"}
+            placeholder={
+              isSection ? "e.g. Employment Details" : "Enter your question"
+            }
           />
         </div>
 
@@ -507,7 +537,9 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                 onChange={(e) => setIsRequired(e.target.checked)}
               />
               <span className="fb-toggle-label">Required field</span>
-              <span className="fb-toggle-hint">Users must answer this question</span>
+              <span className="fb-toggle-hint">
+                Users must answer this question
+              </span>
             </label>
 
             {/* ── Options editor (checkbox / multiple_choice) ── */}
@@ -517,7 +549,10 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
 
                 {/* Existing options — each shows a remove button */}
                 {options.length > 0 && (
-                  <div className="fb-option-pills" style={{ marginBottom: "12px" }}>
+                  <div
+                    className="fb-option-pills"
+                    style={{ marginBottom: "12px" }}
+                  >
                     {options.map((opt, idx) => (
                       <div key={idx} className="fb-option-pill">
                         <span>{opt}</span>
@@ -583,7 +618,8 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                     value={ratingScale}
                     onChange={(e) => {
                       setRatingScale(e.target.value);
-                      if (e.target.value === "custom") setCustomRatingOptions([]);
+                      if (e.target.value === "custom")
+                        setCustomRatingOptions([]);
                     }}
                   >
                     <optgroup label="Numeric Scales">
@@ -591,19 +627,31 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                       <option value="numeric_10">1 to 10 (10 points)</option>
                     </optgroup>
                     <optgroup label="Agreement Scales">
-                      <option value="agree_5">Strongly Disagree → Strongly Agree (5 points)</option>
-                      <option value="agree_3">Disagree → Agree (3 points)</option>
+                      <option value="agree_5">
+                        Strongly Disagree → Strongly Agree (5 points)
+                      </option>
+                      <option value="agree_3">
+                        Disagree → Agree (3 points)
+                      </option>
                     </optgroup>
                     <optgroup label="Quality Scales">
-                      <option value="quality_5">Poor → Excellent (5 points)</option>
+                      <option value="quality_5">
+                        Poor → Excellent (5 points)
+                      </option>
                       <option value="quality_3">Bad → Good (3 points)</option>
                     </optgroup>
                     <optgroup label="Satisfaction Scales">
-                      <option value="satisfaction_5">Very Dissatisfied → Very Satisfied (5 points)</option>
-                      <option value="satisfaction_3">Dissatisfied → Satisfied (3 points)</option>
+                      <option value="satisfaction_5">
+                        Very Dissatisfied → Very Satisfied (5 points)
+                      </option>
+                      <option value="satisfaction_3">
+                        Dissatisfied → Satisfied (3 points)
+                      </option>
                     </optgroup>
                     <optgroup label="Frequency Scales">
-                      <option value="frequency_5">Never → Always (5 points)</option>
+                      <option value="frequency_5">
+                        Never → Always (5 points)
+                      </option>
                     </optgroup>
                     <option value="custom">Custom (define your own)</option>
                   </select>
@@ -611,10 +659,14 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
 
                 {ratingScale !== "custom" && (
                   <>
-                    <p className="fb-label" style={{ marginBottom: "8px" }}>Preview</p>
+                    <p className="fb-label" style={{ marginBottom: "8px" }}>
+                      Preview
+                    </p>
                     <div className="fb-option-pills">
                       {getRatingScaleOptions(ratingScale).map((opt, idx) => (
-                        <div key={idx} className="fb-option-pill">{opt}</div>
+                        <div key={idx} className="fb-option-pill">
+                          {opt}
+                        </div>
                       ))}
                     </div>
                   </>
@@ -622,12 +674,18 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
 
                 {ratingScale === "custom" && (
                   <>
-                    <p className="fb-condition-hint" style={{ marginBottom: "10px", color: "#3a5fc8" }}>
+                    <p
+                      className="fb-condition-hint"
+                      style={{ marginBottom: "10px", color: "#3a5fc8" }}
+                    >
                       Add rating options in order from lowest to highest.
                     </p>
 
                     {customRatingOptions.length > 0 && (
-                      <div className="fb-option-pills" style={{ marginBottom: "10px" }}>
+                      <div
+                        className="fb-option-pills"
+                        style={{ marginBottom: "10px" }}
+                      >
                         {customRatingOptions.map((opt, idx) => (
                           <div key={idx} className="fb-option-pill">
                             <span>{opt}</span>
@@ -636,7 +694,9 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                               type="button"
                               onClick={() =>
                                 setCustomRatingOptions(
-                                  customRatingOptions.filter((_, i) => i !== idx)
+                                  customRatingOptions.filter(
+                                    (_, i) => i !== idx,
+                                  ),
                                 )
                               }
                             >
@@ -658,7 +718,10 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                           if (e.key === "Enter") {
                             e.preventDefault();
                             if (newOption.trim()) {
-                              setCustomRatingOptions([...customRatingOptions, newOption.trim()]);
+                              setCustomRatingOptions([
+                                ...customRatingOptions,
+                                newOption.trim(),
+                              ]);
                               setNewOption("");
                             }
                           }
@@ -670,7 +733,10 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                         style={{ width: "auto", padding: "10px 18px" }}
                         onClick={() => {
                           if (newOption.trim()) {
-                            setCustomRatingOptions([...customRatingOptions, newOption.trim()]);
+                            setCustomRatingOptions([
+                              ...customRatingOptions,
+                              newOption.trim(),
+                            ]);
                             setNewOption("");
                           }
                         }}
@@ -685,14 +751,24 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
 
             {/* ── Number configuration ── */}
             {type === "number" && (
-              <div style={{
-                background: "#f0f9ff",
-                padding: "15px",
-                borderRadius: "8px",
-                border: "1px solid #3b82f6",
-              }}>
-                <p className="fb-options-title" style={{ color: "#1d4ed8" }}>Number Configuration</p>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
+              <div
+                style={{
+                  background: "#f0f9ff",
+                  padding: "15px",
+                  borderRadius: "8px",
+                  border: "1px solid #3b82f6",
+                }}
+              >
+                <p className="fb-options-title" style={{ color: "#1d4ed8" }}>
+                  Number Configuration
+                </p>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr 1fr",
+                    gap: "12px",
+                  }}
+                >
                   <div className="fb-field" style={{ marginBottom: 0 }}>
                     <label className="fb-label">Min (optional)</label>
                     <input
@@ -713,32 +789,34 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                       placeholder="No maximum"
                     />
                   </div>
-                  <div className="fb-field" style={{ marginBottom: 0 }}>
+                  {/* <div className="fb-field" style={{ marginBottom: 0 }}>
                     <label className="fb-label">Step</label>
                     <select
                       className="fb-select"
                       value={numberStep}
                       onChange={(e) => setNumberStep(e.target.value)}
                     >
-                      <option value="1">Integers (1, 2, 3...)</option>
-                      <option value="0.1">Decimals (0.1)</option>
-                      <option value="0.01">Decimals (0.01)</option>
-                      <option value="any">Any number</option>
+                      <option value="1">Whole Number</option>
+                      <option value="any">Decimal</option>
                     </select>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             )}
 
             {/* ── Date/Time configuration ── */}
             {type === "datetime" && (
-              <div style={{
-                background: "#fffbeb",
-                padding: "15px",
-                borderRadius: "8px",
-                border: "1px solid #f59e0b",
-              }}>
-                <p className="fb-options-title" style={{ color: "#92400e" }}>Date/Time Type</p>
+              <div
+                style={{
+                  background: "#fffbeb",
+                  padding: "15px",
+                  borderRadius: "8px",
+                  border: "1px solid #f59e0b",
+                }}
+              >
+                <p className="fb-options-title" style={{ color: "#92400e" }}>
+                  Date/Time Type
+                </p>
                 <div className="fb-field" style={{ marginBottom: 0 }}>
                   <label className="fb-label">Input type</label>
                   <select
@@ -749,8 +827,8 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                     <option value="date">Date only (MM/DD/YYYY)</option>
                     <option value="time">Time only (HH:MM)</option>
                     <option value="datetime-local">Date and Time</option>
-                    <option value="month">Month and Year</option>
-                    <option value="week">Week (Week 1-52)</option>
+                    {/* <option value="month">Month and Year</option>
+                    <option value="week">Week (Week 1-52)</option> */}
                   </select>
                 </div>
               </div>
@@ -764,14 +842,19 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
               itself from the list.
             */}
             <div className="fb-condition-panel">
-              <p className="fb-condition-title">⚡ Conditional Logic — Optional</p>
+              <p className="fb-condition-title">
+                ⚡ Conditional Logic — Optional
+              </p>
 
-              <label className="fb-toggle-row" style={{
-                marginBottom: 0,
-                background: "transparent",
-                border: "none",
-                padding: "0",
-              }}>
+              <label
+                className="fb-toggle-row"
+                style={{
+                  marginBottom: 0,
+                  background: "transparent",
+                  border: "none",
+                  padding: "0",
+                }}
+              >
                 <input
                   type="checkbox"
                   checked={hasCondition}
@@ -784,7 +867,9 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                     }
                   }}
                 />
-                <span className="fb-toggle-label">Show this question only if...</span>
+                <span className="fb-toggle-label">
+                  Show this question only if...
+                </span>
               </label>
 
               {!hasCondition && (
@@ -794,10 +879,17 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
               )}
 
               {hasCondition && (
-                <div style={{ marginTop: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div
+                  style={{
+                    marginTop: "14px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
                   {/* Filter out sections and this question itself from the dropdown */}
                   {questions.filter(
-                    (q) => q.type !== "section" && q.id !== question.id
+                    (q) => q.type !== "section" && q.id !== question.id,
                   ).length === 0 ? (
                     <p className="fb-condition-hint">
                       No other questions available to condition on.
@@ -820,7 +912,8 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                             let counter = 0;
                             return questions
                               .filter(
-                                (q) => q.type !== "section" && q.id !== question.id
+                                (q) =>
+                                  q.type !== "section" && q.id !== question.id,
                               )
                               .map((q) => {
                                 counter++;
@@ -834,85 +927,119 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                         </select>
                       </div>
 
-                      {conditionQuestionId && (() => {
-                        const selectedQ = questions.find(
-                          (q) => q.id == conditionQuestionId
-                        );
-                        if (!selectedQ) return null;
+                      {conditionQuestionId &&
+                        (() => {
+                          const selectedQ = questions.find(
+                            (q) => q.id == conditionQuestionId,
+                          );
+                          if (!selectedQ) return null;
 
-                        const allowedConditionTypes = getAllowedConditionTypes(selectedQ.type);
-                        const effectiveConditionType =
-                          allowedConditionTypes.includes(conditionType)
-                            ? conditionType
-                            : "equals";
+                          const allowedConditionTypes =
+                            getAllowedConditionTypes(selectedQ.type);
+                          const effectiveConditionType =
+                            allowedConditionTypes.includes(conditionType)
+                              ? conditionType
+                              : "equals";
 
-                        return (
-                          <>
-                            <div className="fb-field" style={{ marginBottom: 0 }}>
-                              <label className="fb-label">Condition type</label>
-                              <select
-                                className="fb-select"
-                                value={effectiveConditionType}
-                                onChange={(e) => {
-                                  setConditionType(e.target.value);
-                                  setConditionValue("");
-                                }}
+                          return (
+                            <>
+                              <div
+                                className="fb-field"
+                                style={{ marginBottom: 0 }}
                               >
-                                <option value="equals">Answer equals</option>
-                                <option value="not_equals">Answer does NOT equal</option>
-                                {selectedQ.type === "multiple_choice" && (
-                                  <>
-                                    <option value="contains">Selected answers contain</option>
-                                    <option value="not_contains">Selected answers do NOT contain</option>
-                                  </>
-                                )}
-                                <option value="is_answered">Question is answered (any value)</option>
-                              </select>
-                            </div>
-
-                            {effectiveConditionType !== "is_answered" && (
-                              <div className="fb-field" style={{ marginBottom: 0 }}>
                                 <label className="fb-label">
-                                  {effectiveConditionType === "contains" ||
-                                    effectiveConditionType === "not_contains"
-                                    ? "Option"
-                                    : "Value"}
+                                  Condition type
                                 </label>
-                                {selectedQ.type === "text" || selectedQ.type === "email" ? (
-                                  <input
-                                    className="fb-input"
-                                    type="text"
-                                    value={conditionValue}
-                                    onChange={(e) => setConditionValue(e.target.value)}
-                                    placeholder="Enter expected answer"
-                                  />
-                                ) : selectedQ.type === "number" ? (
-                                  <input
-                                    className="fb-input"
-                                    type="number"
-                                    value={conditionValue}
-                                    onChange={(e) => setConditionValue(e.target.value)}
-                                    placeholder="Enter expected number"
-                                  />
-                                ) : (
-                                  <select
-                                    className="fb-select"
-                                    value={conditionValue}
-                                    onChange={(e) => setConditionValue(e.target.value)}
-                                  >
-                                    <option value="">-- Select an option --</option>
-                                    {selectedQ.options && selectedQ.options.length > 0
-                                      ? selectedQ.options.map((opt, idx) => (
-                                          <option key={idx} value={opt}>{opt}</option>
-                                        ))
-                                      : <option disabled>No options available</option>}
-                                  </select>
-                                )}
+                                <select
+                                  className="fb-select"
+                                  value={effectiveConditionType}
+                                  onChange={(e) => {
+                                    setConditionType(e.target.value);
+                                    setConditionValue("");
+                                  }}
+                                >
+                                  <option value="equals">Answer equals</option>
+                                  <option value="not_equals">
+                                    Answer does NOT equal
+                                  </option>
+                                  {selectedQ.type === "multiple_choice" && (
+                                    <>
+                                      <option value="contains">
+                                        Selected answers contain
+                                      </option>
+                                      <option value="not_contains">
+                                        Selected answers do NOT contain
+                                      </option>
+                                    </>
+                                  )}
+                                  <option value="is_answered">
+                                    Question is answered (any value)
+                                  </option>
+                                </select>
                               </div>
-                            )}
-                          </>
-                        );
-                      })()}
+
+                              {effectiveConditionType !== "is_answered" && (
+                                <div
+                                  className="fb-field"
+                                  style={{ marginBottom: 0 }}
+                                >
+                                  <label className="fb-label">
+                                    {effectiveConditionType === "contains" ||
+                                    effectiveConditionType === "not_contains"
+                                      ? "Option"
+                                      : "Value"}
+                                  </label>
+                                  {selectedQ.type === "text" ||
+                                  selectedQ.type === "email" ? (
+                                    <input
+                                      className="fb-input"
+                                      type="text"
+                                      value={conditionValue}
+                                      onChange={(e) =>
+                                        setConditionValue(e.target.value)
+                                      }
+                                      placeholder="Enter expected answer"
+                                    />
+                                  ) : selectedQ.type === "number" ? (
+                                    <input
+                                      className="fb-input"
+                                      type="number"
+                                      value={conditionValue}
+                                      onChange={(e) =>
+                                        setConditionValue(e.target.value)
+                                      }
+                                      placeholder="Enter expected number"
+                                    />
+                                  ) : (
+                                    <select
+                                      className="fb-select"
+                                      value={conditionValue}
+                                      onChange={(e) =>
+                                        setConditionValue(e.target.value)
+                                      }
+                                    >
+                                      <option value="">
+                                        -- Select an option --
+                                      </option>
+                                      {selectedQ.options &&
+                                      selectedQ.options.length > 0 ? (
+                                        selectedQ.options.map((opt, idx) => (
+                                          <option key={idx} value={opt}>
+                                            {opt}
+                                          </option>
+                                        ))
+                                      ) : (
+                                        <option disabled>
+                                          No options available
+                                        </option>
+                                      )}
+                                    </select>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                     </>
                   )}
                 </div>
@@ -1003,7 +1130,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
 
   const [numberMin, setNumberMin] = useState("");
   const [numberMax, setNumberMax] = useState("");
-  const [numberStep, setNumberStep] = useState("1");
+  // const [numberStep, setNumberStep] = useState("1");
   const [dateTimeType, setDateTimeType] = useState("date");
 
   const [newSectionTitle, setNewSectionTitle] = useState("");
@@ -1044,7 +1171,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
     if (!isOrderValidForConditions(reordered)) {
       showToast(
         "That order isn't allowed: a conditional question must stay below the question it depends on.",
-        "error"
+        "error",
       );
       return;
     }
@@ -1078,7 +1205,9 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
     setIsEditMode(true);
 
     try {
-      const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}`));
+      const response = await fetch(
+        apiUrl(`/get_form_details.php?id=${formId}`),
+      );
       const result = await response.json();
 
       if (result.success) {
@@ -1097,7 +1226,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
             rating_scale: q.rating_scale || null,
             number_min: q.number_min || null,
             number_max: q.number_max || null,
-            number_step: q.number_step || "1",
+            // number_step: q.number_step || "1",
             datetime_type: q.datetime_type || "date",
             is_required: q.is_required !== undefined ? q.is_required : 1,
             condition_question_id: q.condition_question_id || null,
@@ -1107,7 +1236,10 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
           })),
         );
       } else {
-        showToast("Failed to load form: " + (result.error || "Unknown error"), "error");
+        showToast(
+          "Failed to load form: " + (result.error || "Unknown error"),
+          "error",
+        );
       }
     } catch (error) {
       showToast("Failed to load form: " + error.message, "error");
@@ -1135,7 +1267,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
   // which triggers a re-render showing the changes.
   function saveEdit(updatedQuestion) {
     setQuestions((prev) =>
-      prev.map((q) => (q.id === updatedQuestion.id ? updatedQuestion : q))
+      prev.map((q) => (q.id === updatedQuestion.id ? updatedQuestion : q)),
     );
     setEditingQuestion(null); // close the modal
     showToast("Question updated.", "success");
@@ -1148,10 +1280,14 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
     }
 
     if (
-      (newQuestionType === "multiple_choice" || newQuestionType === "checkbox") &&
+      (newQuestionType === "multiple_choice" ||
+        newQuestionType === "checkbox") &&
       tempOptions.length === 0
     ) {
-      showToast("Please add at least one option for this question type.", "warning");
+      showToast(
+        "Please add at least one option for this question type.",
+        "warning",
+      );
       return;
     }
 
@@ -1160,7 +1296,10 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
       ratingScale === "custom" &&
       customRatingOptions.length === 0
     ) {
-      showToast("Please add at least one rating option for custom scale.", "warning");
+      showToast(
+        "Please add at least one rating option for custom scale.",
+        "warning",
+      );
       return;
     }
 
@@ -1178,19 +1317,39 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
       questionOptions = tempOptions;
     }
 
+    const parsedMin = numberMin !== "" ? parseFloat(numberMin) : null;
+
+    const parsedMax = numberMax !== "" ? parseFloat(numberMax) : null;
+
+    if (parsedMin !== null && parsedMax !== null && parsedMin > parsedMax) {
+      showToast(
+        "Minimum value cannot be greater than maximum value.",
+        "warning",
+      );
+      return;
+    }
+
     const newQuestion = {
       id: "q_" + Date.now(),
       text: newQuestionText,
       type: newQuestionType,
       options: questionOptions,
       rating_scale: newQuestionType === "rating" ? ratingScale : null,
-      number_min: newQuestionType === "number" && numberMin ? parseFloat(numberMin) : null,
-      number_max: newQuestionType === "number" && numberMax ? parseFloat(numberMax) : null,
-      number_step: newQuestionType === "number" ? numberStep : null,
+      number_min:
+        newQuestionType === "number" && numberMin
+          ? parseFloat(numberMin)
+          : null,
+      number_max:
+        newQuestionType === "number" && numberMax
+          ? parseFloat(numberMax)
+          : null,
+      // number_step: newQuestionType === "number" ? numberStep : null,
       datetime_type: newQuestionType === "datetime" ? dateTimeType : null,
       is_required: isNewQuestionRequired ? 1 : 0,
-      condition_question_id: hasCondition && conditionQuestionId ? conditionQuestionId : null,
-      condition_type: hasCondition && conditionQuestionId ? conditionType : null,
+      condition_question_id:
+        hasCondition && conditionQuestionId ? conditionQuestionId : null,
+      condition_type:
+        hasCondition && conditionQuestionId ? conditionType : null,
       condition_value: hasCondition && conditionValue ? conditionValue : null,
     };
 
@@ -1215,7 +1374,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
 
   function addSection() {
     if (newSectionTitle.trim() === "") {
-      showToast("Please enter a section title.", "warning"); 
+      showToast("Please enter a section title.", "warning");
       return;
     }
 
@@ -1232,7 +1391,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
       rating_scale: null,
       number_min: null,
       number_max: null,
-      number_step: null,
+      // number_step: null,
       datetime_type: null,
     };
 
@@ -1245,11 +1404,23 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
     const scales = {
       numeric_5: ["1", "2", "3", "4", "5"],
       numeric_10: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-      agree_5: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+      agree_5: [
+        "Strongly Disagree",
+        "Disagree",
+        "Neutral",
+        "Agree",
+        "Strongly Agree",
+      ],
       agree_3: ["Disagree", "Neutral", "Agree"],
       quality_5: ["Poor", "Fair", "Good", "Very Good", "Excellent"],
       quality_3: ["Bad", "Fair", "Good"],
-      satisfaction_5: ["Very Dissatisfied", "Dissatisfied", "Neutral", "Satisfied", "Very Satisfied"],
+      satisfaction_5: [
+        "Very Dissatisfied",
+        "Dissatisfied",
+        "Neutral",
+        "Satisfied",
+        "Very Satisfied",
+      ],
       satisfaction_3: ["Dissatisfied", "Neutral", "Satisfied"],
       frequency_5: ["Never", "Rarely", "Sometimes", "Often", "Always"],
     };
@@ -1304,7 +1475,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
       is_required: q.is_required ?? 1,
       number_min: q.number_min ?? null,
       number_max: q.number_max ?? null,
-      number_step: q.number_step ?? null,
+      // number_step: q.number_step ?? null,
       datetime_type: q.datetime_type ?? null,
       description: q.description ?? null,
       condition_question_id: canonicalConditionParentId(q),
@@ -1342,7 +1513,9 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
         result = JSON.parse(raw);
       } catch {
         console.error("Non-JSON response from server:", raw);
-        throw new Error("Server returned non-JSON. Check console for raw response.");
+        throw new Error(
+          "Server returned non-JSON. Check console for raw response.",
+        );
       }
 
       if (result.success) {
@@ -1350,7 +1523,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
           isEditMode
             ? "Form updated successfully!"
             : "Form saved successfully! Form ID: " + result.form_id,
-          "success"
+          "success",
         );
 
         if (isEditMode && onSaveComplete) {
@@ -1362,7 +1535,10 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
           setQuestions([]);
         }
       } else {
-        showToast("Error saving form: " + (result.error || "Unknown error"), "error");
+        showToast(
+          "Error saving form: " + (result.error || "Unknown error"),
+          "error",
+        );
       }
     } catch (error) {
       showToast("Failed to connect to server: " + error.message, "error");
@@ -1376,7 +1552,10 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
     <div className="fb-shell">
       {/* Loading overlay */}
       {loadingForm && (
-        <div className="fb-paper" style={{ textAlign: "center", color: "#aaa" }}>
+        <div
+          className="fb-paper"
+          style={{ textAlign: "center", color: "#aaa" }}
+        >
           Loading form data...
         </div>
       )}
@@ -1438,29 +1617,43 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
 
         <div className="fb-field" style={{ marginBottom: 0 }}>
           <label className="fb-label">Privacy Notice</label>
-          <div style={{
-            marginTop: "12px",
-            background: "#f7f8fc",
-            border: "1px solid #e0e4f0",
-            borderRadius: "8px",
-            padding: "14px 16px",
-          }}>
-            <p style={{
-              margin: "0 0 8px 0",
-              fontSize: "0.75em",
-              fontWeight: "700",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              color: "#a0b4f0",
-            }}>
+          <div
+            style={{
+              marginTop: "12px",
+              background: "#f7f8fc",
+              border: "1px solid #e0e4f0",
+              borderRadius: "8px",
+              padding: "14px 16px",
+            }}
+          >
+            <p
+              style={{
+                margin: "0 0 8px 0",
+                fontSize: "0.75em",
+                fontWeight: "700",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                color: "#a0b4f0",
+              }}
+            >
               🔒 Required on all forms — what respondents will see
             </p>
-            <p style={{ margin: 0, fontSize: "0.82em", color: "#555", lineHeight: "1.6" }}>
-              By submitting this form, you consent to the collection and processing
-              of your personal information in accordance with the Data Privacy Act
-              of 2012 (Republic Act No. 10173) of the Philippines...
+            <p
+              style={{
+                margin: 0,
+                fontSize: "0.82em",
+                color: "#555",
+                lineHeight: "1.6",
+              }}
+            >
+              By submitting this form, you consent to the collection and
+              processing of your personal information in accordance with the
+              Data Privacy Act of 2012 (Republic Act No. 10173) of the
+              Philippines...
             </p>
-            <p style={{ margin: "8px 0 0 0", fontSize: "0.78em", color: "#aaa" }}>
+            <p
+              style={{ margin: "8px 0 0 0", fontSize: "0.78em", color: "#aaa" }}
+            >
               Full statement shown to respondents in the popup.
             </p>
           </div>
@@ -1475,39 +1668,84 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
               onChange={(e) => setStepMode(e.target.checked)}
             />
             <span className="fb-toggle-label">Enable multi-step form</span>
-            <span className="fb-toggle-hint">Section blocks become step boundaries</span>
+            <span className="fb-toggle-hint">
+              Section blocks become step boundaries
+            </span>
           </label>
 
           {stepMode && (
-            <div style={{
-              marginTop: "12px",
-              borderRadius: "8px",
-              padding: "14px 16px",
-              background: hasSections ? "#f0f9ff" : "#fffbf0",
-              border: hasSections ? "1px solid #a0b4f0" : "1px solid #f0d080",
-            }}>
+            <div
+              style={{
+                marginTop: "12px",
+                borderRadius: "8px",
+                padding: "14px 16px",
+                background: hasSections ? "#f0f9ff" : "#fffbf0",
+                border: hasSections ? "1px solid #a0b4f0" : "1px solid #f0d080",
+              }}
+            >
               {!hasSections ? (
                 <>
-                  <p style={{ margin: "0 0 6px 0", fontSize: "0.78em", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.06em", color: "#a07800" }}>
+                  <p
+                    style={{
+                      margin: "0 0 6px 0",
+                      fontSize: "0.78em",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      color: "#a07800",
+                    }}
+                  >
                     ⚠️ No section blocks yet
                   </p>
-                  <p style={{ margin: 0, fontSize: "0.82em", color: "#7a5800", lineHeight: "1.5" }}>
-                    Step mode is on but your form has no section blocks. Add section blocks below to define where each step begins.
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.82em",
+                      color: "#7a5800",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    Step mode is on but your form has no section blocks. Add
+                    section blocks below to define where each step begins.
                   </p>
                 </>
               ) : (
                 <>
-                  <p style={{ margin: "0 0 6px 0", fontSize: "0.78em", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.06em", color: "#3a5fc8" }}>
+                  <p
+                    style={{
+                      margin: "0 0 6px 0",
+                      fontSize: "0.78em",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      color: "#3a5fc8",
+                    }}
+                  >
                     🪜 Step mode active
                   </p>
-                  <p style={{ margin: 0, fontSize: "0.82em", color: "#333", lineHeight: "1.5" }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.82em",
+                      color: "#333",
+                      lineHeight: "1.5",
+                    }}
+                  >
                     This form will have{" "}
                     <strong>
                       {(() => {
-                        const firstSectionIdx = questions.findIndex((q) => q.type === "section");
-                        const questionsBeforeFirst = questions.slice(0, firstSectionIdx).filter((q) => q.type !== "section").length;
-                        const sectionCount = questions.filter((q) => q.type === "section").length;
-                        return sectionCount + (questionsBeforeFirst > 0 ? 1 : 0);
+                        const firstSectionIdx = questions.findIndex(
+                          (q) => q.type === "section",
+                        );
+                        const questionsBeforeFirst = questions
+                          .slice(0, firstSectionIdx)
+                          .filter((q) => q.type !== "section").length;
+                        const sectionCount = questions.filter(
+                          (q) => q.type === "section",
+                        ).length;
+                        return (
+                          sectionCount + (questionsBeforeFirst > 0 ? 1 : 0)
+                        );
                       })()}{" "}
                       steps
                     </strong>
@@ -1538,11 +1776,20 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
       {/* ── Zone 2A: Add section block ── */}
       <div className="fb-paper">
         <p className="fb-section-title">Add Section</p>
-        <p style={{ fontSize: "0.85em", color: "#888", marginTop: "-12px", marginBottom: "18px" }}>
-          Section blocks act as visual dividers between groups of questions. They collect no answer.
+        <p
+          style={{
+            fontSize: "0.85em",
+            color: "#888",
+            marginTop: "-12px",
+            marginBottom: "18px",
+          }}
+        >
+          Section blocks act as visual dividers between groups of questions.
+          They collect no answer.
           {stepMode && (
             <strong style={{ color: "#3a5fc8" }}>
-              {" "}In step mode, each section block marks the start of a new step.
+              {" "}
+              In step mode, each section block marks the start of a new step.
             </strong>
           )}
         </p>
@@ -1628,13 +1875,23 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
             onChange={(e) => setIsNewQuestionRequired(e.target.checked)}
           />
           <span className="fb-toggle-label">Required field</span>
-          <span className="fb-toggle-hint">Users must answer this question</span>
+          <span className="fb-toggle-hint">
+            Users must answer this question
+          </span>
         </label>
 
         <div className="fb-condition-panel">
           <p className="fb-condition-title">⚡ Conditional Logic — Optional</p>
 
-          <label className="fb-toggle-row" style={{ marginBottom: 0, background: "transparent", border: "none", padding: "0" }}>
+          <label
+            className="fb-toggle-row"
+            style={{
+              marginBottom: 0,
+              background: "transparent",
+              border: "none",
+              padding: "0",
+            }}
+          >
             <input
               type="checkbox"
               checked={hasCondition}
@@ -1647,17 +1904,30 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
                 }
               }}
             />
-            <span className="fb-toggle-label">Show this question only if...</span>
+            <span className="fb-toggle-label">
+              Show this question only if...
+            </span>
           </label>
 
           {!hasCondition && (
-            <p className="fb-condition-hint">This question will always be visible to respondents.</p>
+            <p className="fb-condition-hint">
+              This question will always be visible to respondents.
+            </p>
           )}
 
           {hasCondition && (
-            <div style={{ marginTop: "14px", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div
+              style={{
+                marginTop: "14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+              }}
+            >
               {questions.length === 0 ? (
-                <p className="fb-condition-hint">Add at least one question first to create conditions.</p>
+                <p className="fb-condition-hint">
+                  Add at least one question first to create conditions.
+                </p>
               ) : (
                 <>
                   <div className="fb-field" style={{ marginBottom: 0 }}>
@@ -1688,82 +1958,155 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
                     </select>
                   </div>
 
-                  {conditionQuestionId && (() => {
-                    const selectedQ = questions.find((q) => q.id == conditionQuestionId);
-                    if (!selectedQ) return null;
-                    const allowedConditionTypes = getAllowedConditionTypes(selectedQ.type);
-                    const effectiveConditionType = allowedConditionTypes.includes(conditionType) ? conditionType : "equals";
-                    return (
-                      <>
-                        <div className="fb-field" style={{ marginBottom: 0 }}>
-                          <label className="fb-label">Condition type</label>
-                          <select
-                            className="fb-select"
-                            value={effectiveConditionType}
-                            onChange={(e) => {
-                              setConditionType(e.target.value);
-                              setConditionValue("");
-                            }}
-                          >
-                            <option value="equals">Answer equals</option>
-                            <option value="not_equals">Answer does NOT equal</option>
-                            {selectedQ.type === "multiple_choice" && (
-                              <>
-                                <option value="contains">Selected answers contain</option>
-                                <option value="not_contains">Selected answers do NOT contain</option>
-                              </>
-                            )}
-                            <option value="is_answered">Question is answered (any value)</option>
-                          </select>
-                        </div>
-
-                        {effectiveConditionType !== "is_answered" && (
+                  {conditionQuestionId &&
+                    (() => {
+                      const selectedQ = questions.find(
+                        (q) => q.id == conditionQuestionId,
+                      );
+                      if (!selectedQ) return null;
+                      const allowedConditionTypes = getAllowedConditionTypes(
+                        selectedQ.type,
+                      );
+                      const effectiveConditionType =
+                        allowedConditionTypes.includes(conditionType)
+                          ? conditionType
+                          : "equals";
+                      return (
+                        <>
                           <div className="fb-field" style={{ marginBottom: 0 }}>
-                            <label className="fb-label">
-                              {effectiveConditionType === "contains" || effectiveConditionType === "not_contains" ? "Option" : "Value"}
-                            </label>
-                            {selectedQ.type === "text" ? (
-                              <input className="fb-input" type="text" value={conditionValue} onChange={(e) => setConditionValue(e.target.value)} placeholder="Enter expected answer" />
-                            ) : (
-                              <select className="fb-select" value={conditionValue} onChange={(e) => setConditionValue(e.target.value)}>
-                                <option value="">-- Select an option --</option>
-                                {selectedQ.options && selectedQ.options.length > 0
-                                  ? selectedQ.options.map((opt, idx) => <option key={idx} value={opt}>{opt}</option>)
-                                  : <option disabled>No options available</option>}
-                              </select>
-                            )}
+                            <label className="fb-label">Condition type</label>
+                            <select
+                              className="fb-select"
+                              value={effectiveConditionType}
+                              onChange={(e) => {
+                                setConditionType(e.target.value);
+                                setConditionValue("");
+                              }}
+                            >
+                              <option value="equals">Answer equals</option>
+                              <option value="not_equals">
+                                Answer does NOT equal
+                              </option>
+                              {selectedQ.type === "multiple_choice" && (
+                                <>
+                                  <option value="contains">
+                                    Selected answers contain
+                                  </option>
+                                  <option value="not_contains">
+                                    Selected answers do NOT contain
+                                  </option>
+                                </>
+                              )}
+                              <option value="is_answered">
+                                Question is answered (any value)
+                              </option>
+                            </select>
                           </div>
-                        )}
 
-                        <p className="fb-condition-hint" style={{ margin: 0 }}>
-                          {effectiveConditionType === "equals" && "Shows when answer exactly matches the value above."}
-                          {effectiveConditionType === "not_equals" && "Shows when answer does NOT match the value above."}
-                          {effectiveConditionType === "contains" && "Shows when the selected answers include the option above."}
-                          {effectiveConditionType === "not_contains" && "Shows when the selected answers do not include the option above."}
-                          {effectiveConditionType === "is_answered" && "Shows when the previous question has any answer."}
-                        </p>
-                      </>
-                    );
-                  })()}
+                          {effectiveConditionType !== "is_answered" && (
+                            <div
+                              className="fb-field"
+                              style={{ marginBottom: 0 }}
+                            >
+                              <label className="fb-label">
+                                {effectiveConditionType === "contains" ||
+                                effectiveConditionType === "not_contains"
+                                  ? "Option"
+                                  : "Value"}
+                              </label>
+                              {selectedQ.type === "text" ? (
+                                <input
+                                  className="fb-input"
+                                  type="text"
+                                  value={conditionValue}
+                                  onChange={(e) =>
+                                    setConditionValue(e.target.value)
+                                  }
+                                  placeholder="Enter expected answer"
+                                />
+                              ) : (
+                                <select
+                                  className="fb-select"
+                                  value={conditionValue}
+                                  onChange={(e) =>
+                                    setConditionValue(e.target.value)
+                                  }
+                                >
+                                  <option value="">
+                                    -- Select an option --
+                                  </option>
+                                  {selectedQ.options &&
+                                  selectedQ.options.length > 0 ? (
+                                    selectedQ.options.map((opt, idx) => (
+                                      <option key={idx} value={opt}>
+                                        {opt}
+                                      </option>
+                                    ))
+                                  ) : (
+                                    <option disabled>
+                                      No options available
+                                    </option>
+                                  )}
+                                </select>
+                              )}
+                            </div>
+                          )}
+
+                          <p
+                            className="fb-condition-hint"
+                            style={{ margin: 0 }}
+                          >
+                            {effectiveConditionType === "equals" &&
+                              "Shows when answer exactly matches the value above."}
+                            {effectiveConditionType === "not_equals" &&
+                              "Shows when answer does NOT match the value above."}
+                            {effectiveConditionType === "contains" &&
+                              "Shows when the selected answers include the option above."}
+                            {effectiveConditionType === "not_contains" &&
+                              "Shows when the selected answers do not include the option above."}
+                            {effectiveConditionType === "is_answered" &&
+                              "Shows when the previous question has any answer."}
+                          </p>
+                        </>
+                      );
+                    })()}
                 </>
               )}
             </div>
           )}
         </div>
 
-        {(newQuestionType === "multiple_choice" || newQuestionType === "checkbox") && (
+        {(newQuestionType === "multiple_choice" ||
+          newQuestionType === "checkbox") && (
           <div className="fb-options-panel">
             <p className="fb-options-title">Options</p>
             <div className="fb-add-option-row">
-              <input className="fb-input" type="text" value={newOption} onChange={(e) => setNewOption(e.target.value)} placeholder="Enter an option" />
-              <button className="fb-btn-add" style={{ width: "auto", padding: "10px 18px" }} onClick={addOption}>Add</button>
+              <input
+                className="fb-input"
+                type="text"
+                value={newOption}
+                onChange={(e) => setNewOption(e.target.value)}
+                placeholder="Enter an option"
+              />
+              <button
+                className="fb-btn-add"
+                style={{ width: "auto", padding: "10px 18px" }}
+                onClick={addOption}
+              >
+                Add
+              </button>
             </div>
             {tempOptions.length > 0 && (
               <div className="fb-option-pills">
                 {tempOptions.map((option, index) => (
                   <div key={index} className="fb-option-pill">
                     <span>{option}</span>
-                    <button className="fb-option-pill-remove" onClick={() => removeOption(index)}>×</button>
+                    <button
+                      className="fb-option-pill-remove"
+                      onClick={() => removeOption(index)}
+                    >
+                      ×
+                    </button>
                   </div>
                 ))}
               </div>
@@ -1777,13 +2120,22 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
 
             <div className="fb-field">
               <label className="fb-label">Select a scale</label>
-              <select className="fb-select" value={ratingScale} onChange={(e) => { setRatingScale(e.target.value); if (e.target.value === "custom") setCustomRatingOptions([]); }}>
+              <select
+                className="fb-select"
+                value={ratingScale}
+                onChange={(e) => {
+                  setRatingScale(e.target.value);
+                  if (e.target.value === "custom") setCustomRatingOptions([]);
+                }}
+              >
                 <optgroup label="Numeric Scales">
                   <option value="numeric_5">1 to 5 (5 points)</option>
                   <option value="numeric_10">1 to 10 (10 points)</option>
                 </optgroup>
                 <optgroup label="Agreement Scales">
-                  <option value="agree_5">Strongly Disagree → Strongly Agree (5 points)</option>
+                  <option value="agree_5">
+                    Strongly Disagree → Strongly Agree (5 points)
+                  </option>
                   <option value="agree_3">Disagree → Agree (3 points)</option>
                 </optgroup>
                 <optgroup label="Quality Scales">
@@ -1791,8 +2143,12 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
                   <option value="quality_3">Bad → Good (3 points)</option>
                 </optgroup>
                 <optgroup label="Satisfaction Scales">
-                  <option value="satisfaction_5">Very Dissatisfied → Very Satisfied (5 points)</option>
-                  <option value="satisfaction_3">Dissatisfied → Satisfied (3 points)</option>
+                  <option value="satisfaction_5">
+                    Very Dissatisfied → Very Satisfied (5 points)
+                  </option>
+                  <option value="satisfaction_3">
+                    Dissatisfied → Satisfied (3 points)
+                  </option>
                 </optgroup>
                 <optgroup label="Frequency Scales">
                   <option value="frequency_5">Never → Always (5 points)</option>
@@ -1803,10 +2159,14 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
 
             {ratingScale !== "custom" && (
               <>
-                <p className="fb-label" style={{ marginBottom: "8px" }}>Preview</p>
+                <p className="fb-label" style={{ marginBottom: "8px" }}>
+                  Preview
+                </p>
                 <div className="fb-option-pills">
                   {getRatingScaleOptions(ratingScale).map((opt, idx) => (
-                    <div key={idx} className="fb-option-pill">{opt}</div>
+                    <div key={idx} className="fb-option-pill">
+                      {opt}
+                    </div>
                   ))}
                 </div>
               </>
@@ -1814,19 +2174,53 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
 
             {ratingScale === "custom" && (
               <>
-                <p className="fb-condition-hint" style={{ marginBottom: "10px", color: "#3a5fc8" }}>
+                <p
+                  className="fb-condition-hint"
+                  style={{ marginBottom: "10px", color: "#3a5fc8" }}
+                >
                   Add rating options in order from lowest to highest.
                 </p>
                 <div className="fb-add-option-row">
-                  <input className="fb-input" type="text" value={newOption} onChange={(e) => setNewOption(e.target.value)} placeholder="e.g. Poor, Fair, Good" />
-                  <button className="fb-btn-add" style={{ width: "auto", padding: "10px 18px" }} onClick={() => { if (newOption.trim() === "") { showToast("Please enter an option.", "warning"); return; } setCustomRatingOptions([...customRatingOptions, newOption]); setNewOption(""); }}>Add</button>
+                  <input
+                    className="fb-input"
+                    type="text"
+                    value={newOption}
+                    onChange={(e) => setNewOption(e.target.value)}
+                    placeholder="e.g. Poor, Fair, Good"
+                  />
+                  <button
+                    className="fb-btn-add"
+                    style={{ width: "auto", padding: "10px 18px" }}
+                    onClick={() => {
+                      if (newOption.trim() === "") {
+                        showToast("Please enter an option.", "warning");
+                        return;
+                      }
+                      setCustomRatingOptions([
+                        ...customRatingOptions,
+                        newOption,
+                      ]);
+                      setNewOption("");
+                    }}
+                  >
+                    Add
+                  </button>
                 </div>
                 {customRatingOptions.length > 0 && (
                   <div className="fb-option-pills">
                     {customRatingOptions.map((option, index) => (
                       <div key={index} className="fb-option-pill">
                         <span>{option}</span>
-                        <button className="fb-option-pill-remove" onClick={() => setCustomRatingOptions(customRatingOptions.filter((_, i) => i !== index))}>×</button>
+                        <button
+                          className="fb-option-pill-remove"
+                          onClick={() =>
+                            setCustomRatingOptions(
+                              customRatingOptions.filter((_, i) => i !== index),
+                            )
+                          }
+                        >
+                          ×
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -1837,44 +2231,97 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
         )}
 
         {newQuestionType === "number" && (
-          <div style={{ background: "#f0f9ff", padding: "15px", marginBottom: "15px", borderRadius: "5px", border: "1px solid #3b82f6" }}>
+          <div
+            style={{
+              background: "#f0f9ff",
+              padding: "15px",
+              marginBottom: "15px",
+              borderRadius: "5px",
+              border: "1px solid #3b82f6",
+            }}
+          >
             <h3 style={{ margin: "0 0 15px 0" }}>Number Configuration</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "15px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: "15px",
+              }}
+            >
               <div>
-                <label><strong>Minimum Value (optional):</strong><br />
-                  <input type="number" value={numberMin} onChange={(e) => setNumberMin(e.target.value)} placeholder="No minimum" style={{ padding: "8px", fontSize: "14px", width: "100%" }} />
+                <label>
+                  <strong>Minimum Value (optional):</strong>
+                  <br />
+                  <input
+                    type="number"
+                    value={numberMin}
+                    onChange={(e) => setNumberMin(e.target.value)}
+                    placeholder="No minimum"
+                    style={{ padding: "8px", fontSize: "14px", width: "100%" }}
+                  />
                 </label>
               </div>
               <div>
-                <label><strong>Maximum Value (optional):</strong><br />
-                  <input type="number" value={numberMax} onChange={(e) => setNumberMax(e.target.value)} placeholder="No maximum" style={{ padding: "8px", fontSize: "14px", width: "100%" }} />
+                <label>
+                  <strong>Maximum Value (optional):</strong>
+                  <br />
+                  <input
+                    type="number"
+                    value={numberMax}
+                    onChange={(e) => setNumberMax(e.target.value)}
+                    placeholder="No maximum"
+                    style={{ padding: "8px", fontSize: "14px", width: "100%" }}
+                  />
                 </label>
               </div>
-              <div>
-                <label><strong>Step:</strong><br />
-                  <select value={numberStep} onChange={(e) => setNumberStep(e.target.value)} style={{ padding: "8px", fontSize: "14px", width: "100%" }}>
-                    <option value="1">Integers only (1, 2, 3...)</option>
-                    <option value="0.1">Decimals (0.1)</option>
-                    <option value="0.01">Decimals (0.01)</option>
-                    <option value="any">Any number</option>
+              {/* <div>
+                <label>
+                  <strong>Step:</strong>
+                  <br />
+                  <select
+                    value={numberStep}
+                    onChange={(e) => setNumberStep(e.target.value)}
+                    style={{ padding: "8px", fontSize: "14px", width: "100%" }}
+                  >
+                    <option value="1">Whole Number</option>
+                    <option value="any">Decimal</option>
                   </select>
                 </label>
-              </div>
+              </div> */}
             </div>
           </div>
         )}
 
         {newQuestionType === "datetime" && (
-          <div style={{ background: "#fef3c7", padding: "15px", marginBottom: "15px", borderRadius: "5px", border: "1px solid #f59e0b" }}>
+          <div
+            style={{
+              background: "#fef3c7",
+              padding: "15px",
+              marginBottom: "15px",
+              borderRadius: "5px",
+              border: "1px solid #f59e0b",
+            }}
+          >
             <h3 style={{ margin: "0 0 15px 0" }}>Date/Time Type</h3>
             <div>
-              <label><strong>Select input type:</strong><br />
-                <select value={dateTimeType} onChange={(e) => setDateTimeType(e.target.value)} style={{ padding: "8px", fontSize: "14px", width: "100%", maxWidth: "400px" }}>
+              <label>
+                <strong>Select input type:</strong>
+                <br />
+                <select
+                  value={dateTimeType}
+                  onChange={(e) => setDateTimeType(e.target.value)}
+                  style={{
+                    padding: "8px",
+                    fontSize: "14px",
+                    width: "100%",
+                    maxWidth: "400px",
+                  }}
+                >
                   <option value="date">Date only (MM/DD/YYYY)</option>
                   <option value="time">Time only (HH:MM)</option>
                   <option value="datetime-local">Date and Time</option>
-                  <option value="month">Month and Year (MM/YYYY)</option>
-                  <option value="week">Week (Week 1-52)</option>
+                  {/* <option value="month">Month and Year (MM/YYYY)</option>
+                  <option value="week">Week (Week 1-52)</option> */}
                 </select>
               </label>
             </div>
@@ -1889,19 +2336,38 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
       {/* ── Zone 3: Preview ── */}
       <div className="fb-paper">
         <p className="fb-section-title">
-          Form Preview — {questions.length} question{questions.length !== 1 ? "s" : ""}
+          Form Preview — {questions.length} question
+          {questions.length !== 1 ? "s" : ""}
         </p>
         {questions.length > 0 && (
-          <p className="fb-reorder-hint" style={{ color: "#888", fontSize: "0.85em", marginTop: "-6px", marginBottom: "14px" }}>
-            Use the ⋮⋮ handle to drag questions into order. Click <strong>Edit</strong> on any question to change its details.
+          <p
+            className="fb-reorder-hint"
+            style={{
+              color: "#888",
+              fontSize: "0.85em",
+              marginTop: "-6px",
+              marginBottom: "14px",
+            }}
+          >
+            Use the ⋮⋮ handle to drag questions into order. Click{" "}
+            <strong>Edit</strong> on any question to change its details.
           </p>
         )}
 
         {questions.length === 0 ? (
-          <p style={{ color: "#ccc", fontSize: "0.9em" }}>No questions yet. Add one above.</p>
+          <p style={{ color: "#ccc", fontSize: "0.9em" }}>
+            No questions yet. Add one above.
+          </p>
         ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleQuestionsDragEnd}>
-            <SortableContext items={questions.map((q) => q.id)} strategy={verticalListSortingStrategy}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleQuestionsDragEnd}
+          >
+            <SortableContext
+              items={questions.map((q) => q.id)}
+              strategy={verticalListSortingStrategy}
+            >
               {(() => {
                 let questionCounter = 0;
                 return questions.map((question) => {
@@ -1910,10 +2376,14 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
                     <SortableQuestionRow
                       key={question.id}
                       question={question}
-                      questionIndex={question.type === "section" ? -1 : questionCounter - 1}
+                      questionIndex={
+                        question.type === "section" ? -1 : questionCounter - 1
+                      }
                       questions={questions}
                       onDelete={deleteQuestion}
-                      onEdit={openEditModal}  /* ← NEW: wire up the edit handler */
+                      onEdit={
+                        openEditModal
+                      } /* ← NEW: wire up the edit handler */
                     />
                   );
                 });
@@ -1927,16 +2397,25 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
       <div className="fb-save-panel">
         <p className="fb-save-title">Ready to Save?</p>
         <p className="fb-save-count">
-          Your form has {questions.filter((q) => q.type !== "section").length} question
-          {questions.filter((q) => q.type !== "section").length !== 1 ? "s" : ""}
-          {stepMode && hasSections && ` across ${
-            (() => {
-              const firstSectionIdx = questions.findIndex((q) => q.type === "section");
-              const before = questions.slice(0, firstSectionIdx).filter((q) => q.type !== "section").length;
-              const sections = questions.filter((q) => q.type === "section").length;
+          Your form has {questions.filter((q) => q.type !== "section").length}{" "}
+          question
+          {questions.filter((q) => q.type !== "section").length !== 1
+            ? "s"
+            : ""}
+          {stepMode &&
+            hasSections &&
+            ` across ${(() => {
+              const firstSectionIdx = questions.findIndex(
+                (q) => q.type === "section",
+              );
+              const before = questions
+                .slice(0, firstSectionIdx)
+                .filter((q) => q.type !== "section").length;
+              const sections = questions.filter(
+                (q) => q.type === "section",
+              ).length;
               return sections + (before > 0 ? 1 : 0);
-            })()
-          } steps`}
+            })()} steps`}
         </p>
         <button className="fb-btn-save" onClick={saveForm}>
           💾 {isEditMode ? "Update Form" : "Save Form to Database"}
