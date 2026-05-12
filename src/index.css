@@ -1594,3 +1594,122 @@ p, label, span {
   background: #a0c4ff;
   cursor: not-allowed;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* Question card action buttons — responsive                                   */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*
+  Two styles, one for each breakpoint.
+
+  DESKTOP — .fb-action-soft  (Option D: soft-filled)
+  ─────────────────────────────────────────────────
+  Always visible with a lightly tinted background. The edit button uses a
+  blue tint, the delete button uses a red tint — both are soft enough that
+  they don't overpower the question text sitting next to them.
+
+  CSS custom properties (--fb-edit-bg, etc.) are defined here rather than
+  inline in JSX. That means if you ever want to tweak the shade you change
+  it in one place, not hunt through component code.
+
+  MOBILE — .fb-action-ghost  (Option A: icon-only ghost)
+  ──────────────────────────────────────────────────────
+  Tiny 30×30 square buttons with just an emoji icon. The thin border makes
+  them discoverable (you can see they're buttons). On hover the background
+  and border flash to the semantic colour (blue for edit, red for delete).
+
+  The .fb-action-ghost class is hidden on desktop and .fb-action-soft is
+  hidden on mobile using media queries at the bottom of this block.
+*/
+
+/* ── Shared base resets ────────────────────────────────────────────────────── */
+.fb-action-soft,
+.fb-action-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s ease, background 0.15s ease,
+              border-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Option D: soft-filled buttons (desktop) ───────────────────────────────── */
+.fb-action-soft {
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 8px;
+  border: none;
+}
+
+.fb-action-soft--edit {
+  background: rgba(59, 130, 246, 0.10);   /* very light blue tint */
+  color: #1d4ed8;                          /* blue 700 — readable on the tint */
+}
+
+.fb-action-soft--edit:hover {
+  background: rgba(59, 130, 246, 0.20);
+}
+
+.fb-action-soft--delete {
+  background: rgba(239, 68, 68, 0.10);    /* very light red tint */
+  color: #b91c1c;                          /* red 700 */
+}
+
+.fb-action-soft--delete:hover {
+  background: rgba(239, 68, 68, 0.20);
+}
+
+/* ── Option A: icon-only ghost buttons (mobile) ────────────────────────────── */
+.fb-action-ghost {
+  width: 30px;
+  height: 30px;
+  font-size: 15px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid #d1d5db;              /* neutral gray border */
+  color: #6b7280;                          /* neutral gray icon */
+}
+
+.fb-action-ghost--edit:hover {
+  background: rgba(59, 130, 246, 0.10);
+  border-color: #93c5fd;                  /* blue 300 */
+  color: #1d4ed8;
+}
+
+.fb-action-ghost--delete:hover {
+  background: rgba(239, 68, 68, 0.10);
+  border-color: #fca5a5;                  /* red 300 */
+  color: #b91c1c;
+}
+
+/* ── Responsive visibility ──────────────────────────────────────────────────── */
+/*
+  On desktop screens (≥768px):
+    - Show the soft-filled buttons
+    - Hide the ghost buttons
+
+  On mobile screens (<768px):
+    - Show the ghost buttons
+    - Hide the soft-filled buttons
+
+  We use 768px because that's exactly what useIsMobile() uses as its
+  breakpoint (MOBILE_BREAKPOINT in useIsMobile.js). Keeping them in sync
+  means the JS state and the CSS visibility always agree — there's no
+  flash where JS says "mobile" but CSS is still showing desktop buttons.
+
+  Note: these classes appear inside .fb-preview-card and .fb-section-card,
+  but the selectors here are global and that's fine — the class names are
+  unique enough (fb-action-*) that there's no collision risk.
+*/
+
+@media (min-width: 768px) {
+  .fb-action-ghost { display: none; }
+}
+
+@media (max-width: 767px) {
+  .fb-action-soft  { display: none; }
+}
