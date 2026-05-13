@@ -1367,7 +1367,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
     setCustomRatingOptions([]);
     setNumberMin("");
     setNumberMax("");
-    setNumberStep("1");
     setDateTimeType("date");
     showToast("Question added.", "success");
   }
@@ -1398,6 +1397,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
     setQuestions([...questions, newSection]);
     setNewSectionTitle("");
     setNewSectionDescription("");
+    showToast("Section added.", "success");
   }
 
   function getRatingScaleOptions(scale) {
@@ -1615,7 +1615,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
           />
         </div>
 
-        <div className="fb-field" style={{ marginBottom: 0 }}>
+        <div className="fb-field">
           <label className="fb-label">Privacy Notice</label>
           <div
             style={{
@@ -1659,7 +1659,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
           </div>
         </div>
 
-        <div className="fb-field" style={{ marginBottom: 0 }}>
+        <div className="fb-field" >
           <label className="fb-label">Step Mode</label>
           <label className="fb-toggle-row">
             <input
@@ -1850,7 +1850,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
               if (e.target.value === "number") {
                 setNumberMin("");
                 setNumberMax("");
-                setNumberStep("1");
               }
               if (e.target.value === "datetime") {
                 setDateTimeType("date");

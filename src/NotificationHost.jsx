@@ -1,292 +1,169 @@
 // src/NotificationHost.jsx
 //
-// This component is the "stage" for all notifications.
-// It renders two things:
-//   1. The toast banner (top of screen, auto-dismisses)
-//   2. The confirm modal (centered, waits for user input)
+// WHAT CHANGED FROM THE ORIGINAL:
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. All inline style={{ ... }} replaced with CSS class names.
+//    The toast banner and confirm modal now use the .notif-* namespace.
 //
-// It lives in App.jsx, above everything else, so it always sits on top
-// of the page visually (via CSS z-index and position: fixed).
+// 2. Toast type styles (success/error/warning/info) moved from the
+//    TOAST_STYLES JavaScript object into CSS classes (.notif-toast--success,
+//    .notif-toast--error, etc.). This is the right place for visual rules.
 //
-// PROPS it receives (passed down from App.jsx):
-//   toast      — the current toast object, or null
-//   confirm    — the current confirm object, or null
-//   hideToast  — function to dismiss the toast early
-//   hideConfirm — function to dismiss the modal
+//    BEFORE: a JS object with background/borderColor/icon values, applied
+//            via inline style. Mixing data (icon) and appearance (background).
 //
-// It renders nothing when both toast and confirm are null.
+//    AFTER:  icon stays in JS (it's data), appearance moves to CSS classes.
+//            The JS object only needs to map type → icon character now.
+//
+// 3. The confirm modal overlay uses backdrop-filter blur from CSS,
+//    matching the premium glass aesthetic of the rest of the app.
+//
+// ALL LOGIC IS IDENTICAL TO THE ORIGINAL:
+// - handleConfirmYes() and handleConfirmNo() are unchanged
+// - hideToast / hideConfirm prop wiring is unchanged
+// - toast / confirm state shapes are unchanged
+// ─────────────────────────────────────────────────────────────────────────────
 
-// ── TOAST TYPE STYLES ──────────────────────────────────────────────────────
-// Each toast "type" gets its own color so the user immediately understands
-// the severity at a glance, without reading the message.
+// ── Toast icons ────────────────────────────────────────────────────────────
+// We keep the icon mapping in JavaScript because it's DATA, not appearance.
+// The icon character tells the user WHAT kind of notification this is.
+// The color and background (appearance) belong in CSS.
 //
-// We define these as a plain object (a lookup table / map).
-// The keys match the `type` string we pass to showToast().
-// Each value is an object with the CSS properties for that type.
-const TOAST_STYLES = {
-  success: {
-    background: 'rgba(39, 174, 96, 0.96)',   // green
-    borderColor: 'rgba(255,255,255,0.25)',
-    icon: '✓',
-  },
-  error: {
-    background: 'rgba(192, 57, 43, 0.96)',   // red
-    borderColor: 'rgba(255,255,255,0.25)',
-    icon: '✕',
-  },
-  warning: {
-    background: 'rgba(243, 156, 18, 0.96)',  // amber
-    borderColor: 'rgba(255,255,255,0.25)',
-    icon: '⚠',
-  },
-  info: {
-    background: 'rgba(41, 128, 185, 0.96)',  // blue
-    borderColor: 'rgba(255,255,255,0.25)',
-    icon: 'ℹ',
-  },
+// This is the "separation of concerns" principle applied at a granular level:
+// even within a component, ask yourself "is this data or style?"
+// Icons/text = data (JS). Colors/spacing = style (CSS).
+const TOAST_ICONS = {
+  success: '✓',
+  error:   '✕',
+  warning: '⚠',
+  info:    'ℹ',
 }
 
 function NotificationHost({ toast, confirm, hideToast, hideConfirm }) {
 
-  // ── CONFIRM HANDLERS ───────────────────────────────────────────────────────
-  // When the user clicks "Yes / Confirm":
-  //   1. Run whatever callback was stored in confirm.onConfirm
-  //   2. Close the modal
+  // ── Confirm handlers (unchanged) ──────────────────────────────────────────
   function handleConfirmYes() {
-    if (confirm?.onConfirm) {
-      confirm.onConfirm()      // run the stored action (e.g. deleteForm)
-    }
-    hideConfirm()              // close the modal regardless
+    if (confirm?.onConfirm) confirm.onConfirm()
+    hideConfirm()
   }
 
-  // When the user clicks "Cancel": just close. Don't run anything.
   function handleConfirmNo() {
     hideConfirm()
   }
 
-  // Look up the style for the current toast type.
-  // If the type is somehow unknown, fall back to 'info'.
-  const toastStyle = toast ? (TOAST_STYLES[toast.type] ?? TOAST_STYLES.info) : null
+  // The type to use if somehow an unknown type arrives.
+  // Defensive programming: always have a fallback.
+  const toastType = toast?.type ?? 'info'
+  const toastIcon = TOAST_ICONS[toastType] ?? TOAST_ICONS.info
 
   return (
     <>
-      {/* ════════════════════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════════════════════
           TOAST BANNER
-          position: fixed — stays pinned to the viewport even when scrolling
-          top / left / right — positions it at the top-center of the screen
-          zIndex: 9000 — sits above everything, including the QR modal (1000)
-          The banner only renders when toast is not null.
-      ════════════════════════════════════════════════════════════════ */}
+          ══════════════════════════════════════════════════════════════════════
+
+          The toast uses two class names:
+          1. .notif-toast          — base styles (position, layout, animation)
+          2. .notif-toast--{type}  — type-specific color (success/error/etc.)
+
+          This "base + modifier" pattern (BEM) means we write the shared
+          styles once and only override what differs per type.
+
+          BEFORE (all inline):
+            <div style={{
+              position: 'fixed', top: '20px', left: '50%',
+              transform: 'translate(-50%, 0)', zIndex: 9000,
+              maxWidth: '480px', background: toastStyle.background,
+              border: `1px solid ${toastStyle.borderColor}`,
+              borderRadius: '14px', padding: '14px 18px',
+              ...etc (15 more properties)
+            }}>
+
+          AFTER (class names):
+            <div className={`notif-toast notif-toast--${toastType}`}>
+
+          The animation (toastSlideDown) stays in index.css exactly as before.
+          We reference it in the .notif-toast class via animation property.
+      ════════════════════════════════════════════════════════════════════════ */}
       {toast && (
         <div
-          style={{
-            position: 'fixed',
-            top: '20px',
-            left: '50%',
-
-            // translate(-50%, 0) shifts the element left by 50% of its OWN
-            // width. Combined with left: 50% (which is 50% of the PARENT),
-            // this perfectly centers it horizontally regardless of its width.
-            transform: 'translate(-50%, 0)',
-
-            zIndex: 9000,
-
-            // We cap the width so it looks like a neat pill on wide screens,
-            // but allow it to shrink on mobile.
-            maxWidth: '480px',
-            width: 'calc(100% - 40px)',  // 20px padding on each side on small screens
-
-            background: toastStyle.background,
-            border: `1px solid ${toastStyle.borderColor}`,
-            borderRadius: '14px',
-            padding: '14px 18px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',  // Safari prefix
-
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-
-            // CSS animation — we define this in index.css below.
-            // 'slideDown' makes the banner drop in from above.
-            animation: 'toastSlideDown 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            // cubic-bezier(0.34, 1.56, 0.64, 1) is a "spring" easing —
-            // it overshoots slightly before settling, giving a satisfying bounce.
-          }}
+          className={`notif-toast notif-toast--${toastType}`}
           role="alert"
-          // role="alert" is an accessibility attribute. Screen readers will
-          // announce this element's content immediately when it appears.
+          // role="alert" is an ARIA attribute. Screen readers announce
+          // the contents of role="alert" elements immediately when they
+          // appear, without the user having to navigate to them.
+          // This makes toasts accessible to users who can't see the screen.
         >
-          {/* Icon circle on the left */}
-          <span style={{
-            flexShrink: 0,          // don't let it compress if text is long
-            width: '28px',
-            height: '28px',
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.22)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '14px',
-            color: '#fff',
-            fontWeight: '700',
-          }}>
-            {toastStyle.icon}
+          {/* Icon circle */}
+          <span className="notif-toast__icon">
+            {toastIcon}
           </span>
 
           {/* Message text */}
-          <span style={{
-            flex: 1,                // take up all remaining horizontal space
-            fontSize: '0.92em',
-            color: '#fff',
-            fontWeight: '500',
-            lineHeight: '1.4',
-          }}>
+          <span className="notif-toast__message">
             {toast.message}
           </span>
 
-          {/* Dismiss (×) button on the right */}
+          {/* Dismiss button */}
           <button
+            className="notif-toast__close"
             onClick={hideToast}
             aria-label="Dismiss notification"
-            // aria-label explains the button to screen readers since it has
-            // no visible text, just the × character.
-            style={{
-              flexShrink: 0,
-              background: 'rgba(255,255,255,0.18)',
-              border: 'none',
-              borderRadius: '8px',
-              color: '#fff',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '700',
-              width: '28px',
-              height: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              lineHeight: 1,
-              padding: 0,
-              transition: 'background 0.15s ease',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.30)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
           >
             ×
           </button>
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════════════════════
           CONFIRM MODAL
-          Same overlay + card pattern used by the privacy notice modal
-          in FormDisplay.jsx. Consistent UX throughout the app.
-          Only renders when confirm is not null.
-      ════════════════════════════════════════════════════════════════ */}
+          ══════════════════════════════════════════════════════════════════════
+
+          The confirm modal has three layers:
+          1. .notif-overlay    — the dark backdrop that covers the whole page
+          2. .notif-modal      — the white card in the center
+          3. Inside the card:  icon, message, Cancel button, Confirm button
+
+          Clicking the overlay calls handleConfirmNo (same as Cancel).
+          Clicking inside the card uses e.stopPropagation() so the click
+          doesn't bubble up to the overlay and accidentally close the modal.
+
+          WHY stopPropagation():
+          In the DOM, click events "bubble" upward through parent elements.
+          If you click inside the card, the click fires on the card AND on
+          every parent including the overlay. stopPropagation() cuts the
+          bubble at the card — the overlay's onClick never fires.
+      ════════════════════════════════════════════════════════════════════════ */}
       {confirm && (
         <div
-          // Dark overlay behind the modal
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(0, 0, 0, 0.50)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9001,   // one higher than toast so it covers it if both appear
-            padding: '20px',
-            boxSizing: 'border-box',
-            animation: 'fadeIn 0.2s ease',
-          }}
+          className="notif-overlay"
           onClick={handleConfirmNo}
-          // Clicking the overlay (outside the card) = Cancel
         >
           <div
-            // The white card
-            style={{
-              background: '#fff',
-              borderRadius: '18px',
-              padding: '32px 28px',
-              maxWidth: '400px',
-              width: '100%',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
-              animation: 'modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            }}
+            className="notif-modal"
             onClick={e => e.stopPropagation()}
-            // stopPropagation prevents clicks INSIDE the card from
-            // triggering the overlay's onClick (which would close the modal).
           >
-            {/* Warning icon at the top */}
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              background: '#fdecea',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '22px',
-              marginBottom: '16px',
-            }}>
-              ⚠️
+            {/* Danger icon */}
+            <div className="notif-modal__icon-wrap">
+              <span className="notif-modal__icon">⚠</span>
             </div>
 
-            {/* The question */}
-            <p style={{
-              margin: '0 0 24px 0',
-              fontSize: '1em',
-              color: '#1a1a2e',
-              fontWeight: '600',
-              lineHeight: '1.5',
-            }}>
+            {/* The question being asked */}
+            <p className="notif-modal__message">
               {confirm.message}
             </p>
 
-            {/* Action buttons row */}
-            <div style={{ display: 'flex', gap: '10px' }}>
-
-              {/* Cancel — left, muted style */}
+            {/* Action buttons */}
+            <div className="notif-modal__actions">
               <button
+                className="notif-modal__btn notif-modal__btn--cancel"
                 onClick={handleConfirmNo}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  fontSize: '0.95em',
-                  background: '#f0f0f0',
-                  color: '#555',
-                  border: '1px solid #ddd',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  transition: 'background 0.15s ease',
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = '#e4e4e4'}
-                onMouseLeave={e => e.currentTarget.style.background = '#f0f0f0'}
               >
                 Cancel
               </button>
-
-              {/* Confirm — right, red (destructive action) */}
               <button
+                className="notif-modal__btn notif-modal__btn--confirm"
                 onClick={handleConfirmYes}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  fontSize: '0.95em',
-                  background: '#c0392b',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: '700',
-                  transition: 'background 0.15s ease',
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = '#a93226'}
-                onMouseLeave={e => e.currentTarget.style.background = '#c0392b'}
               >
                 Confirm
               </button>
@@ -295,9 +172,6 @@ function NotificationHost({ toast, confirm, hideToast, hideConfirm }) {
         </div>
       )}
     </>
-    // The <> </> is a React Fragment — a wrapper that renders no actual HTML
-    // element. We need it because JSX requires a single root element, but
-    // we're returning two siblings (toast + modal) with nothing wrapping them.
   )
 }
 
