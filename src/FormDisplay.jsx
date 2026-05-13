@@ -401,11 +401,11 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
             min={question.number_min || undefined}
             max={question.number_max || undefined}
-            step={
-              question.number_step === "any"
-                ? "any"
-                : question.number_step || "1"
-            }
+            // step={
+            //   question.number_step === "any"
+            //     ? "any"
+            //     : question.number_step || "1"
+            // }
             className="fd-input"
             placeholder={
               question.number_min && question.number_max

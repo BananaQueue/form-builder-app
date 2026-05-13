@@ -2242,12 +2242,12 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
           >
             <h3 style={{ margin: "0 0 15px 0" }}>Number Configuration</h3>
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr 1fr",
-                gap: "15px",
-              }}
-            >
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: "15px",
+  }}
+>
               <div>
                 <label>
                   <strong>Minimum Value (optional):</strong>
@@ -2257,7 +2257,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
                     value={numberMin}
                     onChange={(e) => setNumberMin(e.target.value)}
                     placeholder="No minimum"
-                    style={{ padding: "8px", fontSize: "14px", width: "100%" }}
+                    style={{ padding: "8px", fontSize: "14px", width: "100%", boxSizing: "border-box" }}
                   />
                 </label>
               </div>
@@ -2270,7 +2270,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
                     value={numberMax}
                     onChange={(e) => setNumberMax(e.target.value)}
                     placeholder="No maximum"
-                    style={{ padding: "8px", fontSize: "14px", width: "100%" }}
+                    style={{ padding: "8px", fontSize: "14px", width: "100%", boxSizing: "border-box" }}
                   />
                 </label>
               </div>
