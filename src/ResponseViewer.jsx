@@ -39,7 +39,7 @@ function ResponseViewer({ responseId, onBack }) {
   async function fetchResponseDetails() {
     setIsRefreshing(true)
     try {
-      const res    = await fetch(apiUrl(`/get_response_details.php?id=${responseId}`))
+      const res    = await fetch(apiUrl(`/get_response_details.php?id=${responseId}`), { credentials: 'include' })
       const result = await res.json()
       if (result.success) {
         setResponse(result.response)

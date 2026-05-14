@@ -249,7 +249,6 @@ function AdminLayout({ onLogout, currentUser, showToast, showConfirm }) {
               <ResponseViewer
                 responseId={viewingResponseId}
                 onBack={handleBackToResponses}
-                showToast={showToast}
               />
             ) : (
               <Navigate to="/" />

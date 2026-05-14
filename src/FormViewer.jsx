@@ -120,7 +120,7 @@ function FormViewer({ formId, onBack, showToast }) {
 
   async function fetchFormDetails() {
     try {
-      const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}`));
+      const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}`), { credentials: 'include' });
       const result   = await response.json();
       if (result.success) {
         setForm(result.form);

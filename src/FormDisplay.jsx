@@ -195,7 +195,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
         }
         return "?";
       });
-      showToast?.(`Please answer required questions: ${questionNumbers.join(", ")}`, "warning");
+      showToast(`Please answer required questions: ${questionNumbers.join(", ")}`, "warning");
       return questionNumbers;
     }
     return [];
@@ -249,7 +249,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
         }
         return "?";
       });
-      showToast?.(`Please answer required questions: ${questionNumbers.join(", ")}`, "warning");
+      showToast(`Please answer required questions: ${questionNumbers.join(", ")}`, "warning");
       return;
     }
 
@@ -291,10 +291,10 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
         setSubmitted(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        showToast?.("Error submitting form: " + (result.error || "Unknown error"), "error");
+        showToast("Error submitting form: " + (result.error || "Unknown error"), "error");
       }
     } catch (error) {
-       showToast?.("Failed to connect to server: " + error.message, "error");
+       showToast("Failed to connect to server: " + error.message, "error");
       console.error("Error:", error);
     } finally {
       setSubmitting(false);

@@ -34,7 +34,7 @@ function ResponseList({ formId, onBack, onViewResponse }) {
 
   async function fetchResponses() {
     try {
-      const response = await fetch(apiUrl(`/get_responses.php?form_id=${formId}`))
+      const response = await fetch(apiUrl(`/get_responses.php?form_id=${formId}`), { credentials: 'include' })
       const result   = await response.json()
 
       if (result.success) {
