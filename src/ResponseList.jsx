@@ -1,16 +1,41 @@
+// src/ResponseList.jsx
+//
+// WHAT CHANGED FROM THE ORIGINAL:
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. All inline style={{ ... }} replaced with CSS class names.
+//    Uses the new .rl-* namespace (Response List).
+//
+// 2. The export button no longer uses inline style for its disabled/active
+//    color states. Instead it uses .rl-export-btn and
+//    .rl-export-btn--disabled modifier classes.
+//
+// 3. Each response row uses .rl-response-row instead of an inline style
+//    object with display, justifyContent, background, padding, etc.
+//
+// 4. The empty state gets a proper .rl-empty treatment instead of a
+//    bare centered <div> with inline padding and color.
+//
+// ALL LOGIC IS IDENTICAL TO THE ORIGINAL:
+// - fetchResponses() is unchanged
+// - handleExport() (window.open to export URL) is unchanged
+// - onBack / onViewResponse prop wiring is unchanged
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { useState, useEffect } from 'react'
 import { apiUrl, API_BASE } from './apiBase'
 
 function ResponseList({ formId, onBack, onViewResponse }) {
-  const [form, setForm] = useState(null)
+  const [form, setForm]           = useState(null)
   const [responses, setResponses] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState(null)
+
+  // ── Data fetching (unchanged) ──────────────────────────────────────────────
 
   async function fetchResponses() {
     try {
       const response = await fetch(apiUrl(`/get_responses.php?form_id=${formId}`))
-      const result = await response.json()
+      const result   = await response.json()
 
       if (result.success) {
         setForm(result.form)
@@ -27,122 +52,137 @@ function ResponseList({ formId, onBack, onViewResponse }) {
 
   useEffect(() => {
     fetchResponses()
-    // we intentionally don't include fetchResponses in deps
-    // to avoid re-creating it on every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formId])
 
+  // ── Export handler (unchanged) ─────────────────────────────────────────────
+
   function handleExport() {
-  // Create a link to the export endpoint
-  const exportUrl = `${API_BASE}/export_responses.php?form_id=${formId}`
-  
-  // Open in new window to trigger download
-  window.open(exportUrl, '_blank')
-}
+    const exportUrl = `${API_BASE}/export_responses.php?form_id=${formId}`
+    window.open(exportUrl, '_blank')
+  }
+
+  // ── Guards ─────────────────────────────────────────────────────────────────
 
   if (loading) {
-    return <div className="fv-shell">
-      <p className="fv-meta">Loading responses...</p>
+    return (
+      <div className="rl-shell">
+        <p className="rl-meta">Loading responses…</p>
       </div>
+    )
   }
 
   if (error) {
     return (
-      <div className="fv-shell">
-        <div className="fv-paper">
-          <p style={{ color: "#c0392b" }}>{error}</p>
-          <button className="glass-button" onClick={onBack}>
-            ← Back to List
-          </button>
+      <div className="rl-shell">
+        <div className="rl-error">
+          <p className="rl-error__text">{error}</p>
+          <button className="glass-button" onClick={onBack}>← Back</button>
         </div>
       </div>
-    );
+    )
   }
 
+  // ── Main render ────────────────────────────────────────────────────────────
+
   return (
-    <div className="fv-shell">
-      {/* Header */}
-      <div className="fv-action-bar">
-        <button
-          className="glass-button"
-          style={{ backgroundColor: "rgba(100,100,100,0.40)" }}
-          onClick={onBack}
-        >
-          ← Back to List
+    <div className="rl-shell">
+
+      {/* ── Action bar ──────────────────────────────────────────────────────
+          Two buttons: Back (left) and Export CSV (right).
+          The export button is disabled when there are no responses.
+
+          BEFORE:
+            <button style={{
+              padding: '10px 20px',
+              background: responses.length === 0 ? '#ccc' : '#28a745',
+              color: 'white',
+              ...
+            }}>
+
+          AFTER:
+            <button className={`rl-export-btn ${
+              responses.length === 0 ? 'rl-export-btn--disabled' : ''
+            }`}>
+
+          The disabled/active appearance is now in CSS, not JSX.
+      ──────────────────────────────────────────────────────────────────── */}
+      <div className="rl-action-bar">
+        <button className="glass-button" onClick={onBack}>
+          ← Back
         </button>
+
         <button
-            onClick={handleExport}
-            className="glass-button"
-            disabled={responses.length === 0}
-            style={{
-            padding: '10px 20px',
-            background: responses.length === 0 ? '#ccc' : '#28a745',
-            color: 'white',
-            border: 'none',
-            cursor: responses.length === 0 ? 'not-allowed' : 'pointer',
-            borderRadius: '3px'
-            }}
+          className={`rl-export-btn ${
+            responses.length === 0 ? 'rl-export-btn--disabled' : ''
+          }`}
+          onClick={handleExport}
+          disabled={responses.length === 0}
         >
-    📥 Export to CSV
+          📥 Export CSV
         </button>
       </div>
 
-      {/* Form Info */}
-      <div style={{ marginBottom: '30px' }}>
-        <h1 style={{ margin: '0 0 10px 0' }}>Responses: {form.title}</h1>
-        <p style={{ color: '#ffffff', fontSize: '16px' }}>
-          Total Responses: <strong>{responses.length}</strong>
+      {/* ── Page header ─────────────────────────────────────────────────────
+          Form title and total response count.
+          The hr acts as a visual break between header and content.
+      ──────────────────────────────────────────────────────────────────── */}
+      <div className="rl-header">
+        <h1 className="rl-title">
+          {form.title}
+        </h1>
+        <p className="rl-subtitle">
+          {responses.length === 0
+            ? 'No responses yet'
+            : `${responses.length} ${responses.length === 1 ? 'response' : 'responses'}`
+          }
         </p>
       </div>
 
-      <hr />
+      <hr className="rl-divider" />
 
-      {/* Responses List */}
+      {/* ── Response list or empty state ─────────────────────────────────── */}
       {responses.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px'}}>
-          <p style={{ fontSize: '18px',color: '#fffafa' }}> <strong>No responses yet.</strong></p>
-          <p style={{ color: '#fffafa' }}>Share this form to start collecting responses!</p>
+
+        // ── Empty state ─────────────────────────────────────────────────────
+        <div className="rl-empty">
+          <div className="rl-empty__icon">📭</div>
+          <p className="rl-empty__title">No responses yet</p>
+          <p className="rl-empty__message">
+            Share the form link to start collecting responses.
+          </p>
         </div>
+
       ) : (
-        <div>
+
+        // ── Response rows ───────────────────────────────────────────────────
+        <div className="rl-response-list">
           {responses.map((response, index) => (
-            <div
-              key={response.id}
-              style={{
-                background: '#f9f9f9',
-                padding: '20px',
-                marginBottom: '15px',
-                border: '1px solid #ddd',
-                borderRadius: '5px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <div>
-                <strong style={{ fontSize: '16px', color: '#333' }}>Response #{index + 1}</strong>
-                <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
-                  Submitted: {new Date(response.submitted_at).toLocaleString()}
-                </p>
+
+            // Each row shows: response number, date, and a View Details button
+            <div key={response.id} className="rl-response-row">
+
+              <div className="rl-response-row__info">
+                <span className="rl-response-row__number">
+                  Response #{index + 1}
+                </span>
+                <span className="rl-response-row__date">
+                  {new Date(response.submitted_at).toLocaleString()}
+                </span>
               </div>
 
               <button
+                className="rl-view-btn"
                 onClick={() => onViewResponse(response.id)}
-                style={{
-                  padding: '10px 20px',
-                  background: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer',
-                  borderRadius: '3px'
-                }}
               >
                 View Details
               </button>
+
             </div>
           ))}
         </div>
       )}
+
     </div>
   )
 }
