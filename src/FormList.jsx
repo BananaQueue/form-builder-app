@@ -145,7 +145,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
           <p className="form-list-error__title">⚠ Could not load forms</p>
           <p className="form-list-error__message">{error}</p>
           <button
-            className="glass-button"
+            className="glass-button glass-button--error"
             onClick={retryLoad}
           >
             Try Again

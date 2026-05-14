@@ -388,6 +388,17 @@ body::after {
      Subtle but satisfying. */
 }
 
+.glass-button--error{
+  display: block;
+  background: none;
+  border-color: var(--border-glass);
+  box-shadow: var(--shadow-strong);
+}
+
+.glass-button--error:hover {
+  background: var(--bg-glass-hover);
+}
+
 .glass-button:active {
   transform: translateY(0px);
   /* Pressing a button "pushes it down" back to its resting position */
