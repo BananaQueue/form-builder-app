@@ -126,20 +126,22 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
           + New Form
         </button>
 
-        <button
-          onClick={() => navigate("/settings")}
-          className={navButtonClass("/settings")}
-        >
-          Settings
-        </button>
-
         {isSuperAdmin && (
-          <button
-            onClick={() => navigate("/users")}
-            className={navButtonClass("/users")}
-          >
-            Users
-          </button>
+          <>
+            <button
+              onClick={() => navigate("/settings")}
+              className={navButtonClass("/settings")}
+            >
+              Settings
+            </button>
+
+            <button
+              onClick={() => navigate("/users")}
+              className={navButtonClass("/users")}
+            >
+              Users
+            </button>
+          </>
         )}
         </div>
 
@@ -274,7 +276,11 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
 
         <Route
           path="/settings"
-          element={<BannerSettings showToast={showToast} />}
+          element={
+            isSuperAdmin
+              ? <BannerSettings showToast={showToast} />
+              : <Navigate to="/" />
+          }
         />
 
         <Route

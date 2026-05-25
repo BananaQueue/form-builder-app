@@ -4560,7 +4560,7 @@ body::after {
   }
 
   /* ── FormBuilder topbar (mobile only) ──────────────────────── */
-  .fb-topbar {
+  /* .fb-topbar {
     display: flex;
     flex-direction: column;
     position: sticky;
@@ -4613,11 +4613,11 @@ body::after {
   }
 
   /* Hide the desktop title and save panel on mobile */
-  .fb-page-title,
+  /* .fb-page-title,
   .fb-page-subtitle,
   .fb-save-panel {
     display: none;
-  }
+  } */ 
 
   /* ── Global ─────────────────────────────────────────────────── */
   body { overflow-x: hidden; }

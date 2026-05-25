@@ -1536,20 +1536,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
         />
       )}
 
-      <div className="fb-topbar">
-        <h2 className="fb-topbar__title">
-          {isEditMode ? "Edit Form" : "Form Builder"}
-        </h2>
-        <div className="fb-topbar__actions">
-          <button className="fb-topbar__btn" onClick={saveForm}>
-            🖫 Save Draft
-          </button>
-          <button className="fb-topbar__btn fb-topbar__btn--publish" onClick={saveForm}>
-            ✈ Publish
-          </button>
-        </div>
-      </div>
-
       <h1 className="fb-page-title">
         {isEditMode ? "Edit Form" : "Form Builder"}
       </h1>
