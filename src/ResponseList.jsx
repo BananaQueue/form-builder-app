@@ -24,7 +24,7 @@
 import { useState, useEffect } from 'react'
 import { apiUrl, API_BASE } from './apiBase'
 
-function ResponseList({ formId, onBack, onViewResponse }) {
+function ResponseList({ formId, onBack, onViewResponse, isSuperAdmin = false }) {
   const [form, setForm]           = useState(null)
   const [responses, setResponses] = useState([])
   const [loading, setLoading]     = useState(true)
@@ -34,7 +34,7 @@ function ResponseList({ formId, onBack, onViewResponse }) {
 
   async function fetchResponses() {
     try {
-      const response = await fetch(apiUrl(`/get_responses.php?form_id=${formId}`), { credentials: 'include' })
+      const response = await fetch(apiUrl(`/get_responses.php?form_id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`), { credentials: 'include' })
       const result   = await response.json()
 
       if (result.success) {
@@ -58,7 +58,7 @@ function ResponseList({ formId, onBack, onViewResponse }) {
   // ── Export handler (unchanged) ─────────────────────────────────────────────
 
   function handleExport() {
-    const exportUrl = `${API_BASE}/export_responses.php?form_id=${formId}`
+    const exportUrl = `${API_BASE}/export_responses.php?form_id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`
     window.open(exportUrl, '_blank')
   }
 

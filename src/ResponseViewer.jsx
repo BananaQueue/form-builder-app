@@ -28,7 +28,7 @@
 import { useState, useEffect } from 'react'
 import { apiUrl } from './apiBase'
 
-function ResponseViewer({ responseId, onBack }) {
+function ResponseViewer({ responseId, onBack, isSuperAdmin = false }) {
   const [response, setResponse]       = useState(null)
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState(null)
@@ -39,7 +39,7 @@ function ResponseViewer({ responseId, onBack }) {
   async function fetchResponseDetails() {
     setIsRefreshing(true)
     try {
-      const res    = await fetch(apiUrl(`/get_response_details.php?id=${responseId}`), { credentials: 'include' })
+      const res    = await fetch(apiUrl(`/get_response_details.php?id=${responseId}${isSuperAdmin ? '&admin_override=1' : ''}`), { credentials: 'include' })
       const result = await res.json()
       if (result.success) {
         setResponse(result.response)

@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { apiUrl } from './apiBase'
 import FormList from './FormList'
 
-function UserManagement({ showToast, showConfirm }) {
-  const navigate = useNavigate()
+function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onViewResponses, isSuperAdmin = false }) {
 
   // ── User list state ────────────────────────────────────────────────────────
   const [users, setUsers]       = useState([])
@@ -23,6 +21,9 @@ function UserManagement({ showToast, showConfirm }) {
   const [pwModal, setPwModal]       = useState(null) // { id, username }
   const [newPw, setNewPw]           = useState('')
   const [savingPw, setSavingPw]     = useState(false)
+  const [pinModal, setPinModal]     = useState(null) // { id, username }
+  const [pinInput, setPinInput]     = useState('')
+  const [pinError, setPinError]     = useState('')
 
   useEffect(() => { fetchUsers() }, [])
 
@@ -72,6 +73,11 @@ function UserManagement({ showToast, showConfirm }) {
   }
 
   function handleDeleteUser(user) {
+    if (user.role === 'super_admin') {
+      showToast('Super Admin accounts cannot be deleted through the UI.', 'warning')
+      return
+    }
+
     showConfirm(
       `Delete "${user.username}"? Their forms will remain in the database unassigned.`,
       async () => {
@@ -122,6 +128,32 @@ function UserManagement({ showToast, showConfirm }) {
     }
   }
 
+  function handlePasswordAction(user) {
+    if (user.role === 'super_admin') {
+      setPinModal({ id: user.id, username: user.username })
+      setPinInput('')
+      setPinError('')
+      return
+    }
+
+    setPwModal({ id: user.id, username: user.username })
+    setNewPw('')
+  }
+
+  function handlePinSubmit(e) {
+    e.preventDefault()
+    if (pinInput !== '0000') {
+      setPinError('Incorrect PIN. Please enter the correct Super Admin PIN.')
+      return
+    }
+
+    setPinModal(null)
+    showToast(
+      'PIN accepted. Super Admin password resets must still be completed through the secure recovery flow.',
+      'info',
+    )
+  }
+
   // ── Drill-down: view a user's forms ───────────────────────────────────────
   if (viewingUser) {
     return (
@@ -137,9 +169,10 @@ function UserManagement({ showToast, showConfirm }) {
           scopedUserId={viewingUser.id}
           showToast={showToast}
           showConfirm={showConfirm}
-          onViewForm={formId => { /* read-only drill-down; navigate if needed */ }}
-          onEditForm={() => {}}
-          onViewResponses={() => {}}
+          onViewForm={onViewForm}
+          onEditForm={onEditForm}
+          onViewResponses={onViewResponses}
+          isSuperAdmin={isSuperAdmin}
         />
       </div>
     )
@@ -222,24 +255,28 @@ function UserManagement({ showToast, showConfirm }) {
                     </td>
                     <td>
                       <div className="um-actions">
-                        <button
-                          className="um-action-btn um-action-btn--view"
-                          onClick={() => setViewingUser({ id: user.id, username: user.username })}
-                        >
-                          View Forms
-                        </button>
+                        {user.role !== 'super_admin' && (
+                          <button
+                            className="um-action-btn um-action-btn--view"
+                            onClick={() => setViewingUser({ id: user.id, username: user.username })}
+                          >
+                            View Forms
+                          </button>
+                        )}
                         <button
                           className="um-action-btn um-action-btn--pw"
-                          onClick={() => { setPwModal({ id: user.id, username: user.username }); setNewPw('') }}
+                          onClick={() => handlePasswordAction(user)}
                         >
                           Change Password
                         </button>
-                        <button
-                          className="um-action-btn um-action-btn--delete"
-                          onClick={() => handleDeleteUser(user)}
-                        >
-                          Delete
-                        </button>
+                        {user.role !== 'super_admin' && (
+                          <button
+                            className="um-action-btn um-action-btn--delete"
+                            onClick={() => handleDeleteUser(user)}
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -278,6 +315,46 @@ function UserManagement({ showToast, showConfirm }) {
                   type="button"
                   className="um-cancel-btn"
                   onClick={() => setPwModal(null)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {pinModal && (
+        <div className="um-modal-overlay" onClick={() => setPinModal(null)}>
+          <div className="um-modal" onClick={e => e.stopPropagation()}>
+            <h3 className="um-modal-title">Protected Super Admin Account</h3>
+            <p className="um-modal-sub">
+              This is a protected Super Admin account. <br /> Enter the Super Admin PIN to confirm the request.
+            </p>
+            <form onSubmit={handlePinSubmit}>
+              <input
+                className="um-input"
+                type="password"
+                placeholder="Enter Super Admin PIN"
+                value={pinInput}
+                onChange={e => {
+                  setPinInput(e.target.value)
+                  setPinError('')
+                }}
+                autoFocus
+                autoComplete="one-time-code"
+              />
+              {pinError && <p className="um-modal-error">{pinError}</p>}
+              <div className="um-modal-actions">
+                <button
+                  type="submit"
+                  className="um-add-btn"
+                >
+                  Confirm PIN
+                </button>
+                <button
+                  type="button"
+                  className="um-cancel-btn"
+                  onClick={() => setPinModal(null)}
                 >
                   Cancel
                 </button>

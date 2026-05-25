@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiUrl } from "./apiBase";
 
-function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConfirm, scopedUserId = null }) {
+function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConfirm, scopedUserId = null, isSuperAdmin = false }) {
   const [forms, setForms]                   = useState([]);
   const [loading, setLoading]               = useState(true);
   const [error, setError]                   = useState(null);
@@ -23,7 +23,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
 
     try {
       const url = scopedUserId
-        ? apiUrl(`/get_forms.php?user_id=${scopedUserId}`)
+        ? apiUrl(`/get_forms.php?user_id=${scopedUserId}${isSuperAdmin ? '&admin_override=1' : ''}`)
         : apiUrl("/get_forms.php");
       const response = await fetch(url, {
         credentials: "include",
@@ -69,7 +69,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
           const res = await fetch(apiUrl("/delete_form.php"), {
             method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body:    JSON.stringify({ form_id: formId }),
+            body:    JSON.stringify({ form_id: formId, admin_override: isSuperAdmin ? 1 : 0 }),
           });
 
           const result = await res.json();

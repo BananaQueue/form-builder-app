@@ -1089,7 +1089,7 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
 //   5. Passing `onEdit={openEditModal}` to each <SortableQuestionRow>
 // Everything else is IDENTICAL to before.
 // ─────────────────────────────────────────────────────────────────────────────
-function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
+function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSuperAdmin = false }) {
   const navigate = useNavigate();
   // ── All the original state variables (unchanged) ─────────────────────────
   const [formTitle, setFormTitle] = useState("");
@@ -1187,7 +1187,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
 
     try {
       const response = await fetch(
-        apiUrl(`/get_form_details.php?id=${formId}`),
+        apiUrl(`/get_form_details.php?id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`),
       );
       const result = await response.json();
 
@@ -1452,6 +1452,11 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
 
     if (isEditMode && editFormId) {
       formData.form_id = editFormId;
+    }
+
+    // Allow backend Super Admin bypass when applicable
+    if (isSuperAdmin) {
+      formData.admin_override = 1;
     }
 
     try {

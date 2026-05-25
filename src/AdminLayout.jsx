@@ -204,13 +204,14 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
               onViewResponses={handleViewResponses}
               showToast={showToast}
               showConfirm={showConfirm}
+              isSuperAdmin={isSuperAdmin}
             />
           }
         />
 
         <Route
           path="/create"
-          element={<FormBuilder key="create" showToast={showToast} />}
+          element={<FormBuilder key="create" showToast={showToast} isSuperAdmin={isSuperAdmin} />}
         />
 
         <Route
@@ -221,6 +222,7 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
                 formId={viewingFormId}
                 showToast={showToast}
                 actionsRef={formActionsRef}
+                isSuperAdmin={isSuperAdmin}
               />
             ) : (
               <Navigate to="/" />
@@ -237,6 +239,7 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
                 editFormId={editingFormId}
                 onSaveComplete={handleEditComplete}
                 showToast={showToast}
+                isSuperAdmin={isSuperAdmin}
               />
             ) : (
               <Navigate to="/" />
@@ -253,6 +256,7 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
                 onBack={() => navigate("/")}
                 onViewResponse={handleViewResponseDetail}
                 showToast={showToast}
+                isSuperAdmin={isSuperAdmin}
               />
             ) : (
               <Navigate to="/" />
@@ -267,6 +271,7 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
               <ResponseViewer
                 responseId={viewingResponseId}
                 onBack={handleBackToResponses}
+                isSuperAdmin={isSuperAdmin}
               />
             ) : (
               <Navigate to="/" />
@@ -286,10 +291,17 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
         <Route
           path="/users"
           element={
-            isSuperAdmin
-              ? <UserManagement showToast={showToast} showConfirm={showConfirm} />
-              : <Navigate to="/" />
-          }
+              isSuperAdmin
+                ? <UserManagement
+                    showToast={showToast}
+                    showConfirm={showConfirm}
+                    onViewForm={handleViewForm}
+                    onEditForm={handleEditForm}
+                    onViewResponses={handleViewResponses}
+                    isSuperAdmin={isSuperAdmin}
+                  />
+                : <Navigate to="/" />
+            }
         />
 
         <Route path="*" element={<Navigate to="/" />} />

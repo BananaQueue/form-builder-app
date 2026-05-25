@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiUrl } from "./apiBase";
 import QRCode from "qrcode";
 
-function FormViewer({ formId, showToast, actionsRef }) {
+function FormViewer({ formId, showToast, actionsRef, isSuperAdmin = false }) {
   const [form, setForm]           = useState(null);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(null);
   const [showQrModal, setShowQrModal] = useState(false);
   const qrCanvasRef               = useRef(null);
+  const navigate = useNavigate();
 
   // ── URL helpers (unchanged) ────────────────────────────────────────────────
 
@@ -95,7 +97,7 @@ function FormViewer({ formId, showToast, actionsRef }) {
 
   async function fetchFormDetails() {
     try {
-      const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}`), { credentials: 'include' });
+      const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`), { credentials: 'include' });
       const result   = await response.json();
       if (result.success) {
         setForm(result.form);
@@ -220,6 +222,11 @@ function FormViewer({ formId, showToast, actionsRef }) {
       )}
 
       <div className="fv-action-bar">
+        {isSuperAdmin && (
+          <button className="glass-button" onClick={() => navigate(-1)}>
+            ← Back
+          </button>
+        )}
         <button
           className="glass-button glass-button--fill"
           onClick={() => window.open(buildPublicUrl(), "_blank")}
