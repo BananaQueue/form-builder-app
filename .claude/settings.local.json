@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/R1-MIS/Desktop -name \"*.php\" -not -path \"*/node_modules/*\" 2>/dev/null | head -30)",
+      "Read(//c/Users/R1-MIS/Desktop/**)",
+      "Read(//c/Users/R1-MIS/**)",
+      "Read(//c/xampp/**)",
+      "Read(//c/wamp/**)",
+      "Read(//c/wamp64/**)",
+      "Bash(find /c/laragon -name \"*.php\" 2>/dev/null | grep -i \"banner\\\\|upload\" | head -20; ls /c/laragon/www/ 2>/dev/null || echo \"no laragon\")",
+      "Read(//c//**)",
+      "Read(//c/laragon/**)",
+      "Bash(find / -path \"*/form-builder-api\" -type d 2>/dev/null | head -5; find / -path \"*/htdocs/form-builder-api\" -type d 2>/dev/null | head -5; ls /c/Users/R1-MIS/Desktop/FormBuilder/ 2>/dev/null)",
+      "Bash(npm install *)",
+      "Bash(node --input-type=module --eval \"import './src/AdminLayout.jsx'\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(npx --yes acorn --ecma2020 --module src/AdminLayout.jsx)",
+      "Bash(echo \"exit:$?\")"
+    ]
+  }
+}

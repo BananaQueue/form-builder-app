@@ -1,52 +1,31 @@
-// src/FormList.jsx
-//
-// WHAT CHANGED FROM THE ORIGINAL:
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. All inline style={{ ... }} removed from the page shell, header, filter
-//    bar, and card metadata. Replaced with CSS class names.
-//
-// 2. Card metadata (question count, date, response count) now uses individual
-//    <span> elements inside a .form-card-meta row instead of a single <p>
-//    with <br/> tags. This lets CSS style each piece independently.
-//
-// 3. Empty state gets a proper visual treatment (.form-list-empty) instead
-//    of a bare <p> tag.
-//
-// 4. Error state uses the existing glass-card system for visual consistency.
-//
-// 5. The page wrapper uses .form-list-shell, a new class that handles
-//    max-width and centering via CSS instead of inline style.
-//
-// ALL LOGIC IS IDENTICAL TO THE ORIGINAL:
-// - fetchForms(), fetchCategories(), deleteForm() are unchanged
-// - showToast / showConfirm wiring is unchanged
-// - category filtering logic is unchanged
-// ─────────────────────────────────────────────────────────────────────────────
-
 import { useState, useEffect } from "react";
 import { apiUrl } from "./apiBase";
 
-function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConfirm }) {
+function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConfirm, scopedUserId = null }) {
   const [forms, setForms]                   = useState([]);
   const [loading, setLoading]               = useState(true);
   const [error, setError]                   = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categories, setCategories]         = useState([]);
   const [isRefreshing, setIsRefreshing]     = useState(false);
+  const [searchQuery, setSearchQuery]       = useState("");
 
   useEffect(() => {
     fetchForms();
     fetchCategories();
-  }, []);
+  }, [scopedUserId]);
 
-  // ── Data fetching (unchanged) ──────────────────────────────────────────────
+  // ── Data fetching ──────────────────────────────────────────────────────────
 
   async function fetchForms() {
     setIsRefreshing(true);
     setError(null);
 
     try {
-      const response = await fetch(apiUrl("/get_forms.php"), {
+      const url = scopedUserId
+        ? apiUrl(`/get_forms.php?user_id=${scopedUserId}`)
+        : apiUrl("/get_forms.php");
+      const response = await fetch(url, {
         credentials: "include",
       });
       const result = await response.json();
@@ -108,12 +87,18 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
     );
   }
 
-  // ── Filtering (unchanged) ──────────────────────────────────────────────────
+  // ── Filtering ─────────────────────────────────────────────────────────────
 
-  const filteredForms =
-    selectedCategory === "all"
-      ? forms
-      : forms.filter((form) => form.category_id == selectedCategory);
+  const filteredForms = forms.filter((form) => {
+    const matchesCategory =
+      selectedCategory === "all" || form.category_id == selectedCategory;
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      form.title?.toLowerCase().includes(q) ||
+      form.description?.toLowerCase().includes(q);
+    return matchesCategory && matchesSearch;
+  });
 
   // ── Render: Loading ────────────────────────────────────────────────────────
 
@@ -121,8 +106,6 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
     return (
       <div className="form-list-shell">
         <div className="form-list-loading">
-          {/* Three animated dots give a sense of activity.
-              The animation is defined in index.css as .form-list-dot */}
           <div className="form-list-loading__dots">
             <span className="form-list-dot" />
             <span className="form-list-dot" />
@@ -139,8 +122,6 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
   if (error) {
     return (
       <div className="form-list-shell">
-        {/* We use glass-card here so the error state looks like it belongs
-            on the page, not like a system crash. */}
         <div className="glass-card form-list-error">
           <p className="form-list-error__title">⚠ Could not load forms</p>
           <p className="form-list-error__message">{error}</p>
@@ -162,23 +143,6 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
       className={`form-list-shell ${isRefreshing ? "refreshing-background" : ""}`}
     >
 
-      {/* ── Page Header ───────────────────────────────────────────────────────
-          
-          BEFORE:
-            <div style={{ marginBottom: "20px", textAlign: "center" }}>
-              <h1 style={{ marginBottom: "5px", textShadow: "..." }}>Forms</h1>
-              <p>Showing {filteredForms.length} of {forms.length} forms</p>
-            </div>
-
-          AFTER:
-            <div className="form-list-header">
-              <h1 className="form-list-title">My Forms</h1>
-              <p className="form-list-subtitle">...</p>
-            </div>
-
-          The textShadow and marginBottom are now in index.css under
-          .form-list-title, keeping JSX clean.
-      ──────────────────────────────────────────────────────────────────── */}
       <div className="form-list-header">
         <div>
           <h1 className="form-list-title">My Forms</h1>
@@ -189,10 +153,6 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
           </p>
         </div>
 
-        {/* ── Controls: filter + refresh ──────────────────────────────────
-            BEFORE: these were in two separate divs with inline styles.
-            AFTER: one .form-list-controls row, CSS handles the layout.
-        ──────────────────────────────────────────────────────────────── */}
         <div className="form-list-controls">
           <select
             className="glass-select"
@@ -217,29 +177,41 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
         </div>
       </div>
 
-      {/* ── Empty State ───────────────────────────────────────────────────────
-          
-          An empty state is a designed moment. Instead of nothing (or a bare
-          "No forms found" message), we show a centered illustration area
-          with a call-to-action button.
+      <div className="form-list-search">
+        <span className="form-list-search__icon">🔍</span>
+        <input
+          className="form-list-search__input"
+          type="search"
+          placeholder="Search forms by title or description…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {searchQuery && (
+          <button
+            className="form-list-search__clear"
+            onClick={() => setSearchQuery("")}
+            aria-label="Clear search"
+          >
+            ✕
+          </button>
+        )}
+      </div>
 
-          This pattern is used by every modern SaaS app — Notion, Linear,
-          Figma all do this. It turns a dead end into a guided path.
-
-          BEFORE:  {filteredForms.length === 0 && <p>No forms found.</p>}
-          AFTER:   A proper empty state card with a CTA
-      ──────────────────────────────────────────────────────────────────── */}
       {filteredForms.length === 0 ? (
         <div className="form-list-empty">
           <div className="form-list-empty__icon">📋</div>
           <p className="form-list-empty__title">
             {forms.length === 0
               ? "No forms yet"
+              : searchQuery.trim()
+              ? "No forms match your search"
               : "No forms in this category"}
           </p>
           <p className="form-list-empty__message">
             {forms.length === 0
               ? "Create your first form to start collecting responses."
+              : searchQuery.trim()
+              ? "Try a different search term or clear the search."
               : "Try selecting a different category, or create a new form."}
           </p>
         </div>
@@ -272,20 +244,6 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
                 {form.description || "\u00A0"}
               </p>
 
-              {/* ── Metadata row ────────────────────────────────────────────
-                  
-                  BEFORE:
-                    <p>
-                      📝 {form.question_count} question(s)<br/>
-                      📅 {new Date(...).toLocaleDateString()}<br/>
-                      📊 {form.response_count} responses
-                    </p>
-
-                  AFTER: individual <span> elements in a flex row.
-                  Each piece of metadata is independently styled and readable.
-                  The · separator is a CSS ::before pseudo-element so it
-                  never accidentally wraps to a new line mid-separator.
-              ────────────────────────────────────────────────────────────── */}
               <div className="form-card-meta">
                 <span className="form-card-meta__item">
                   📝 {form.question_count}{" "}
@@ -302,11 +260,6 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
                 </span>
               </div>
 
-              {/* ── Action buttons ──────────────────────────────────────────
-                  These use the existing .card-btn-group system from index.css.
-                  No changes to class names — they already work with our new
-                  design tokens because we updated the token values in Phase 1.
-              ────────────────────────────────────────────────────────────── */}
               <div className="card-btn-group">
                 <button
                   className="card-btn card-btn-view"

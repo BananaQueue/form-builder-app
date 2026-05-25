@@ -66,6 +66,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [bannerLoaded, setBannerLoaded] = useState(false);
+  const [bannerTs] = useState(() => Date.now());
 
   async function fetchFormDetails() {
     try {
@@ -581,7 +582,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
       {/* ── Agency Banner ── */}
       <div className="fd-banner" style={{ display: bannerLoaded ? 'block' : 'none' }}>
         <img
-          src={apiUrl('/uploads/banner.png')}
+          src={`${apiUrl('/uploads/banner.png')}?t=${bannerTs}`}
           alt="Agency banner"
           className="fd-banner-img"
           onLoad={() => setBannerLoaded(true)}

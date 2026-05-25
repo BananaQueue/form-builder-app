@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   DndContext,
   closestCenter,
@@ -251,6 +252,30 @@ function SortableQuestionRow({
 //   onSave    — called with the updated question object
 //   onClose   — called when the modal should be dismissed
 // ─────────────────────────────────────────────────────────────────────────────
+
+function getAllowedConditionTypes(questionType) {
+  const baseTypes = ["equals", "not_equals", "is_answered"];
+  if (questionType === "multiple_choice") {
+    return [...baseTypes, "contains", "not_contains"];
+  }
+  return baseTypes;
+}
+
+function getRatingScaleOptions(scale) {
+  const scales = {
+    numeric_5: ["1", "2", "3", "4", "5"],
+    numeric_10: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+    agree_5: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    agree_3: ["Disagree", "Neutral", "Agree"],
+    quality_5: ["Poor", "Fair", "Good", "Very Good", "Excellent"],
+    quality_3: ["Bad", "Fair", "Good"],
+    satisfaction_5: ["Very Dissatisfied", "Dissatisfied", "Neutral", "Satisfied", "Very Satisfied"],
+    satisfaction_3: ["Dissatisfied", "Neutral", "Satisfied"],
+    frequency_5: ["Never", "Rarely", "Sometimes", "Often", "Always"],
+  };
+  return scales[scale] || [];
+}
+
 function EditQuestionModal({ question, questions, onSave, onClose }) {
   // ── Local draft state ──────────────────────────────────────────────────────
   // Each piece of the question gets its own state variable.
@@ -305,43 +330,6 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
   const [conditionValue, setConditionValue] = useState(
     question.condition_value ?? "",
   );
-
-  // ── Helper: which condition types are valid for a given question type ──────
-  function getAllowedConditionTypes(questionType) {
-    const baseTypes = ["equals", "not_equals", "is_answered"];
-    if (questionType === "multiple_choice") {
-      return [...baseTypes, "contains", "not_contains"];
-    }
-    return baseTypes;
-  }
-
-  // ── Helper: preset options for known rating scales ─────────────────────────
-  function getRatingScaleOptions(scale) {
-    const scales = {
-      numeric_5: ["1", "2", "3", "4", "5"],
-      numeric_10: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-      agree_5: [
-        "Strongly Disagree",
-        "Disagree",
-        "Neutral",
-        "Agree",
-        "Strongly Agree",
-      ],
-      agree_3: ["Disagree", "Neutral", "Agree"],
-      quality_5: ["Poor", "Fair", "Good", "Very Good", "Excellent"],
-      quality_3: ["Bad", "Fair", "Good"],
-      satisfaction_5: [
-        "Very Dissatisfied",
-        "Dissatisfied",
-        "Neutral",
-        "Satisfied",
-        "Very Satisfied",
-      ],
-      satisfaction_3: ["Dissatisfied", "Neutral", "Satisfied"],
-      frequency_5: ["Never", "Rarely", "Sometimes", "Often", "Always"],
-    };
-    return scales[scale] || [];
-  }
 
   // ── handleSave ─────────────────────────────────────────────────────────────
   // Assembles the updated question object from all the local state variables,
@@ -1102,6 +1090,7 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
 // Everything else is IDENTICAL to before.
 // ─────────────────────────────────────────────────────────────────────────────
 function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
+  const navigate = useNavigate();
   // ── All the original state variables (unchanged) ─────────────────────────
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
@@ -1152,14 +1141,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-
-  function getAllowedConditionTypes(questionType) {
-    const baseTypes = ["equals", "not_equals", "is_answered"];
-    if (questionType === "multiple_choice") {
-      return [...baseTypes, "contains", "not_contains"];
-    }
-    return baseTypes;
-  }
 
   function handleQuestionsDragEnd(event) {
     const { active, over } = event;
@@ -1400,33 +1381,6 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
     showToast("Section added.", "success");
   }
 
-  function getRatingScaleOptions(scale) {
-    const scales = {
-      numeric_5: ["1", "2", "3", "4", "5"],
-      numeric_10: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-      agree_5: [
-        "Strongly Disagree",
-        "Disagree",
-        "Neutral",
-        "Agree",
-        "Strongly Agree",
-      ],
-      agree_3: ["Disagree", "Neutral", "Agree"],
-      quality_5: ["Poor", "Fair", "Good", "Very Good", "Excellent"],
-      quality_3: ["Bad", "Fair", "Good"],
-      satisfaction_5: [
-        "Very Dissatisfied",
-        "Dissatisfied",
-        "Neutral",
-        "Satisfied",
-        "Very Satisfied",
-      ],
-      satisfaction_3: ["Dissatisfied", "Neutral", "Satisfied"],
-      frequency_5: ["Never", "Rarely", "Sometimes", "Often", "Always"],
-    };
-    return scales[scale] || [];
-  }
-
   function addOption() {
     if (newOption.trim() === "") {
       showToast("Please enter an option.", "warning");
@@ -1442,9 +1396,13 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
   }
 
   function deleteQuestion(questionId) {
+    const target = questions.find((q) => q.id === questionId);
     const updated = questions.filter((q) => q.id !== questionId);
     setQuestions(updated);
-    showToast("Question deleted.", "warning");
+    showToast(
+      target?.type === "section" ? "Section deleted." : "Question deleted.",
+      "warning",
+    );
   }
 
   function canonicalConditionParentId(q) {
@@ -1529,10 +1487,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
         if (isEditMode && onSaveComplete) {
           onSaveComplete();
         } else {
-          setFormTitle("");
-          setFormDescription("");
-          setStepMode(false);
-          setQuestions([]);
+          navigate("/");
         }
       } else {
         showToast(
@@ -1580,6 +1535,20 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast }) {
           onClose={() => setEditingQuestion(null)}
         />
       )}
+
+      <div className="fb-topbar">
+        <h2 className="fb-topbar__title">
+          {isEditMode ? "Edit Form" : "Form Builder"}
+        </h2>
+        <div className="fb-topbar__actions">
+          <button className="fb-topbar__btn" onClick={saveForm}>
+            🖫 Save Draft
+          </button>
+          <button className="fb-topbar__btn fb-topbar__btn--publish" onClick={saveForm}>
+            ✈ Publish
+          </button>
+        </div>
+      </div>
 
       <h1 className="fb-page-title">
         {isEditMode ? "Edit Form" : "Form Builder"}

@@ -48,7 +48,7 @@ function App() {
   useEffect(() => {
     fetch(apiUrl('/check_session.php'), { credentials: 'include' })
       .then(r => r.json())
-      .then(data => setAuthUser(data.logged_in ? data.username : false))
+      .then(data => setAuthUser(data.logged_in ? { username: data.username, role: data.role } : false))
       .catch(() => setAuthUser(false))
   }, [])
 
@@ -99,12 +99,13 @@ function App() {
             authUser
               ? <AdminLayout
                   onLogout={handleLogout}
-                  currentUser={authUser}
+                  currentUser={authUser.username}
+                  userRole={authUser.role}
                   showToast={showToast}
                   showConfirm={showConfirm}
                 />
               : <LoginPage
-                  onLoginSuccess={username => setAuthUser(username)}
+                  onLoginSuccess={(username, role) => setAuthUser({ username, role })}
                   showToast={showToast}
                 />
           }

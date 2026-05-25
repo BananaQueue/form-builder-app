@@ -1,33 +1,8 @@
-// src/FormViewer.jsx
-//
-// WHAT CHANGED FROM THE ORIGINAL:
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. All inline style={{ ... }} replaced with CSS class names.
-//    The QR modal uses the new .qr-* namespace.
-//    The action bar buttons use glass-button with color modifier classes
-//    (.glass-button--success, .glass-button--info, .glass-button--purple)
-//    instead of inline backgroundColor overrides.
-//
-// 2. The fv-paper content (title, description, questions) uses the
-//    existing .fv-* classes from index.css — these were already correct,
-//    we just clean up any remaining inline styles around them.
-//
-// 3. Section blocks inside the question list use .fv-section-block,
-//    a new class that replaces the hardcoded inline style object.
-//
-// ALL LOGIC IS IDENTICAL TO THE ORIGINAL:
-// - slugifyTitle(), buildPublicUrl(), copyPublicLink() are unchanged
-// - handleDownloadQr() is unchanged
-// - The QR canvas useEffect (drawing the QR code) is unchanged
-// - useRef, useState, useEffect wiring is unchanged
-// - fetchFormDetails() and its useEffect are unchanged
-// ─────────────────────────────────────────────────────────────────────────────
-
 import { useState, useEffect, useRef } from "react";
 import { apiUrl } from "./apiBase";
 import QRCode from "qrcode";
 
-function FormViewer({ formId, onBack, showToast }) {
+function FormViewer({ formId, showToast, actionsRef }) {
   const [form, setForm]           = useState(null);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(null);
@@ -138,6 +113,16 @@ function FormViewer({ formId, onBack, showToast }) {
     if (formId) fetchFormDetails();
   }, [formId]);
 
+  useEffect(() => {
+    if (!form || !actionsRef) return;
+    actionsRef.current = {
+      fillOut:  () => window.open(buildPublicUrl(), '_blank'),
+      copyLink: copyPublicLink,
+      showQr:   () => setShowQrModal(true),
+    };
+    return () => { if (actionsRef) actionsRef.current = null; };
+  }, [form]);
+
   // ── Guards ─────────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -153,7 +138,6 @@ function FormViewer({ formId, onBack, showToast }) {
       <div className="fv-shell">
         <div className="fv-paper">
           <p className="fv-error-text">{error}</p>
-          <button className="glass-button" onClick={onBack}>← Back</button>
         </div>
       </div>
     );
@@ -235,58 +219,21 @@ function FormViewer({ formId, onBack, showToast }) {
         </div>
       )}
 
-      {/* ── Action bar ────────────────────────────────────────────────────────
-          
-          BEFORE (inline backgroundColor on each button):
-            <button style={{ backgroundColor: "rgba(46,204,113,0.55)" }}>
-              📝 Fill Out
-            </button>
-
-          AFTER (modifier classes):
-            <button className="glass-button glass-button--fill">
-              📝 Fill Out
-            </button>
-
-          Each button gets a semantic modifier class that describes its
-          PURPOSE (fill, share, qr) rather than its color. This means
-          if we ever want to change the "fill" button color, we change
-          one CSS rule — not hunt through JSX for an rgba value.
-      ──────────────────────────────────────────────────────────────────── */}
       <div className="fv-action-bar">
-        <button
-          className="glass-button"
-          onClick={onBack}
-        >
-          ← Back
-        </button>
-
         <button
           className="glass-button glass-button--fill"
           onClick={() => window.open(buildPublicUrl(), "_blank")}
         >
           📝 Fill Out
         </button>
-
-        <button
-          className="glass-button glass-button--share"
-          onClick={copyPublicLink}
-        >
+        <button className="glass-button glass-button--share" onClick={copyPublicLink}>
           🔗 Copy Link
         </button>
-
-        <button
-          className="glass-button glass-button--qr"
-          onClick={() => setShowQrModal(true)}
-        >
+        <button className="glass-button glass-button--qr" onClick={() => setShowQrModal(true)}>
           ⬜ Show QR
         </button>
       </div>
 
-      {/* ── Paper card ────────────────────────────────────────────────────────
-          All .fv-* classes come from index.css Phase 1.
-          Nothing new here — we just remove any remaining inline styles
-          that were scattered around the original's paper card.
-      ──────────────────────────────────────────────────────────────────── */}
       <div className="fv-paper">
 
         {/* Form header */}
