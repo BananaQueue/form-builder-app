@@ -3743,7 +3743,7 @@ body::after {
 }
 
 .um-select {
-  flex: 0 1 140px;
+  /* flex: 0 1 140px; */
   padding: 9px var(--space-3);
   border: 1.5px solid var(--border-input);
   border-radius: var(--radius-md);
@@ -3933,7 +3933,7 @@ body::after {
 .um-back-btn:hover { text-decoration: underline; }
 
 .um-breadcrumb-sep  { color: var(--text-muted); }
-.um-breadcrumb-name { font-weight: 600; color: var(--text-primary); }
+.um-breadcrumb-name { font-weight: 600; color: var(--text-on-dark-deaf); }
 
 /* ============================================================
    11. BANNER SETTINGS PAGE  (.bs-*)
@@ -4554,32 +4554,44 @@ body::after {
   .glass-nav {
     position: static;
     padding: var(--space-2) var(--space-3);
-    gap: var(--space-1) var(--space-2);
+    gap: var(--space-2);
     flex-wrap: wrap;
+    align-items: flex-start;
   }
 
   .nav-nav.nav-left {
-    flex: 1;
-    gap: var(--space-1);
+    flex: 1 1 100%;
+    gap: var(--space-2);
     overflow-x: auto;
     scrollbar-width: none;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    min-width: 0;
+    padding: var(--space-2);
   }
 
   .nav-nav.nav-left::-webkit-scrollbar { display: none; }
 
   .nav-right.nav-user {
+    margin-left: 0;
     width: 100%;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: var(--space-2);
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: var(--space-2);
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .nav-right.nav-user > * {
+    min-width: 0;
   }
 
   .glass-nav .glass-button {
     padding: var(--space-2) var(--space-3);
     font-size: var(--text-sm);
-    white-space: nowrap;
+    white-space: normal;
+    min-width: 0;
+    flex: 0 1 auto;
   }
 
   /* ── Form list controls ─────────────────────────────────────── */
@@ -4719,9 +4731,49 @@ body::after {
   /* ── User Management ────────────────────────────────────────── */
   .um-shell { padding: 0; margin-top: var(--space-5); }
   .um-card { padding: var(--space-4); }
-  .um-add-form { flex-direction: column; align-items: stretch; }
-  .um-input { flex: 1 1 160px; }
+  .um-add-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+  .um-add-form > * {
+    width: 100%;
+    min-width: 0;
+  }
+  .um-input,
+  .um-select,
+  .password-input-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+  .um-input,
+  .um-select {
+    min-height: 44px;
+  }
+  /* .um-input { flex: 1 1 160px; } */
+  .um-select { max-width: 100%; }
+  .um-add-btn {
+    width: 100%;
+    align-self: stretch;
+  }
   .um-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .um-table {
+    width: 100%;
+    min-width: 0;
+  }
+  .um-table th,
+  .um-table td {
+    min-width: 0;
+    white-space: normal;
+  }
+  .um-actions {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .um-action-btn {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
   /* Hide less critical columns on mobile */
   .um-table .um-td-date,
   .um-table th:nth-child(4) { display: none; }
