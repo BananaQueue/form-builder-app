@@ -783,6 +783,50 @@ body::after {
   box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.20);
 }
 
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.password-input {
+  width: 100%;
+  padding-right: 44px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.password-input-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-on-dark-faint, #999);
+  transition: color var(--transition-fast);
+  border-radius: var(--radius-sm, 4px);
+}
+
+.password-input-toggle:hover,
+.password-input-toggle:focus-visible {
+  color: var(--text-on-dark, #ccc);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.password-input-toggle:focus-visible {
+  outline: 2px solid rgba(108, 99, 255, 0.28);
+  outline-offset: 2px;
+}
+
 /* Override browser autofill background — browsers apply a yellow
    or blue tint to autofilled fields by default. We override it
    to match our dark card. The transition trick delays the browser's
@@ -3677,13 +3721,12 @@ body::after {
 
 .um-add-form {
   display: flex;
-  flex-wrap: wrap;
   gap: var(--space-3);
   align-items: flex-end;
 }
 
 .um-input {
-  flex: 1 1 160px;
+  flex: 1 1 auto;
   padding: 9px var(--space-3);
   border: 1.5px solid var(--border-input);
   border-radius: var(--radius-md);
@@ -4676,7 +4719,8 @@ body::after {
   /* ── User Management ────────────────────────────────────────── */
   .um-shell { padding: 0; margin-top: var(--space-5); }
   .um-card { padding: var(--space-4); }
-  .um-add-form { flex-direction: column; }
+  .um-add-form { flex-direction: column; align-items: stretch; }
+  .um-input { flex: 1 1 160px; }
   .um-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   /* Hide less critical columns on mobile */
   .um-table .um-td-date,

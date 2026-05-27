@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { apiUrl } from './apiBase'
 import FormList from './FormList'
+import PasswordInput from './PasswordInput'
 
 function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onViewResponses, isSuperAdmin = false }) {
 
@@ -195,13 +196,12 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
             onChange={e => setNewUsername(e.target.value)}
             autoComplete="off"
           />
-          <input
-            className="um-input"
-            type="password"
-            placeholder="Password (min 6 chars)"
+          <PasswordInput
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
+            placeholder="Password (min 6 chars)"
             autoComplete="new-password"
+            className="um-input"
           />
           <select
             className="um-select"
@@ -294,14 +294,13 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
             <h3 className="um-modal-title">Change Password</h3>
             <p className="um-modal-sub">Setting new password for <strong>{pwModal.username}</strong></p>
             <form onSubmit={handleChangePassword}>
-              <input
-                className="um-input"
-                type="password"
-                placeholder="New password (min 6 chars)"
+              <PasswordInput
                 value={newPw}
                 onChange={e => setNewPw(e.target.value)}
+                placeholder="New password (min 6 chars)"
                 autoFocus
                 autoComplete="new-password"
+                className="um-input"
               />
               <div className="um-modal-actions">
                 <button

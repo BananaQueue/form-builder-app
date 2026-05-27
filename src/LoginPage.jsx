@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { apiUrl } from './apiBase'
+import PasswordInput from './PasswordInput'
 
 function LoginPage({ onLoginSuccess }) {
   const [username, setUsername] = useState('')
@@ -79,9 +80,8 @@ function LoginPage({ onLoginSuccess }) {
             <label className="login-label" htmlFor="login-password">
               Password
             </label>
-            <input
+            <PasswordInput
               id="login-password"
-              type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
