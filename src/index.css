@@ -342,6 +342,7 @@ body::after {
 .glass-nav {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
   margin-bottom: var(--space-8);
@@ -391,6 +392,10 @@ body::after {
   align-items: center;
   gap: var(--space-2);
   animation: nav-actions-in 200ms ease both;
+}
+
+.nav-actions .action-buttons {
+  flex-wrap: nowrap;
 }
 
 .action-buttons {
@@ -520,6 +525,52 @@ body::after {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+
+.nav-nav.nav-left {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .glass-nav {
+    position: static;
+    top: auto;
+  }
+}
+
+/* Keep sticky nav compact by switching migrated actions to icon-only */
+.glass-nav.glass-nav--sticky-active.glass-nav--actions-migrated .nav-actions .action-buttons {
+  gap: var(--space-2);
+}
+
+.glass-nav.glass-nav--sticky-active.glass-nav--actions-migrated .nav-actions .glass-button {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+/* When actions are migrated, place them right after left nav group */
+.glass-nav.glass-nav--actions-migrated .nav-nav.nav-left {
+  flex: 0 1 auto;
+}
+
+.glass-nav.glass-nav--actions-migrated .nav-actions {
+  margin-left: var(--space-1);
+}
+
+@media (max-width: 1100px) {
+  .glass-nav.glass-nav--sticky-active.glass-nav--actions-migrated .nav-actions .action-buttons {
+    gap: var(--space-1);
+  }
+
+  .glass-nav.glass-nav--sticky-active.glass-nav--actions-migrated .nav-actions .glass-button {
+    padding: var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .glass-nav.glass-nav--sticky-active.glass-nav--actions-migrated .nav-actions .glass-button span {
+    display: none;
+  }
 }
 
 /* Dropdown select in nav / forms */
@@ -4965,7 +5016,7 @@ body::after {
 
   /* Conditional badges: wrap long text and never overflow */
   .fv-badge,
-  .fv-badge fv-badge-condition,
+.fv-badge-condition,
   .fv-badge-row {
     white-space: normal;
     overflow-wrap: anywhere;

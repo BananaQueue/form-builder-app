@@ -5,7 +5,15 @@ import QRCode from "qrcode";
 import ActionButtons from "./ActionButtons";
 import { useIsMobile } from "./useIsMobile";
 
-function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, actionsInNavbar, isSuperAdmin = false }) {
+function FormViewer({
+  formId,
+  showToast,
+  actionsRef,
+  onActionBarOverlapChange,
+  actionsInNavbar,
+  navStickyActive = false,
+  isSuperAdmin = false
+}) {
   const [form, setForm]           = useState(null);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(null);
@@ -14,6 +22,7 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
   const actionBarRef              = useRef(null);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const closeQrButtonRef = useRef(null);
 
   // ── URL helpers (unchanged) ────────────────────────────────────────────────
 
@@ -99,9 +108,12 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
 
   // ── Data fetching (unchanged) ──────────────────────────────────────────────
 
-  async function fetchFormDetails() {
+  async function fetchFormDetails(signal) {
     try {
-      const response = await fetch(apiUrl(`/get_form_details.php?id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`), { credentials: 'include' });
+      const response = await fetch(
+        apiUrl(`/get_form_details.php?id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`),
+        { credentials: 'include', signal }
+      );
       const result   = await response.json();
       if (result.success) {
         setForm(result.form);
@@ -109,25 +121,30 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
         setError(result.error || "Failed to load form");
       }
     } catch (err) {
+      if (err.name === "AbortError") return;
       setError("Could not connect to server: " + err.message);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }
 
   useEffect(() => {
-    if (formId) fetchFormDetails();
-  }, [formId]);
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+    if (formId) fetchFormDetails(controller.signal);
+    return () => controller.abort();
+  }, [formId, isSuperAdmin]);
 
   useEffect(() => {
     if (!form || !actionsRef) return;
     actionsRef.current = {
-      fillOut:  () => window.open(buildPublicUrl(), '_blank'),
+      fillOut:  () => window.open(buildPublicUrl(), "_blank", "noopener,noreferrer"),
       copyLink: copyPublicLink,
       showQr:   () => setShowQrModal(true),
     };
     return () => { if (actionsRef) actionsRef.current = null; };
-  }, [form]);
+  }, [form, actionsRef]);
 
   useEffect(() => {
     if (!actionBarRef.current || !onActionBarOverlapChange) return;
@@ -152,7 +169,7 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
     function observeActionBar() {
       if (observer) observer.disconnect();
       observer = new IntersectionObserver(([entry]) => {
-        onActionBarOverlapChange(!entry.isIntersecting);
+        onActionBarOverlapChange(!entry.isIntersecting && navStickyActive);
       }, observerOptions());
       observer.observe(actionBarRef.current);
     }
@@ -164,7 +181,17 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
       window.removeEventListener('resize', observeActionBar);
       if (observer) observer.disconnect();
     };
-  }, [form, onActionBarOverlapChange]);
+  }, [form, onActionBarOverlapChange, isMobile, navStickyActive]);
+
+  useEffect(() => {
+    if (!showQrModal) return undefined;
+    closeQrButtonRef.current?.focus();
+    function handleEscape(event) {
+      if (event.key === "Escape") setShowQrModal(false);
+    }
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [showQrModal]);
 
   // ── Guards ─────────────────────────────────────────────────────────────────
 
@@ -195,6 +222,7 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
   }
 
   // ── Main render ────────────────────────────────────────────────────────────
+  const questions = Array.isArray(form?.questions) ? form.questions : [];
 
   return (
     <div className="fv-shell">
@@ -225,10 +253,14 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
           <div
             className="qr-modal"
             onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="qr-modal-title"
+            aria-describedby="qr-modal-url"
           >
             {/* Header */}
             <div className="qr-modal__header">
-              <h2 className="qr-modal__title">QR Code</h2>
+              <h2 id="qr-modal-title" className="qr-modal__title">QR Code</h2>
               <p className="qr-modal__subtitle">{form.title}</p>
             </div>
 
@@ -239,7 +271,7 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
             />
 
             {/* The URL the QR points to */}
-            <p className="qr-modal__url">
+            <p id="qr-modal-url" className="qr-modal__url">
               {buildPublicUrl()}
             </p>
 
@@ -254,6 +286,7 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
               <button
                 className="qr-modal__btn qr-modal__btn--close"
                 onClick={() => setShowQrModal(false)}
+                ref={closeQrButtonRef}
               >
                 Close
               </button>
@@ -271,7 +304,7 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
               </button>
             )}
             <ActionButtons
-              onFillOut={() => window.open(buildPublicUrl(), "_blank")}
+              onFillOut={() => window.open(buildPublicUrl(), "_blank", "noopener,noreferrer")}
               onCopyLink={copyPublicLink}
               onShowQr={() => setShowQrModal(true)}
             />
@@ -310,7 +343,7 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
         </div>
 
         {/* Questions list */}
-        {form.questions.length === 0 ? (
+        {questions.length === 0 ? (
           <p className="fv-meta">No questions in this form yet.</p>
         ) : (
           <div className="fv-question-list">
@@ -319,7 +352,7 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
               // skipping section blocks (they don't get a Q number).
               let counter = 0;
 
-              return form.questions.map((question) => {
+              return questions.map((question) => {
 
                 // ── Section block ──────────────────────────────────────────
                 if (question.question_type === "section") {
@@ -369,7 +402,7 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
                       {question.condition_question_id !== null && (
                         <span className="fv-badge fv-badge-condition">
                           {(() => {
-                            const referencedIndex = form.questions.findIndex(
+                            const referencedIndex = questions.findIndex(
                               (q) => q.id === question.condition_question_id
                             );
 
@@ -377,7 +410,7 @@ function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, a
                             if (referencedIndex === -1) {
                               label = "another question";
                             } else {
-                              const visibleNumber = form.questions
+                              const visibleNumber = questions
                                 .slice(0, referencedIndex + 1)
                                 .filter((q) => q.question_type !== "section")
                                 .length;

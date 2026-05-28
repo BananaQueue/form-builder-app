@@ -22,24 +22,41 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
   const location = useLocation();
   const navRef = useRef(null);
   const [navOverForm, setNavOverForm] = useState(false);
+  const [navStickyActive, setNavStickyActive] = useState(false);
   const formActionsRef = useRef(null);
   const [actionsInNavbar, setActionsInNavbar] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    let frame = null;
     function check() {
       const formEl = document.querySelector('.fv-paper, .fb-shell, .fv-shell');
-      if (!formEl || !navRef.current) { setNavOverForm(false); return; }
+      if (!formEl || !navRef.current) {
+        setNavOverForm(false);
+        setNavStickyActive(false);
+        return;
+      }
       const navBottom = navRef.current.getBoundingClientRect().bottom;
+      const navTop = navRef.current.getBoundingClientRect().top;
+      const stickyTop = 16;
       const formTop = formEl.getBoundingClientRect().top;
       setNavOverForm(formTop < navBottom);
+      setNavStickyActive(Math.abs(navTop - stickyTop) <= 1);
     }
-    window.addEventListener('scroll', check, { passive: true });
+    function onScrollOrResize() {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        check();
+      });
+    }
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
     window.addEventListener('resize', check, { passive: true });
     check();
     return () => {
-      window.removeEventListener('scroll', check);
+      window.removeEventListener('scroll', onScrollOrResize);
       window.removeEventListener('resize', check);
+      if (frame !== null) window.cancelAnimationFrame(frame);
     };
   }, [location.pathname]);
 
@@ -106,7 +123,10 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
   return (
     <div style={{ paddingBottom: "40px" }}>
 
-      <nav ref={navRef} className={`glass-nav${navOverForm ? ' glass-nav--over-form' : ''}`}>
+      <nav
+        ref={navRef}
+        className={`glass-nav${navOverForm ? ' glass-nav--over-form' : ''}${navStickyActive ? ' glass-nav--sticky-active' : ''}${actionsInNavbar ? ' glass-nav--actions-migrated' : ''}`}
+      >
 
         {/* Primary nav links */}
         <div className="nav-nav nav-left">
@@ -209,6 +229,7 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
                 actionsRef={formActionsRef}
                 onActionBarOverlapChange={setActionsInNavbar}
                 actionsInNavbar={actionsInNavbar}
+                navStickyActive={navStickyActive}
                 isSuperAdmin={isSuperAdmin}
               />
             ) : (
