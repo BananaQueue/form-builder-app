@@ -393,6 +393,13 @@ body::after {
   animation: nav-actions-in 200ms ease both;
 }
 
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 @keyframes nav-actions-in {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -4889,4 +4896,116 @@ body::after {
   .fd-rating-row { gap: var(--space-2); }
   .fd-rating-label { padding: 8px var(--space-3); min-width: 60px; }
   .fb-page-title { font-size: var(--text-xl); }
+}
+
+/* (removed temporary nav-overlap padding change) */
+
+/* Mobile responsiveness fixes: prevent overflow, wrap chips/badges, tighten spacing */
+@media (max-width: 768px) {
+  /* Ensure no accidental horizontal scrolling */
+  html, body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Make main shells and papers constrain to viewport */
+  .fv-shell,
+  .fv-paper,
+  .fb-shell,
+  .fb-paper,
+  .fd-shell {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  /* Question cards: full width, reduced padding on mobile */
+  .fv-question-card,
+  .fv-section-block {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    padding: var(--space-4) !important;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* Allow question top row to wrap without overflow */
+  .fv-question-top {
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  /* Chips / option pills container should wrap */
+  .fv-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  /* Option pills: allow wrapping and prevent oversized pills */
+  .fv-option-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Conditional badges: wrap long text and never overflow */
+  .fv-badge,
+  .fv-badge fv-badge-condition,
+  .fv-badge-row {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Make Action bar buttons stack/wrap nicely */
+  .fv-action-bar {
+    gap: var(--space-2);
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .action-buttons {
+    gap: var(--space-1);
+  }
+  /* .fv-action-bar .glass-button { flex: 0 1 auto; min-width: 0; } */
+
+  /* Prevent large text sizes from colliding on mobile */
+  .fv-title { font-size: calc(var(--text-xl) - 2px); }
+  .fv-section-title { font-size: calc(var(--text-lg) - 1px); }
+
+  /* Ensure any flex child can shrink to avoid overflow */
+  .fv-shell *,
+  .fv-paper *,
+  .fv-question-card *,
+  .fv-options * {
+    min-width: 0;
+  }
+
+  /* Avoid fixed width images or elements causing overflow */
+  img, canvas { max-width: 100%; height: auto; }
+
+  /* Tidy up spacing for very narrow phones */
+  @media (max-width: 420px) {
+    .fv-shell,
+    .fv-paper { padding-left: var(--space-3); padding-right: var(--space-3); }
+    .fv-question-card { padding: var(--space-3); }
+    .fv-title { font-size: var(--text-lg); }
+  }
 }

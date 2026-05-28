@@ -2,14 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiUrl } from "./apiBase";
 import QRCode from "qrcode";
+import ActionButtons from "./ActionButtons";
+import { useIsMobile } from "./useIsMobile";
 
-function FormViewer({ formId, showToast, actionsRef, isSuperAdmin = false }) {
+function FormViewer({ formId, showToast, actionsRef, onActionBarOverlapChange, actionsInNavbar, isSuperAdmin = false }) {
   const [form, setForm]           = useState(null);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(null);
   const [showQrModal, setShowQrModal] = useState(false);
   const qrCanvasRef               = useRef(null);
+  const actionBarRef              = useRef(null);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // ── URL helpers (unchanged) ────────────────────────────────────────────────
 
@@ -125,6 +129,43 @@ function FormViewer({ formId, showToast, actionsRef, isSuperAdmin = false }) {
     return () => { if (actionsRef) actionsRef.current = null; };
   }, [form]);
 
+  useEffect(() => {
+    if (!actionBarRef.current || !onActionBarOverlapChange) return;
+
+    // On small/mobile viewports we do not migrate actions into the nav.
+    if (isMobile) {
+      onActionBarOverlapChange(false);
+      return;
+    }
+
+    const nav = document.querySelector('.glass-nav');
+    if (!nav) return;
+
+    let observer = null;
+
+    const observerOptions = () => ({
+      root: null,
+      rootMargin: `-${nav.getBoundingClientRect().height}px 0px 0px 0px`,
+      threshold: [0],
+    });
+
+    function observeActionBar() {
+      if (observer) observer.disconnect();
+      observer = new IntersectionObserver(([entry]) => {
+        onActionBarOverlapChange(!entry.isIntersecting);
+      }, observerOptions());
+      observer.observe(actionBarRef.current);
+    }
+
+    observeActionBar();
+    window.addEventListener('resize', observeActionBar);
+
+    return () => {
+      window.removeEventListener('resize', observeActionBar);
+      if (observer) observer.disconnect();
+    };
+  }, [form, onActionBarOverlapChange]);
+
   // ── Guards ─────────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -221,24 +262,21 @@ function FormViewer({ formId, showToast, actionsRef, isSuperAdmin = false }) {
         </div>
       )}
 
-      <div className="fv-action-bar">
-        {isSuperAdmin && (
-          <button className="glass-button" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
+      <div ref={actionBarRef} className="fv-action-bar">
+        {!actionsInNavbar && (
+          <>
+            {isSuperAdmin && (
+              <button className="glass-button glass-button--back" onClick={() => navigate(-1)}>
+                ← Back
+              </button>
+            )}
+            <ActionButtons
+              onFillOut={() => window.open(buildPublicUrl(), "_blank")}
+              onCopyLink={copyPublicLink}
+              onShowQr={() => setShowQrModal(true)}
+            />
+          </>
         )}
-        <button
-          className="glass-button glass-button--fill"
-          onClick={() => window.open(buildPublicUrl(), "_blank")}
-        >
-          📝 Fill Out
-        </button>
-        <button className="glass-button glass-button--share" onClick={copyPublicLink}>
-          🔗 Copy Link
-        </button>
-        <button className="glass-button glass-button--qr" onClick={() => setShowQrModal(true)}>
-          ⬜ Show QR
-        </button>
       </div>
 
       <div className="fv-paper">

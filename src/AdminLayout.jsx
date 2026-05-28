@@ -1,5 +1,7 @@
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
+import { useIsMobile } from "./useIsMobile";
+import ActionButtons from "./ActionButtons";
 import FormBuilder from "./FormBuilder";
 import FormList from "./FormList";
 import FormViewer from "./FormViewer";
@@ -21,22 +23,16 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
   const navRef = useRef(null);
   const [navOverForm, setNavOverForm] = useState(false);
   const formActionsRef = useRef(null);
-  const [actionBarScrolled, setActionBarScrolled] = useState(false);
+  const [actionsInNavbar, setActionsInNavbar] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     function check() {
       const formEl = document.querySelector('.fv-paper, .fb-shell, .fv-shell');
       if (!formEl || !navRef.current) { setNavOverForm(false); return; }
-      const navBottom  = navRef.current.getBoundingClientRect().bottom;
-      const formTop    = formEl.getBoundingClientRect().top;
+      const navBottom = navRef.current.getBoundingClientRect().bottom;
+      const formTop = formEl.getBoundingClientRect().top;
       setNavOverForm(formTop < navBottom);
-
-      const actionBar = document.querySelector('.fv-action-bar');
-      if (actionBar) {
-        setActionBarScrolled(actionBar.getBoundingClientRect().bottom < navBottom);
-      } else {
-        setActionBarScrolled(false);
-      }
     }
     window.addEventListener('scroll', check, { passive: true });
     window.addEventListener('resize', check, { passive: true });
@@ -46,6 +42,8 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
       window.removeEventListener('resize', check);
     };
   }, [location.pathname]);
+
+  
 
   // ── Navigation handlers (unchanged) ───────────────────────────────────────
 
@@ -145,29 +143,16 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
         )}
         </div>
 
-        {/* Action buttons: appear when the form's action bar has scrolled out of view */}
-        {actionBarScrolled && location.pathname === '/view' && formActionsRef.current && (
+        {/* Action buttons: render in the nav only when the original actions are overlapped */}
+        {actionsInNavbar && !isMobile && location.pathname === '/view' && formActionsRef.current && (
           <>
             <div className="nav-actions-divider" />
             <div className="nav-actions">
-              <button
-                className="glass-button glass-button--fill"
-                onClick={() => formActionsRef.current.fillOut()}
-              >
-                📝 <span>Fill Out</span>
-              </button>
-              <button
-                className="glass-button glass-button--share"
-                onClick={() => formActionsRef.current.copyLink()}
-              >
-                🔗 <span>Copy Link</span>
-              </button>
-              <button
-                className="glass-button glass-button--qr"
-                onClick={() => formActionsRef.current.showQr()}
-              >
-                ⬜ <span>Show QR</span>
-              </button>
+              <ActionButtons
+                onFillOut={() => formActionsRef.current.fillOut()}
+                onCopyLink={() => formActionsRef.current.copyLink()}
+                onShowQr={() => formActionsRef.current.showQr()}
+              />
             </div>
           </>
         )}
@@ -222,6 +207,8 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
                 formId={viewingFormId}
                 showToast={showToast}
                 actionsRef={formActionsRef}
+                onActionBarOverlapChange={setActionsInNavbar}
+                actionsInNavbar={actionsInNavbar}
                 isSuperAdmin={isSuperAdmin}
               />
             ) : (
