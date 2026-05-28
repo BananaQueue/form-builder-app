@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   DndContext,
@@ -208,11 +208,11 @@ function SortableQuestionRow({
             Options: {question.options.join(", ")}
           </span>
         )}
-        {question.condition_question_id && (
+          {question.condition_question_id && (
           <span className="fb-preview-condition">
             ⚡ Shows only if Q
             {questions.findIndex(
-              (q) => q.id == question.condition_question_id,
+              (q) => String(q.id) === String(question.condition_question_id),
             ) + 1}
             {question.condition_type === "equals" &&
               ` equals "${question.condition_value}"`}
@@ -276,7 +276,7 @@ function getRatingScaleOptions(scale) {
   return scales[scale] || [];
 }
 
-function EditQuestionModal({ question, questions, onSave, onClose }) {
+function EditQuestionModal({ question, questions, onSave, onClose, showToast }) {
   // ── Local draft state ──────────────────────────────────────────────────────
   // Each piece of the question gets its own state variable.
   // We initialise them from the `question` prop when the modal first opens.
@@ -337,7 +337,7 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
   // FormBuilder will find the question by ID and replace it in its array.
   function handleSave() {
     if (text.trim() === "") {
-      alert("Question text cannot be empty.");
+      showToast("Question text cannot be empty.", "warning");
       return;
     }
 
@@ -357,7 +357,7 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
     const parsedMax = numberMax !== "" ? parseFloat(numberMax) : null;
 
     if (parsedMin !== null && parsedMax !== null && parsedMin > parsedMax) {
-      alert("Minimum value cannot be greater than maximum value.");
+      showToast("Minimum value cannot be greater than maximum value.", "warning");
       return;
     }
 
@@ -400,6 +400,25 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
   // Sections are simpler — they only need text + description fields.
   const isSection = question.type === "section";
 
+  // Focus management + Escape-to-close for accessibility
+  const firstInputRef = useRef(null);
+  useEffect(() => {
+    firstInputRef.current?.focus();
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Precompute available previous questions and selected question for
+  // conditional logic rendering to avoid complex IIFEs inside JSX.
+  const currentIndex = questions.findIndex((q) => String(q.id) === String(question.id));
+  const availablePrevQuestions = questions.filter((q, idx) => q.type !== "section" && idx < currentIndex);
+  const selectedQ = questions.find((q) => String(q.id) === String(conditionQuestionId));
+  const allowedConditionTypes = selectedQ ? getAllowedConditionTypes(selectedQ.type) : [];
+  const effectiveConditionType = allowedConditionTypes.includes(conditionType) ? conditionType : "equals";
+
   return (
     // ── Dark overlay ──────────────────────────────────────────────────────────
     // position:fixed makes it cover the whole viewport regardless of scroll.
@@ -427,6 +446,9 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
       {/* stopPropagation prevents a click inside the card from closing it */}
       <div
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-question-title"
         style={{
           background: "#fff",
           borderRadius: "18px",
@@ -445,7 +467,7 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
         <div
           style={{ borderBottom: "2px solid #eef3ff", paddingBottom: "14px" }}
         >
-          <h2 style={{ margin: 0, fontSize: "1.25em", color: "#1a1a2e" }}>
+          <h2 id="edit-question-title" style={{ margin: 0, fontSize: "1.25em", color: "#1a1a2e" }}>
             {isSection ? "✏️ Edit Section" : "✏️ Edit Question"}
           </h2>
           <p style={{ margin: "4px 0 0", fontSize: "0.82em", color: "#aaa" }}>
@@ -459,6 +481,7 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
             {isSection ? "Section Title" : "Question Text"}
           </label>
           <input
+            ref={firstInputRef}
             className="fb-input"
             type="text"
             value={text}
@@ -876,9 +899,7 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                   }}
                 >
                   {/* Filter out sections and this question itself from the dropdown */}
-                  {questions.filter(
-                    (q) => q.type !== "section" && q.id !== question.id,
-                  ).length === 0 ? (
+                  {availablePrevQuestions.length === 0 ? (
                     <p className="fb-condition-hint">
                       No other questions available to condition on.
                     </p>
@@ -898,136 +919,79 @@ function EditQuestionModal({ question, questions, onSave, onClose }) {
                           <option value="">-- Select a question --</option>
                           {(() => {
                             let counter = 0;
-                            return questions
-                              .filter(
-                                (q) =>
-                                  q.type !== "section" && q.id !== question.id,
-                              )
-                              .map((q) => {
-                                counter++;
-                                return (
-                                  <option key={q.id} value={q.id}>
-                                    Q{counter}: {q.text} ({q.type})
-                                  </option>
-                                );
-                              });
+                            return availablePrevQuestions.map((q) => {
+                              counter++;
+                              return (
+                                <option key={q.id} value={q.id}>
+                                  Q{counter}: {q.text} ({q.type})
+                                </option>
+                              );
+                            });
                           })()}
                         </select>
                       </div>
 
-                      {conditionQuestionId &&
-                        (() => {
-                          const selectedQ = questions.find(
-                            (q) => q.id == conditionQuestionId,
-                          );
-                          if (!selectedQ) return null;
-
-                          const allowedConditionTypes =
-                            getAllowedConditionTypes(selectedQ.type);
-                          const effectiveConditionType =
-                            allowedConditionTypes.includes(conditionType)
-                              ? conditionType
-                              : "equals";
-
-                          return (
-                            <>
-                              <div
-                                className="fb-field"
-                                style={{ marginBottom: 0 }}
-                              >
-                                <label className="fb-label">
-                                  Condition type
-                                </label>
-                                <select
-                                  className="fb-select"
-                                  value={effectiveConditionType}
-                                  onChange={(e) => {
-                                    setConditionType(e.target.value);
-                                    setConditionValue("");
-                                  }}
-                                >
-                                  <option value="equals">Answer equals</option>
-                                  <option value="not_equals">
-                                    Answer does NOT equal
-                                  </option>
-                                  {selectedQ.type === "multiple_choice" && (
-                                    <>
-                                      <option value="contains">
-                                        Selected answers contain
-                                      </option>
-                                      <option value="not_contains">
-                                        Selected answers do NOT contain
-                                      </option>
-                                    </>
-                                  )}
-                                  <option value="is_answered">
-                                    Question is answered (any value)
-                                  </option>
-                                </select>
-                              </div>
-
-                              {effectiveConditionType !== "is_answered" && (
-                                <div
-                                  className="fb-field"
-                                  style={{ marginBottom: 0 }}
-                                >
-                                  <label className="fb-label">
-                                    {effectiveConditionType === "contains" ||
-                                    effectiveConditionType === "not_contains"
-                                      ? "Option"
-                                      : "Value"}
-                                  </label>
-                                  {selectedQ.type === "text" ||
-                                  selectedQ.type === "email" ? (
-                                    <input
-                                      className="fb-input"
-                                      type="text"
-                                      value={conditionValue}
-                                      onChange={(e) =>
-                                        setConditionValue(e.target.value)
-                                      }
-                                      placeholder="Enter expected answer"
-                                    />
-                                  ) : selectedQ.type === "number" ? (
-                                    <input
-                                      className="fb-input"
-                                      type="number"
-                                      value={conditionValue}
-                                      onChange={(e) =>
-                                        setConditionValue(e.target.value)
-                                      }
-                                      placeholder="Enter expected number"
-                                    />
-                                  ) : (
-                                    <select
-                                      className="fb-select"
-                                      value={conditionValue}
-                                      onChange={(e) =>
-                                        setConditionValue(e.target.value)
-                                      }
-                                    >
-                                      <option value="">
-                                        -- Select an option --
-                                      </option>
-                                      {selectedQ.options &&
-                                      selectedQ.options.length > 0 ? (
-                                        selectedQ.options.map((opt, idx) => (
-                                          <option key={idx} value={opt}>
-                                            {opt}
-                                          </option>
-                                        ))
-                                      ) : (
-                                        <option disabled>
-                                          No options available
-                                        </option>
-                                      )}
-                                    </select>
-                                  )}
-                                </div>
+                      {selectedQ && (
+                        <>
+                          <div className="fb-field" style={{ marginBottom: 0 }}>
+                            <label className="fb-label">Condition type</label>
+                            <select
+                              className="fb-select"
+                              value={effectiveConditionType}
+                              onChange={(e) => {
+                                setConditionType(e.target.value);
+                                setConditionValue("");
+                              }}
+                            >
+                              <option value="equals">Answer equals</option>
+                              <option value="not_equals">Answer does NOT equal</option>
+                              {selectedQ.type === "multiple_choice" && (
+                                <>
+                                  <option value="contains">Selected answers contain</option>
+                                  <option value="not_contains">Selected answers do NOT contain</option>
+                                </>
                               )}
-                            </>
-                          );
-                        })()}
+                              <option value="is_answered">Question is answered (any value)</option>
+                            </select>
+                          </div>
+
+                          {effectiveConditionType !== "is_answered" && (
+                            <div className="fb-field" style={{ marginBottom: 0 }}>
+                              <label className="fb-label">
+                                {effectiveConditionType === "contains" || effectiveConditionType === "not_contains" ? "Option" : "Value"}
+                              </label>
+                              {selectedQ.type === "text" || selectedQ.type === "email" ? (
+                                <input
+                                  className="fb-input"
+                                  type="text"
+                                  value={conditionValue}
+                                  onChange={(e) => setConditionValue(e.target.value)}
+                                  placeholder="Enter expected answer"
+                                />
+                              ) : selectedQ.type === "number" ? (
+                                <input
+                                  className="fb-input"
+                                  type="number"
+                                  value={conditionValue}
+                                  onChange={(e) => setConditionValue(e.target.value)}
+                                  placeholder="Enter expected number"
+                                />
+                              ) : (
+                                <select className="fb-select" value={conditionValue} onChange={(e) => setConditionValue(e.target.value)}>
+                                  <option value="">-- Select an option --</option>
+                                  {selectedQ.options && selectedQ.options.length > 0 ? (
+                                    selectedQ.options.map((opt, idx) => (
+                                      <option key={idx} value={opt}>{opt}</option>
+                                    ))
+                                  ) : (
+                                    <option disabled>No options available</option>
+                                  )}
+                                </select>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
                     </>
                   )}
                 </div>
@@ -1144,9 +1108,9 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
 
   function handleQuestionsDragEnd(event) {
     const { active, over } = event;
-    if (!over || active.id == over.id) return;
-    const oldIndex = questions.findIndex((q) => q.id == active.id);
-    const newIndex = questions.findIndex((q) => q.id == over.id);
+    if (!over || String(active.id) === String(over.id)) return;
+    const oldIndex = questions.findIndex((q) => String(q.id) === String(active.id));
+    const newIndex = questions.findIndex((q) => String(q.id) === String(over.id));
     if (oldIndex === -1 || newIndex === -1) return;
     const reordered = arrayMove(questions, oldIndex, newIndex);
     if (!isOrderValidForConditions(reordered)) {
@@ -1408,8 +1372,8 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
   function canonicalConditionParentId(q) {
     const raw = q.condition_question_id;
     if (raw == null || raw === "") return null;
-    const parent = questions.find((p) => p.id == raw);
-    return parent ? parent.id : raw;
+    const parent = questions.find((p) => String(p.id) === String(raw));
+    return parent ? parent.id : null;
   }
 
   async function saveForm() {
@@ -1538,6 +1502,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
           questions={questions}
           onSave={saveEdit}
           onClose={() => setEditingQuestion(null)}
+          showToast={showToast}
         />
       )}
 
@@ -1920,7 +1885,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
                   {conditionQuestionId &&
                     (() => {
                       const selectedQ = questions.find(
-                        (q) => q.id == conditionQuestionId,
+                        (q) => String(q.id) === String(conditionQuestionId),
                       );
                       if (!selectedQ) return null;
                       const allowedConditionTypes = getAllowedConditionTypes(

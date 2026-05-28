@@ -228,6 +228,12 @@ html {
   font-size: 16px;  /* base for rem units */
 }
 
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -3730,7 +3736,7 @@ body::after {
   padding: 9px var(--space-3);
   border: 1.5px solid var(--border-input);
   border-radius: var(--radius-md);
-  font-size: var(--text-sm);
+  font-size: 16px;
   font-family: var(--font-base);
   background: var(--bg-input, #fff);
   color: var(--text-primary);

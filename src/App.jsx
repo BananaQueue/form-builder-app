@@ -29,6 +29,42 @@ import { useNotification } from './useNotification'   // NEW
 import { apiUrl } from './apiBase'
 import './App.css'
 
+function isIosSafari() {
+  if (typeof navigator === 'undefined' || typeof document === 'undefined') return false
+  const ua = navigator.userAgent
+  const isIos = /\b(iP(ad|hone|od))\b/.test(ua) || (ua.includes('Macintosh') && 'ontouchend' in document)
+  const isWebkit = /AppleWebKit/.test(ua)
+  const isNotChromium = !/\b(CriOS|Chrome|FxiOS|EdgiOS|OPiOS|OPR|SamsungBrowser)\b/.test(ua)
+  return isIos && isWebkit && isNotChromium
+}
+
+function parseViewportContent(content) {
+  return content
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .reduce((acc, entry) => {
+      const [key, ...rest] = entry.split('=')
+      if (!key) return acc
+      acc[key.trim()] = rest.join('=').trim()
+      return acc
+    }, {})
+}
+
+function serializeViewportContent(entries) {
+  return Object.entries(entries)
+    .map(([key, value]) => (value === '' ? key : `${key}=${value}`))
+    .join(', ')
+}
+
+function normalizeViewportForZoomLock(originalContent) {
+  const viewport = parseViewportContent(originalContent)
+  viewport.width = 'device-width'
+  viewport['initial-scale'] = '1'
+  viewport['maximum-scale'] = '1'
+  return serializeViewportContent(viewport)
+}
+
 function App() {
   // ── Existing auth state (unchanged) ──────────────────────────────────────
   const [authUser, setAuthUser] = useState(null)
@@ -50,6 +86,49 @@ function App() {
       .then(r => r.json())
       .then(data => setAuthUser(data.logged_in ? { username: data.username, role: data.role } : false))
       .catch(() => setAuthUser(false))
+  }, [])
+
+  useEffect(() => {
+    if (!isIosSafari()) return
+
+    const meta = document.querySelector('meta[name=viewport]')
+    if (!meta) return
+
+    const originalContent = meta.getAttribute('content') || ''
+    let locked = false
+
+    function isInputControl(element) {
+      return (
+        element instanceof Element &&
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName)
+      )
+    }
+
+    function handleFocusIn(event) {
+      if (!isInputControl(event.target)) return
+      if (locked) return
+      meta.setAttribute('content', normalizeViewportForZoomLock(originalContent))
+      locked = true
+    }
+
+    function handleFocusOut(event) {
+      const next = event.relatedTarget
+      if (next && isInputControl(next)) return
+      if (!locked) return
+      meta.setAttribute('content', originalContent)
+      locked = false
+    }
+
+    document.addEventListener('focusin', handleFocusIn)
+    document.addEventListener('focusout', handleFocusOut)
+
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn)
+      document.removeEventListener('focusout', handleFocusOut)
+      if (locked) {
+        meta.setAttribute('content', originalContent)
+      }
+    }
   }, [])
 
   async function handleLogout() {

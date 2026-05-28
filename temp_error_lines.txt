@@ -1,0 +1,169 @@
+881:                 </p>
+882:               )}
+883: 
+884:               {hasCondition && (
+885:                 <div
+886:                   style={{
+887:                     marginTop: "14px",
+888:                     display: "flex",
+889:                     flexDirection: "column",
+890:                     gap: "12px",
+891:                   }}
+892:                 >
+893:                   {/* Filter out sections and this question itself from the dropdown */}
+894:                   {(() => {
+895:                     const currentIndex = questions.findIndex((q) => String(q.id) === String(question.id));
+896:                     const available = questions.filter((q, idx) => q.type !== "section" && idx < currentIndex);
+897:                     return available.length === 0 ? (
+898:                     <p className="fb-condition-hint">
+899:                       No other questions available to condition on.
+900:                     </p>
+901:                     ) : (
+902:                     <>
+903:                       <div className="fb-field" style={{ marginBottom: 0 }}>
+904:                         <label className="fb-label">Previous question</label>
+905:                         <select
+906:                           className="fb-select"
+907:                           value={conditionQuestionId}
+908:                           onChange={(e) => {
+909:                             setConditionQuestionId(e.target.value);
+910:                             setConditionType("equals");
+911:                             setConditionValue("");
+912:                           }}
+913:                         >
+914:                           <option value="">-- Select a question --</option>
+915:                           {(() => {
+916:                             let counter = 0;
+917:                             return available.map((q) => {
+918:                               counter++;
+919:                               return (
+920:                                 <option key={q.id} value={q.id}>
+921:                                   Q{counter}: {q.text} ({q.type})
+922:                                 </option>
+923:                               );
+924:                             });
+925:                           })()}
+926:                         </select>
+927:                       </div>
+928: 
+929:                       {conditionQuestionId &&
+930:                         (() => {
+931:                           const selectedQ = questions.find(
+932:                             (q) => String(q.id) === String(conditionQuestionId),
+933:                           );
+934:                           if (!selectedQ) return null;
+935: 
+936:                           const allowedConditionTypes =
+937:                             getAllowedConditionTypes(selectedQ.type);
+938:                           const effectiveConditionType =
+939:                             allowedConditionTypes.includes(conditionType)
+940:                               ? conditionType
+941:                               : "equals";
+942: 
+943:                           return (
+944:                             <>
+945:                               <div
+946:                                 className="fb-field"
+947:                                 style={{ marginBottom: 0 }}
+948:                               >
+949:                                 <label className="fb-label">
+950:                                   Condition type
+951:                                 </label>
+952:                                 <select
+953:                                   className="fb-select"
+954:                                   value={effectiveConditionType}
+955:                                   onChange={(e) => {
+956:                                     setConditionType(e.target.value);
+957:                                     setConditionValue("");
+958:                                   }}
+959:                                 >
+960:                                   <option value="equals">Answer equals</option>
+961:                                   <option value="not_equals">
+962:                                     Answer does NOT equal
+963:                                   </option>
+964:                                   {selectedQ.type === "multiple_choice" && (
+965:                                     <>
+966:                                       <option value="contains">
+967:                                         Selected answers contain
+968:                                       </option>
+969:                                       <option value="not_contains">
+970:                                         Selected answers do NOT contain
+971:                                       </option>
+972:                                     </>
+973:                                   )}
+974:                                   <option value="is_answered">
+975:                                     Question is answered (any value)
+976:                                   </option>
+977:                                 </select>
+978:                               </div>
+979: 
+980:                               {effectiveConditionType !== "is_answered" && (
+981:                                 <div
+982:                                   className="fb-field"
+983:                                   style={{ marginBottom: 0 }}
+984:                                 >
+985:                                   <label className="fb-label">
+986:                                     {effectiveConditionType === "contains" ||
+987:                                     effectiveConditionType === "not_contains"
+988:                                       ? "Option"
+989:                                       : "Value"}
+990:                                   </label>
+991:                                   {selectedQ.type === "text" ||
+992:                                   selectedQ.type === "email" ? (
+993:                                     <input
+994:                                       className="fb-input"
+995:                                       type="text"
+996:                                       value={conditionValue}
+997:                                       onChange={(e) =>
+998:                                         setConditionValue(e.target.value)
+999:                                       }
+1000:                                       placeholder="Enter expected answer"
+1001:                                     />
+1002:                                   ) : selectedQ.type === "number" ? (
+1003:                                     <input
+1004:                                       className="fb-input"
+1005:                                       type="number"
+1006:                                       value={conditionValue}
+1007:                                       onChange={(e) =>
+1008:                                         setConditionValue(e.target.value)
+1009:                                       }
+1010:                                       placeholder="Enter expected number"
+1011:                                     />
+1012:                                   ) : (
+1013:                                     <select
+1014:                                       className="fb-select"
+1015:                                       value={conditionValue}
+1016:                                       onChange={(e) =>
+1017:                                         setConditionValue(e.target.value)
+1018:                                       }
+1019:                                     >
+1020:                                       <option value="">
+1021:                                         -- Select an option --
+1022:                                       </option>
+1023:                                       {selectedQ.options &&
+1024:                                       selectedQ.options.length > 0 ? (
+1025:                                         selectedQ.options.map((opt, idx) => (
+1026:                                           <option key={idx} value={opt}>
+1027:                                             {opt}
+1028:                                           </option>
+1029:                                         ))
+1030:                                       ) : (
+1031:                                         <option disabled>
+1032:                                           No options available
+1033:                                         </option>
+1034:                                       )}
+1035:                                     </select>
+1036:                                   )}
+1037:                                 </div>
+1038:                               )}
+1039:                             </>
+1040:                           );
+1041:                         })()}
+1042:                     </>
+1043:                   )}
+1044:                 </div>
+1045:               )}
+1046:             </div>
+1047:           </>
+1048:         )}
+1049: 
