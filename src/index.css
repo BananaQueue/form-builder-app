@@ -531,6 +531,10 @@ body::after {
   -webkit-backdrop-filter: var(--blur-sm);
 }
 
+::picker(select) {
+  color: var(--text-primary);
+}
+
 .glass-select:hover {
   border-color: var(--border-glass-strong);
 }
@@ -1638,17 +1642,24 @@ body::after {
 
 /* Individual question row */
 .fv-question-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   background: var(--bg-paper-subtle);
   border-left: 3px solid var(--accent);
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-3) var(--space-5);
+  flex-wrap: wrap;
 }
 
 .fv-question-top {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  order: 1;
 }
 
 .fv-question-number {
@@ -1659,27 +1670,45 @@ body::after {
   letter-spacing: 0.05em;
   white-space: nowrap;
   min-width: 32px;
+  flex-shrink: 0;
 }
 
 .fv-question-text {
   font-size: var(--text-base);
   color: var(--text-primary);
   font-weight: 500;
+  flex-shrink: 1;
+  word-break: break-word;
 }
 
 .fv-question-type {
   font-size: var(--text-xs);
   color: var(--text-muted);
-  margin: 0 0 var(--space-3);
-  padding-left: 44px;
+  margin: 0;
+  padding: 0;
   font-family: var(--font-mono);
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-left: auto;
+  order: 3;
+}
+
+.fv-badge-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  order: 2;
 }
 
 .fv-options {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  padding-left: 4px;
+  padding-left: 0;
+  flex-basis: 100%;
+  margin-top: var(--space-2);
+  order: 4;
 }
 
 .fv-option-pill {
