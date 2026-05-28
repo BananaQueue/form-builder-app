@@ -193,6 +193,14 @@ function FormViewer({
     return () => window.removeEventListener("keydown", handleEscape);
   }, [showQrModal]);
 
+  function handleBackNavigation() {
+    if (isSuperAdmin && isMobile) {
+      navigate("/users");
+      return;
+    }
+    navigate("/");
+  }
+
   // ── Guards ─────────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -299,7 +307,7 @@ function FormViewer({
         {!actionsInNavbar && (
           <>
             {isSuperAdmin && (
-              <button className="glass-button glass-button--back" onClick={() => navigate(-1)}>
+              <button className="glass-button glass-button--back" onClick={handleBackNavigation}>
                 ← Back
               </button>
             )}

@@ -1626,6 +1626,29 @@ body::after {
   flex-wrap: wrap;
 }
 
+.fv-action-bar > .glass-button--back {
+  flex: 0 0 80px;
+  width: 80px;
+  max-width: 80px;
+}
+
+.fv-action-bar > .action-buttons {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 545px) {
+  .fv-action-bar > .glass-button--back {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    align-self: flex-start;
+  }
+
+  .fv-action-bar > .action-buttons {
+    flex: 1 1 100%;
+  }
+}
+
 /* The white "paper" document card */
 .fv-paper {
   background: var(--bg-paper);
