@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { apiUrl } from "./apiBase";
 import QRCode from "qrcode";
 import ActionButtons from "./ActionButtons";
@@ -21,6 +21,9 @@ function FormViewer({
   const qrCanvasRef               = useRef(null);
   const actionBarRef              = useRef(null);
   const navigate = useNavigate();
+  const location =useLocation();
+  const fromUserId = location.state?.fromUserId ?? null;
+  const fromUsername = location.state?.fromUsername ?? null;
   const isMobile = useIsMobile();
   const closeQrButtonRef = useRef(null);
 
@@ -194,12 +197,19 @@ function FormViewer({
   }, [showQrModal]);
 
   function handleBackNavigation() {
-    if (isSuperAdmin && isMobile) {
-      navigate("/users");
-      return;
-    }
-    navigate("/");
+  if (fromUserId) {
+    navigate("/users", { 
+      state: { 
+        viewingUser: { 
+          id: fromUserId, 
+          username: fromUsername 
+        } 
+      } 
+    });
+    return;
   }
+  navigate("/");
+}
 
   // ── Guards ─────────────────────────────────────────────────────────────────
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { apiUrl } from './apiBase'
 import FormList from './FormList'
 import PasswordInput from './PasswordInput'
@@ -25,6 +26,14 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
   const [pinModal, setPinModal]     = useState(null) // { id, username }
   const [pinInput, setPinInput]     = useState('')
   const [pinError, setPinError]     = useState('')
+  const location = useLocation()
+
+useEffect(() => {
+  const returning = location.state?.viewingUser
+  if (returning) {
+    setViewingUser(returning)
+  }
+}, [])
 
   useEffect(() => { fetchUsers() }, [])
 
@@ -170,7 +179,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
           scopedUserId={viewingUser.id}
           showToast={showToast}
           showConfirm={showConfirm}
-          onViewForm={onViewForm}
+          onViewForm={(formId) => onViewForm(formId, viewingUser.id, viewingUser.username)}
           onEditForm={onEditForm}
           onViewResponses={onViewResponses}
           isSuperAdmin={isSuperAdmin}

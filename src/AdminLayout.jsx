@@ -69,6 +69,11 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
     navigate("/view");
   }
 
+  function handleViewFormAsAdmin(formId, userId, username) {
+  setViewingFormId(formId)
+  navigate("/view", { state: { fromUserId: userId, fromUsername: username } })
+}
+
   function handleEditForm(formId) {
     setEditingFormId(formId);
     navigate("/edit");
@@ -93,6 +98,8 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
     setViewingResponseId(null);
     navigate("/responses");
   }
+
+  
 
   // ── Helper: build the nav button class name ────────────────────────────────
   //
@@ -303,7 +310,7 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
                 ? <UserManagement
                     showToast={showToast}
                     showConfirm={showConfirm}
-                    onViewForm={handleViewForm}
+                    onViewForm={handleViewFormAsAdmin}
                     onEditForm={handleEditForm}
                     onViewResponses={handleViewResponses}
                     isSuperAdmin={isSuperAdmin}
