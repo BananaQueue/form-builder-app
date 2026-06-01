@@ -838,8 +838,6 @@ function EditQuestionModal({ question, questions, onSave, onClose, showToast }) 
                     <option value="date">Date only (MM/DD/YYYY)</option>
                     <option value="time">Time only (HH:MM)</option>
                     <option value="datetime-local">Date and Time</option>
-                    {/* <option value="month">Month and Year</option>
-                    <option value="week">Week (Week 1-52)</option> */}
                   </select>
                 </div>
               </div>
@@ -2232,6 +2230,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
                 <strong>Select input type:</strong>
                 <br />
                 <select
+                  className="fb-select"
                   value={dateTimeType}
                   onChange={(e) => setDateTimeType(e.target.value)}
                   style={{

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { apiUrl } from "./apiBase";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -29,37 +30,94 @@ function formatDate(dateStr) {
 // and needs to close when the user clicks outside of it.
 function ThreeDotMenu({ form, onView, onEdit, onViewResponses, onDelete }) {
   const [open, setOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef(null);
   const menuRef = useRef(null);
 
-  // Close the menu when the user clicks anywhere outside it.
-  // We attach a mousedown listener to the document when the menu opens
-  // and remove it when the menu closes or the component unmounts.
+  // When the menu opens, we calculate exactly where the button is
+  // on the screen right now. We use this to position the dropdown
+  // so it appears directly below the button.
+  //
+  // getBoundingClientRect() returns the button's position relative
+  // to the viewport — top, bottom, left, right, width, height.
+  // These are real pixel values regardless of scroll position or
+  // any parent's CSS transforms.
+  function handleButtonClick() {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+
+      // We want the dropdown's top-left corner to sit at the
+      // bottom-right of the button. So:
+      // top  = where the button's bottom edge is
+      // left = where the button's right edge is, then shift left
+      //        by a fixed width so it doesn't fly off screen
+      setMenuPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.right + window.scrollX,
+      });
+    }
+    setOpen((prev) => !prev);
+  }
+
+  // Close when clicking outside
   useEffect(() => {
     if (!open) return;
+
     function handleOutsideClick(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+      // We check both refs — the button and the menu itself.
+      // Without checking the button, clicking the button to close
+      // would immediately re-open it (the outside click fires
+      // before the button's onClick).
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target)
+      ) {
         setOpen(false);
       }
     }
+
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [open]);
 
-  return (
-    <div
-      ref={menuRef}
-      style={{ position: "relative", display: "inline-block" }}
-    >
-      <button
-        className="afl-dot-btn"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-label="Form actions"
-      >
-        ⋮
-      </button>
+  // Close if the user scrolls — the dropdown would otherwise
+  // stay in its calculated position while the page moves
+  useEffect(() => {
+    if (!open) return;
+    function handleScroll() {
+      setOpen(false);
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [open]);
 
-      {open && (
-        <div className="afl-dropdown">
+  // The dropdown itself. We render this via createPortal, which
+  // places the HTML directly inside document.body — completely
+  // outside the table, outside the stacking context that was
+  // trapping it. But React still treats it as a child of this
+  // component for event handling and state purposes.
+  const dropdown = open
+    ? createPortal(
+        <div
+          ref={menuRef}
+          className="afl-dropdown"
+          style={{
+            // position: fixed means coordinates are relative to the
+            // viewport, not any parent element. This is what lets us
+            // use getBoundingClientRect() values directly.
+            position: "fixed",
+            top: menuPosition.top - window.scrollY,
+            // We shift left by the dropdown's width (150px min-width)
+            // so the right edge of the dropdown aligns with the
+            // right edge of the button, rather than overflowing right.
+            left: menuPosition.left - 150,
+            // z-index here competes at the document root level,
+            // not inside any stacking context — so 9999 truly wins.
+            zIndex: 9999,
+          }}
+        >
           <button
             className="afl-dropdown-item"
             onClick={() => {
@@ -97,8 +155,24 @@ function ThreeDotMenu({ form, onView, onEdit, onViewResponses, onDelete }) {
           >
             Delete
           </button>
-        </div>
-      )}
+        </div>,
+        document.body, // ← render into body, outside all stacking contexts
+      )
+    : null;
+
+  return (
+    <div style={{ position: "relative", display: "inline-block" }}>
+      <button
+        ref={buttonRef}
+        className="afl-dot-btn"
+        onClick={handleButtonClick}
+        aria-label="Form actions"
+      >
+        ⋮
+      </button>
+
+      {/* The portal renders outside this div, directly in body */}
+      {dropdown}
     </div>
   );
 }
