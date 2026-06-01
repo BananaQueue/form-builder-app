@@ -10,13 +10,20 @@ import ResponseViewer from "./ResponseViewer";
 import BannerSettings from "./BannerSettings";
 import UserManagement from "./UserManagement";
 import { useLocation } from "react-router-dom";
+import AdminFormList from "./AdminFormList";
 
-function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }) {
-  const isSuperAdmin = userRole === 'super_admin';
+function AdminLayout({
+  onLogout,
+  currentUser,
+  userRole,
+  showToast,
+  showConfirm,
+}) {
+  const isSuperAdmin = userRole === "super_admin";
   const navigate = useNavigate();
-  const [viewingFormId, setViewingFormId]       = useState(null);
-  const [editingFormId, setEditingFormId]       = useState(null);
-  const [responsesFormId, setResponsesFormId]   = useState(null);
+  const [viewingFormId, setViewingFormId] = useState(null);
+  const [editingFormId, setEditingFormId] = useState(null);
+  const [responsesFormId, setResponsesFormId] = useState(null);
   const [viewingResponseId, setViewingResponseId] = useState(null);
 
   const location = useLocation();
@@ -30,7 +37,7 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
   useEffect(() => {
     let frame = null;
     function check() {
-      const formEl = document.querySelector('.fv-paper, .fb-shell, .fv-shell');
+      const formEl = document.querySelector(".fv-paper, .fb-shell, .fv-shell");
       if (!formEl || !navRef.current) {
         setNavOverForm(false);
         setNavStickyActive(false);
@@ -50,17 +57,15 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
         check();
       });
     }
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', check, { passive: true });
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", check, { passive: true });
     check();
     return () => {
-      window.removeEventListener('scroll', onScrollOrResize);
-      window.removeEventListener('resize', check);
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", check);
       if (frame !== null) window.cancelAnimationFrame(frame);
     };
   }, [location.pathname]);
-
-  
 
   // ── Navigation handlers (unchanged) ───────────────────────────────────────
 
@@ -70,9 +75,11 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
   }
 
   function handleViewFormAsAdmin(formId, userId, username) {
-  setViewingFormId(formId)
-  navigate("/view", { state: { fromUserId: userId, fromUsername: username } })
-}
+    setViewingFormId(formId);
+    navigate("/view", {
+      state: { fromUserId: userId, fromUsername: username },
+    });
+  }
 
   function handleEditForm(formId) {
     setEditingFormId(formId);
@@ -98,8 +105,6 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
     setViewingResponseId(null);
     navigate("/responses");
   }
-
-  
 
   // ── Helper: build the nav button class name ────────────────────────────────
   //
@@ -129,60 +134,58 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
 
   return (
     <div style={{ paddingBottom: "40px" }}>
-
       <nav
         ref={navRef}
-        className={`glass-nav${navOverForm ? ' glass-nav--over-form' : ''}${navStickyActive ? ' glass-nav--sticky-active' : ''}${actionsInNavbar ? ' glass-nav--actions-migrated' : ''}`}
+        className={`glass-nav${navOverForm ? " glass-nav--over-form" : ""}${navStickyActive ? " glass-nav--sticky-active" : ""}${actionsInNavbar ? " glass-nav--actions-migrated" : ""}`}
       >
-
         {/* Primary nav links */}
         <div className="nav-nav nav-left">
-        <button
-          onClick={() => navigate("/")}
-          className={navButtonClass("/")}
-        >
-          My Forms
-        </button>
+          <button onClick={() => navigate("/")} className={navButtonClass("/")}>
+            My Forms
+          </button>
 
-        <button
-          onClick={() => navigate("/create")}
-          className={navButtonClass("/create")}
-        >
-          + New Form
-        </button>
+          <button
+            onClick={() => navigate("/create")}
+            className={navButtonClass("/create")}
+          >
+            + New Form
+          </button>
 
-        {isSuperAdmin && (
-          <>
-            <button
-              onClick={() => navigate("/settings")}
-              className={navButtonClass("/settings")}
-            >
-              Settings
-            </button>
+          {isSuperAdmin && (
+            <>
+              <button
+                onClick={() => navigate("/settings")}
+                className={navButtonClass("/settings")}
+              >
+                Settings
+              </button>
 
-            <button
-              onClick={() => navigate("/users")}
-              className={navButtonClass("/users")}
-            >
-              Users
-            </button>
-          </>
-        )}
+              <button
+                onClick={() => navigate("/users")}
+                className={navButtonClass("/users")}
+              >
+                Users
+              </button>
+            </>
+          )}
         </div>
 
         {/* Action buttons: render in the nav only when the original actions are overlapped */}
-        {actionsInNavbar && !isMobile && location.pathname === '/view' && formActionsRef.current && (
-          <>
-            <div className="nav-actions-divider" />
-            <div className="nav-actions">
-              <ActionButtons
-                onFillOut={() => formActionsRef.current.fillOut()}
-                onCopyLink={() => formActionsRef.current.copyLink()}
-                onShowQr={() => formActionsRef.current.showQr()}
-              />
-            </div>
-          </>
-        )}
+        {actionsInNavbar &&
+          !isMobile &&
+          location.pathname === "/view" &&
+          formActionsRef.current && (
+            <>
+              <div className="nav-actions-divider" />
+              <div className="nav-actions">
+                <ActionButtons
+                  onFillOut={() => formActionsRef.current.fillOut()}
+                  onCopyLink={() => formActionsRef.current.copyLink()}
+                  onShowQr={() => formActionsRef.current.showQr()}
+                />
+              </div>
+            </>
+          )}
 
         {/* User info + sign out — pushed to the right via .nav-user's margin-left:auto */}
         <div className="nav-right nav-user">
@@ -210,20 +213,36 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
         <Route
           path="/"
           element={
-            <FormList
-              onViewForm={handleViewForm}
-              onEditForm={handleEditForm}
-              onViewResponses={handleViewResponses}
-              showToast={showToast}
-              showConfirm={showConfirm}
-              isSuperAdmin={isSuperAdmin}
-            />
+            isSuperAdmin ? (
+              <AdminFormList
+                onViewForm={handleViewForm}
+                onEditForm={handleEditForm}
+                onViewResponses={handleViewResponses}
+                showToast={showToast}
+                showConfirm={showConfirm}
+              />
+            ) : (
+              <FormList
+                onViewForm={handleViewForm}
+                onEditForm={handleEditForm}
+                onViewResponses={handleViewResponses}
+                showToast={showToast}
+                showConfirm={showConfirm}
+                isSuperAdmin={isSuperAdmin}
+              />
+            )
           }
         />
 
         <Route
           path="/create"
-          element={<FormBuilder key="create" showToast={showToast} isSuperAdmin={isSuperAdmin} />}
+          element={
+            <FormBuilder
+              key="create"
+              showToast={showToast}
+              isSuperAdmin={isSuperAdmin}
+            />
+          }
         />
 
         <Route
@@ -297,26 +316,30 @@ function AdminLayout({ onLogout, currentUser, userRole, showToast, showConfirm }
         <Route
           path="/settings"
           element={
-            isSuperAdmin
-              ? <BannerSettings showToast={showToast} />
-              : <Navigate to="/" />
+            isSuperAdmin ? (
+              <BannerSettings showToast={showToast} />
+            ) : (
+              <Navigate to="/" />
+            )
           }
         />
 
         <Route
           path="/users"
           element={
-              isSuperAdmin
-                ? <UserManagement
-                    showToast={showToast}
-                    showConfirm={showConfirm}
-                    onViewForm={handleViewFormAsAdmin}
-                    onEditForm={handleEditForm}
-                    onViewResponses={handleViewResponses}
-                    isSuperAdmin={isSuperAdmin}
-                  />
-                : <Navigate to="/" />
-            }
+            isSuperAdmin ? (
+              <UserManagement
+                showToast={showToast}
+                showConfirm={showConfirm}
+                onViewForm={handleViewFormAsAdmin}
+                onEditForm={handleEditForm}
+                onViewResponses={handleViewResponses}
+                isSuperAdmin={isSuperAdmin}
+              />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
         />
 
         <Route path="*" element={<Navigate to="/" />} />
