@@ -141,7 +141,7 @@ function AdminLayout({
         {/* Primary nav links */}
         <div className="nav-nav nav-left">
           <button onClick={() => navigate("/")} className={navButtonClass("/")}>
-            My Forms
+            {isSuperAdmin ? "All Forms" : "My Forms"}
           </button>
 
           <button
