@@ -604,6 +604,56 @@ body::after {
 }
 
 /* ============================================================
+   NAV ADDITIONS FOR THEME TOGGLE
+   ============================================================
+
+   These rules handle the placement of the theme toggle inside
+   the navigation bar. Copy them into index.css, just after the
+   existing .nav-user rule in Section 4 (Navigation).
+
+   ============================================================ */
+
+
+/* ── Theme toggle area ─────────────────────────────────────────────────── */
+/*
+  This wrapper sits between the left nav links and the right user area.
+  On desktop it floats between them (flex fills the gap automatically).
+  On mobile it collapses naturally into the wrapped nav content.
+
+  We give it flex-shrink: 0 so it never compresses when the nav is tight.
+*/
+.nav-theme-area {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+
+/* ── Mobile nav adjustment for the theme toggle ─────────────────────────── */
+/*
+  On mobile, the nav switches from horizontal to wrapped rows.
+  The theme toggle should sit in the same row as the Sign Out button.
+  We don't need to force this — flexbox wrapping handles it naturally
+  because .nav-theme-area and .nav-user both have flex-shrink: 0.
+
+  The only thing we need to do is ensure the toggle doesn't take up
+  the full row width on very narrow screens.
+*/
+@media (max-width: 767px) {
+  .nav-theme-area {
+    /* Let it sit inline with the user area */
+    margin-left: 0;
+  }
+
+  /* Adjust user area so theme toggle and user info share the bottom row */
+  .nav-right.nav-user {
+    /* The existing rule already has width: 100%, flex, justify-content:
+       space-between. The theme toggle is OUTSIDE nav-user so it naturally
+       sits to its left in the same wrapped row. No change needed. */
+  }
+}
+
+/* ============================================================
    LOGIN PAGE
    ============================================================
 
@@ -5531,4 +5581,1053 @@ body::after {
     .fv-question-card { padding: var(--space-3); }
     .fv-title { font-size: var(--text-lg); }
   }
+}
+
+/* ============================================================
+   LIGHT THEME ADDITIONS
+   ============================================================
+
+   HOW TO USE THIS FILE:
+   Copy the contents of this file and append them to the END
+   of your existing index.css — after all existing styles.
+
+   WHY AT THE END?
+   CSS is "cascading" — later rules override earlier ones when
+   specificity is equal. By putting the light theme overrides
+   at the end, we guarantee they win over the dark defaults
+   without needing !important everywhere.
+
+   WHAT THIS FILE CONTAINS:
+   1. [data-theme="light"] token redefinitions
+   2. Component-specific overrides that can't be handled by
+      tokens alone (hardcoded colors inside component rules)
+   3. The theme toggle button styles (.theme-toggle)
+
+   ============================================================ */
+
+
+/* ============================================================
+   LIGHT THEME TOKEN OVERRIDES
+   ============================================================
+
+   These redefine ONLY the tokens that need to change in light
+   mode. Tokens that stay the same (like --accent, --radius-md,
+   --space-4, --font-base) are NOT listed here — they inherit
+   from :root automatically.
+
+   Think of this as a "diff" or "patch" against the dark theme.
+   ============================================================ */
+
+[data-theme="light"] {
+
+  /* ── Backgrounds ──────────────────────────────────────────────────────── */
+
+  /* The page-level gradient.
+     Dark mode: dramatic deep indigo → purple → near-black
+     Light mode: soft cloud-like blue-white gradient — still atmospheric
+     but bright and breathable. The slight blue tint stops it from looking
+     like a blank Word document. */
+  --bg-page: linear-gradient(
+    135deg,
+    #f0f4ff 0%,
+    #e8effe 50%,
+    #f4f7ff 100%
+  );
+
+  /* Glass surfaces.
+     Dark mode: translucent white on dark = faintly glowing panels.
+     Light mode: translucent white on light = frosted glass effect.
+     The key difference is that the opacity is much HIGHER in light mode
+     because we need more contrast against the light background.
+     Think of a foggy bathroom mirror vs a dark tinted car window —
+     both are "glass" but behave differently. */
+  --bg-glass:         rgba(255, 255, 255, 0.68);
+  --bg-glass-hover:   rgba(255, 255, 255, 0.82);
+  --bg-glass-strong:  rgba(255, 255, 255, 0.92);
+
+  /* Paper cards (white editing areas — form builder, form viewer, etc.)
+     In dark mode these were near-white (#fff * 0.97) because they needed
+     to stand out against the dark background.
+     In light mode we use a slightly cooler white to create a paper-like
+     feel that doesn't compete with the page background. */
+  --bg-paper:        #ffffff;
+  --bg-paper-subtle: #f8f9fd;
+
+  /* ── Text Colors on Dark Surfaces ──────────────────────────────────────
+     In dark mode, "on dark" meant "on the dark gradient background."
+     In light mode, "on dark" means "on the still-glass nav/cards."
+     Since glass in light mode is bright/white, these need to be DARK text.
+
+     This is the most important semantic shift in the whole system:
+     --text-on-dark doesn't mean "light colored text" — it means
+     "text that sits on the glass/gradient surface, whatever color that is."
+  */
+  --text-on-dark:         rgba(17, 24, 39, 0.95);   /* near-black */
+  --text-on-dark-deaf:    rgba(17, 24, 39, 0.75);
+  --text-on-dark-muted:   rgba(17, 24, 39, 0.55);
+  --text-on-dark-faint:   rgba(17, 24, 39, 0.30);
+
+  /* ── Text Colors on Light (Paper) Surfaces ──────────────────────────── */
+  /* These are used on white paper cards — the form builder, viewer, etc.
+     In dark mode these were already dark (for readability on white paper).
+     In light mode they stay the same — dark text on white paper is correct. */
+  --text-primary:   #111827;
+  --text-secondary: #374151;
+  --text-muted:     #6b7280;
+  --text-faint:     #9ca3af;
+
+  /* ── Borders ────────────────────────────────────────────────────────── */
+
+  /* Dark mode borders used white transparency (white on dark = subtle).
+     Light mode borders use dark transparency (dark on light = subtle).
+     The visual result — a faint line — is the same. The mechanism differs. */
+  --border-glass:       rgba(15, 23, 42, 0.08);
+  --border-glass-strong: rgba(15, 23, 42, 0.16);
+  --border-paper:       rgba(15, 23, 42, 0.07);
+  --border-input:       #d1d5e0;
+  --border-input-focus: var(--accent);   /* accent color stays the same */
+
+  /* ── Shadows ─────────────────────────────────────────────────────────
+     Dark mode shadows were deep purple-tinted (matching the dark palette).
+     Light mode shadows should be blue-gray tinted (matching the light palette).
+     Critically: light mode shadows are MUCH softer. Heavy dark shadows on a
+     white surface look like a Photoshop mistake. We want depth, not weight. */
+  --shadow-soft:   0 2px 12px rgba(15, 23, 42, 0.07);
+  --shadow-medium: 0 6px 24px rgba(15, 23, 42, 0.10);
+  --shadow-strong: 0 16px 48px rgba(15, 23, 42, 0.14);
+  --shadow-glow:   0 0 0 3px rgba(108, 99, 255, 0.18);
+
+  /* ── Accent Soft Variants ───────────────────────────────────────────
+     These are lightly tinted backgrounds used for badges, focused states,
+     etc. The accent color stays the same, but the "soft" variant needs
+     slightly more opacity to be visible on a light background. */
+  --accent-soft:    rgba(108, 99, 255, 0.10);
+  --accent-softer:  rgba(108, 99, 255, 0.05);
+}
+
+
+/* ============================================================
+   COMPONENT-SPECIFIC LIGHT THEME OVERRIDES
+   ============================================================
+
+   WHY THIS SECTION EXISTS:
+   Some rules in the main CSS have hardcoded color values (not
+   using CSS variables). We can't fix those through token
+   redefinition alone. We need to re-state those rules with
+   corrected values inside [data-theme="light"] { }.
+
+   PATTERN USED HERE:
+   [data-theme="light"] .component-class { property: new-value; }
+
+   This is more specific than the original rule (it has an
+   extra attribute selector), so it wins in the cascade.
+   ============================================================ */
+
+
+/* ── Navigation Bar ─────────────────────────────────────────────────────── */
+/*
+  The nav in dark mode used heavy backdrop blur with dark backgrounds.
+  In light mode it becomes a frosted bright panel.
+
+  We override the specific background colors that were hardcoded as
+  dark rgba values.
+*/
+[data-theme="light"] .glass-nav {
+  border-color: rgba(15, 23, 42, 0.10);
+  box-shadow: 0 2px 16px rgba(15, 23, 42, 0.08);
+}
+
+/* When the nav scrolls over a form (dark mode turned it very dark glass) */
+[data-theme="light"] .glass-nav--over-form {
+  background: rgba(248, 250, 255, 0.92);
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Active nav button — the purple stands out fine on light too */
+[data-theme="light"] .glass-button--active {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+/* Danger hover in light mode — clearer red */
+[data-theme="light"] .glass-button--danger:hover {
+  background: rgba(255, 77, 109, 0.08);
+  border-color: var(--accent-danger);
+  color: var(--accent-danger);
+}
+
+/* select dropdown in nav */
+[data-theme="light"] .glass-select {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-on-dark);
+  border-color: var(--border-glass);
+}
+
+[data-theme="light"] .glass-select:hover {
+  border-color: var(--border-glass-strong);
+}
+
+/* Nav action button color variants — need to be more saturated on light */
+[data-theme="light"] .nav-actions .glass-button--fill {
+  background: rgba(0, 200, 150, 0.18);
+  border-color: rgba(0, 200, 150, 0.35);
+  color: #037f5e;
+}
+
+[data-theme="light"] .nav-actions .glass-button--share {
+  background: rgba(52, 152, 219, 0.18);
+  border-color: rgba(52, 152, 219, 0.35);
+  color: #1a6fa3;
+}
+
+[data-theme="light"] .nav-actions .glass-button--qr {
+  background: rgba(155, 89, 182, 0.18);
+  border-color: rgba(155, 89, 182, 0.35);
+  color: #6d3597;
+}
+
+[data-theme="light"] .nav-actions-divider {
+  background: rgba(15, 23, 42, 0.15);
+}
+
+
+/* ── Form Cards (glass-card) ────────────────────────────────────────────── */
+/*
+  Glass cards in dark mode are barely-visible translucent panels.
+  In light mode they become bright frosted panels with subtle borders
+  and soft shadows — the "depth" comes from shadows rather than
+  contrast with a dark background.
+*/
+[data-theme="light"] .glass-card {
+  box-shadow: var(--shadow-soft);
+}
+
+[data-theme="light"] .glass-card:hover {
+  box-shadow: var(--shadow-medium);
+  border-color: var(--border-glass-strong);
+}
+
+/* Category badges need slightly stronger tints to be visible on light */
+[data-theme="light"] .category-badge.external {
+  background: rgba(108, 99, 255, 0.12);
+  color: #4b44c9;
+  border-color: rgba(108, 99, 255, 0.22);
+}
+
+[data-theme="light"] .category-badge.internal {
+  background: rgba(0, 175, 130, 0.10);
+  color: #007a57;
+  border-color: rgba(0, 175, 130, 0.22);
+}
+
+[data-theme="light"] .category-badge.general {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text-muted);
+  border-color: rgba(15, 23, 42, 0.10);
+}
+
+/* Card buttons — slightly more contrast in light mode */
+[data-theme="light"] .card-btn-view   { background: rgba(108, 99, 255, 0.65); }
+[data-theme="light"] .card-btn-edit   { background: rgba(0, 160, 110, 0.60); }
+[data-theme="light"] .card-btn-delete { background: rgba(220, 50, 80, 0.60); }
+
+[data-theme="light"] .card-btn-responses {
+  background: rgba(255, 255, 255, 0.70);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .card-btn-responses:hover {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text-primary);
+}
+
+
+/* ── Body grain overlay ──────────────────────────────────────────────────── */
+/*
+  The grain texture overlay uses opacity: 0.03 on dark mode.
+  In light mode we use a slightly higher opacity (0.05) because
+  the lighter background needs more texture to not look flat.
+*/
+[data-theme="light"] body::after {
+  opacity: 0.05;
+}
+
+
+/* ── Form List Page ──────────────────────────────────────────────────────── */
+
+[data-theme="light"] .form-list-title {
+  text-shadow: 0 2px 16px rgba(108, 99, 255, 0.15);
+}
+
+[data-theme="light"] .form-list-search__input {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--border-glass);
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .form-list-search__input:focus {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: var(--accent);
+}
+
+[data-theme="light"] .form-list-loading {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .form-list-empty__title {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .form-list-empty__message {
+  color: var(--text-on-dark-muted);
+}
+
+/* Loading dots — purple on light background stays readable */
+[data-theme="light"] .form-list-dot {
+  background: var(--accent);
+}
+
+
+/* ── Form Viewer (.fv-*) ─────────────────────────────────────────────────── */
+/*
+  The paper card already works fine in light mode (white on light bg
+  with good shadow). The overrides here are for the SHELL elements
+  that appear outside the paper card.
+*/
+[data-theme="light"] .fv-title {
+  text-shadow: none; /* dark mode had a glow, looks odd on light */
+}
+
+[data-theme="light"] .fv-meta {
+  color: var(--text-muted);
+}
+
+/* Section block in viewer */
+[data-theme="light"] .fv-section-block {
+  background: linear-gradient(
+    to right,
+    rgba(108, 99, 255, 0.08),
+    rgba(108, 99, 255, 0.02)
+  );
+  border-color: rgba(108, 99, 255, 0.20);
+}
+
+/* Action bar buttons */
+[data-theme="light"] .glass-button--fill {
+  background: rgba(0, 160, 110, 0.12);
+  border-color: rgba(0, 160, 110, 0.28);
+  color: #037f5e;
+}
+
+[data-theme="light"] .glass-button--fill:hover {
+  background: rgba(0, 160, 110, 0.20) !important;
+  border-color: rgba(0, 160, 110, 0.45) !important;
+}
+
+[data-theme="light"] .glass-button--share {
+  background: rgba(52, 130, 200, 0.12);
+  border-color: rgba(52, 130, 200, 0.28);
+  color: #1a6fa3;
+}
+
+[data-theme="light"] .glass-button--share:hover {
+  background: rgba(52, 130, 200, 0.20) !important;
+  border-color: rgba(52, 130, 200, 0.45) !important;
+}
+
+[data-theme="light"] .glass-button--qr {
+  background: rgba(140, 70, 175, 0.12);
+  border-color: rgba(140, 70, 175, 0.28);
+  color: #6d3597;
+}
+
+[data-theme="light"] .glass-button--qr:hover {
+  background: rgba(140, 70, 175, 0.20) !important;
+  border-color: rgba(140, 70, 175, 0.45) !important;
+}
+
+/* QR modal — paper background already works, just fix the overlay */
+[data-theme="light"] .qr-overlay {
+  background: rgba(30, 40, 80, 0.45);
+}
+
+
+/* ── Form Builder (.fb-*) ────────────────────────────────────────────────── */
+/*
+  The fb-paper cards are white — already correct in light mode.
+  We need to fix the colored panel backgrounds (condition panel,
+  options panel) that use hardcoded rgba dark values.
+*/
+
+/* Condition panel — amber tint stays consistent */
+[data-theme="light"] .fb-condition-panel {
+  background: rgba(255, 179, 71, 0.06);
+  border-color: rgba(200, 140, 40, 0.22);
+}
+
+[data-theme="light"] .fb-condition-hint {
+  color: #7a5a10;
+}
+
+[data-theme="light"] .fb-condition-title {
+  color: #8a6510;
+}
+
+/* Options panel */
+[data-theme="light"] .fb-options-panel {
+  background: rgba(108, 99, 255, 0.05);
+  border-color: rgba(108, 99, 255, 0.14);
+}
+
+/* Save panel */
+[data-theme="light"] .fb-save-panel {
+  background: rgba(0, 160, 110, 0.05);
+  border-color: rgba(0, 160, 110, 0.16);
+}
+
+[data-theme="light"] .fb-save-title {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .fb-save-count {
+  color: var(--text-on-dark-muted);
+}
+
+/* Section card in preview */
+[data-theme="light"] .fb-section-card {
+  background: linear-gradient(
+    to right,
+    rgba(108, 99, 255, 0.08),
+    rgba(108, 99, 255, 0.02)
+  );
+  border-color: rgba(108, 99, 255, 0.22);
+}
+
+/* Preview question card */
+[data-theme="light"] .fb-preview-card {
+  background: #f8f9fd;
+  border-left-color: var(--accent);
+  border-top-color:    rgba(15, 23, 42, 0.07);
+  border-right-color:  rgba(15, 23, 42, 0.07);
+  border-bottom-color: rgba(15, 23, 42, 0.07);
+}
+
+[data-theme="light"] .fb-drag-handle {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #9ca3af;
+}
+
+[data-theme="light"] .fb-drag-handle:hover {
+  background: #f0f2fa;
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .fb-preview-question {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .fb-preview-condition {
+  color: #7a5a10;
+  background: rgba(255, 179, 71, 0.08);
+  border-color: rgba(200, 140, 40, 0.20);
+}
+
+/* Page title on light — no need for glow shadow */
+[data-theme="light"] .fb-page-title {
+  text-shadow: none;
+}
+
+[data-theme="light"] .fb-page-subtitle {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .fb-section-title {
+  color: var(--text-muted);
+}
+
+
+/* ── Form Display (.fd-*) — Public Form ─────────────────────────────────── */
+/*
+  The public form has its own background system. In dark mode it's
+  styled per the outer PublicFormPage.jsx wrapper. In light mode the
+  white paper feel is fine, but we need to fix some hardcoded colors.
+*/
+
+[data-theme="light"] .fd-form-title {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .fd-form-description {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .fd-question-card {
+  background: rgba(108, 99, 255, 0.03);
+  border-color: rgba(108, 99, 255, 0.09);
+}
+
+[data-theme="light"] .fd-question-title {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .fd-required-star {
+  color: var(--accent-danger);
+}
+
+[data-theme="light"] .fd-optional-text {
+  color: var(--text-muted);
+}
+
+/* Rating pills in light mode */
+[data-theme="light"] .fd-rating-label {
+  border-color: var(--border-input);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .fd-rating-label--unselected:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Privacy modal overlay */
+[data-theme="light"] .fd-modal-overlay {
+  background: rgba(20, 30, 70, 0.55);
+}
+
+/* Stepper in light mode */
+[data-theme="light"] .fd-stepper-row {
+  /* No override needed — uses --text-on-dark which is now dark */
+}
+
+[data-theme="light"] .fd-progress-track {
+  background: rgba(15, 23, 42, 0.10);
+}
+
+[data-theme="light"] .fd-step-counter {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .fd-btn-back {
+  background: #ffffff;
+  border-color: var(--border-input);
+  color: var(--text-secondary);
+}
+
+
+/* ── Response List (.rl-*) ──────────────────────────────────────────────── */
+
+[data-theme="light"] .rl-title {
+  text-shadow: none;
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .rl-subtitle {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .rl-divider {
+  border-color: var(--border-glass);
+}
+
+[data-theme="light"] .rl-response-row {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .rl-response-row:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .rl-response-row__number {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .rl-response-row__date {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .rl-meta {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .rl-empty__title {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .rl-empty__message {
+  color: var(--text-on-dark-muted);
+}
+
+
+/* ── Response Viewer (.rv-*) ────────────────────────────────────────────── */
+
+[data-theme="light"] .rv-title {
+  text-shadow: none;
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .rv-header__item {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .rv-header__item strong {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .rv-divider {
+  border-color: var(--border-glass);
+}
+
+[data-theme="light"] .rv-answers-heading {
+  color: var(--text-on-dark);
+}
+
+/* Answer cards — glass panels that need to be bright white in light */
+[data-theme="light"] .rv-answer-card {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .rv-answer-card__text {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .rv-answer-card__type {
+  color: var(--text-on-dark-muted);
+}
+
+/* Section block in response viewer */
+[data-theme="light"] .rv-section-block {
+  background: rgba(108, 99, 255, 0.05);
+}
+
+[data-theme="light"] .rv-section-block__title {
+  color: var(--text-on-dark);
+}
+
+/* Answer value box — already white paper, just need shadow */
+[data-theme="light"] .rv-answer-value {
+  background: #f8f9fd;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .rv-answer-value__text {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .rv-meta {
+  color: var(--text-on-dark-muted);
+}
+
+
+/* ── Notifications (.notif-*) ───────────────────────────────────────────── */
+/*
+  Toasts in dark mode used very dark near-black backgrounds.
+  In light mode we flip to very light near-white, maintaining the
+  colored left border as the type indicator.
+*/
+[data-theme="light"] .notif-toast--success {
+  background: rgba(240, 255, 250, 0.97);
+  border-color: rgba(0, 200, 150, 0.30);
+  color: #065f46;
+}
+
+[data-theme="light"] .notif-toast--error {
+  background: rgba(255, 242, 244, 0.97);
+  border-color: rgba(255, 77, 109, 0.30);
+  color: #9b1c2e;
+}
+
+[data-theme="light"] .notif-toast--warning {
+  background: rgba(255, 251, 235, 0.97);
+  border-color: rgba(255, 179, 71, 0.30);
+  color: #7a4f00;
+}
+
+[data-theme="light"] .notif-toast--info {
+  background: rgba(243, 242, 255, 0.97);
+  border-color: rgba(108, 99, 255, 0.25);
+  color: #3730a3;
+}
+
+[data-theme="light"] .notif-toast__message {
+  color: inherit; /* inherits the type-specific color above */
+}
+
+[data-theme="light"] .notif-toast__close {
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.45);
+}
+
+[data-theme="light"] .notif-toast__close:hover {
+  background: rgba(15, 23, 42, 0.12);
+  color: rgba(15, 23, 42, 0.80);
+}
+
+/* Icon tints — match the type colors */
+[data-theme="light"] .notif-toast--success .notif-toast__icon {
+  background: rgba(0, 200, 150, 0.15);
+  color: #037f5e;
+}
+[data-theme="light"] .notif-toast--error .notif-toast__icon {
+  background: rgba(255, 77, 109, 0.12);
+  color: var(--accent-danger);
+}
+[data-theme="light"] .notif-toast--warning .notif-toast__icon {
+  background: rgba(255, 179, 71, 0.15);
+  color: #b45309;
+}
+[data-theme="light"] .notif-toast--info .notif-toast__icon {
+  background: rgba(108, 99, 255, 0.12);
+  color: var(--accent);
+}
+
+/* Confirm modal overlay in light */
+[data-theme="light"] .notif-overlay {
+  background: rgba(20, 30, 70, 0.45);
+}
+
+/* Confirm modal card — already white (bg-paper), adjust action buttons */
+[data-theme="light"] .notif-modal__btn--cancel {
+  background: #f3f4f6;
+  color: var(--text-secondary);
+  border-color: #d1d5db;
+}
+
+[data-theme="light"] .notif-modal__btn--cancel:hover {
+  background: #e5e7eb;
+}
+
+
+/* ── Admin Form List (.afl-*) ───────────────────────────────────────────── */
+
+[data-theme="light"] .afl-title {
+  text-shadow: none;
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .afl-subtitle {
+  color: var(--text-on-dark-muted);
+}
+
+/* Metric cards */
+[data-theme="light"] .afl-metric-card {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-theme="light"] .afl-metric-value {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .afl-metric-label {
+  color: var(--text-on-dark-muted);
+}
+
+/* Search input */
+[data-theme="light"] .afl-search-input {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: var(--border-glass);
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .afl-search-input:focus {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+/* Table wrapper */
+[data-theme="light"] .afl-table-wrap {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-theme="light"] .afl-table thead tr {
+  background: rgba(15, 23, 42, 0.03);
+  border-bottom-color: rgba(15, 23, 42, 0.10);
+}
+
+[data-theme="light"] .afl-table th {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .afl-table td {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .afl-tr {
+  border-bottom-color: rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="light"] .afl-tr:hover {
+  background: rgba(108, 99, 255, 0.03);
+}
+
+[data-theme="light"] .afl-form-title {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .afl-form-desc {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .afl-owner-name {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .afl-td-date {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .afl-td-empty {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .afl-empty-title {
+  color: var(--text-on-dark-muted);
+}
+
+/* Three dot menu */
+[data-theme="light"] .afl-dot-btn {
+  border-color: rgba(15, 23, 42, 0.14);
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .afl-dot-btn:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .afl-dropdown {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(15, 23, 42, 0.10);
+  box-shadow: var(--shadow-medium);
+}
+
+[data-theme="light"] .afl-dropdown-item {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .afl-dropdown-item:hover {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] .afl-dropdown-divider {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+/* Pagination */
+[data-theme="light"] .afl-page-btn {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .afl-page-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(15, 23, 42, 0.20);
+}
+
+[data-theme="light"] .afl-results-count {
+  color: var(--text-on-dark-muted);
+}
+
+/* Mobile cards */
+[data-theme="light"] .afl-mobile-card {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+
+/* ── User Management (.um-*) ────────────────────────────────────────────── */
+
+[data-theme="light"] .um-heading {
+  color: var(--text-on-dark);
+}
+
+/* Card overrides */
+[data-theme="light"] .um-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-theme="light"] .um-card-title {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .um-meta {
+  color: var(--text-muted);
+}
+
+/* Inputs inside user management */
+[data-theme="light"] .um-input {
+  background: #ffffff;
+  border-color: var(--border-input);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .um-select {
+  background: #ffffff;
+  border-color: var(--border-input);
+  color: var(--text-primary);
+}
+
+/* Table */
+[data-theme="light"] .um-table th {
+  border-color: rgba(15, 23, 42, 0.10);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .um-table td {
+  border-color: rgba(15, 23, 42, 0.06);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .um-td-date {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .um-breadcrumb-name {
+  color: var(--text-on-dark-deaf);
+}
+
+
+/* ── Banner Settings (.bs-*) ────────────────────────────────────────────── */
+
+[data-theme="light"] .bs-heading {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .bs-card {
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+}
+
+[data-theme="light"] .bs-empty {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .bs-hint {
+  color: var(--text-muted);
+}
+
+
+/* ── Login Page ─────────────────────────────────────────────────────────── */
+/*
+  The login page is full-screen fixed. In dark mode it sits on the dark
+  gradient. In light mode the card needs to stand out from the light bg.
+  We increase the card opacity and give it a stronger shadow.
+*/
+[data-theme="light"] .login-card {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(15, 23, 42, 0.10);
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .login-heading {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .login-subtitle {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .login-label {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .login-input {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(15, 23, 42, 0.14);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .login-input:hover {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(15, 23, 42, 0.22);
+}
+
+[data-theme="light"] .login-input:focus {
+  background: #ffffff;
+}
+
+[data-theme="light"] .login-input::placeholder {
+  color: var(--text-faint);
+}
+
+
+/* ── Refreshing animation ────────────────────────────────────────────────── */
+/*
+  The sweep animation used a purple tint that works on dark.
+  On light it should be subtler — a light blue-white sweep.
+*/
+[data-theme="light"] .refreshing-background::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(108, 99, 255, 0.07) 50%,
+    transparent 100%
+  );
+}
+
+
+/* ── Theme Toggle Button ────────────────────────────────────────────────── */
+/*
+  This is the new button that switches between dark and light.
+  It lives in the nav bar as a glass-button variant.
+  The icon changes based on the current theme (handled in JS).
+*/
+.theme-toggle {
+  /* Inherits all glass-button styles — just add icon-specific sizing */
+  min-width: 36px;
+  justify-content: center;
+  font-size: 15px;
+  padding: var(--space-2) var(--space-3);
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* The icon inside the toggle button */
+.theme-toggle__icon {
+  display: inline-block;
+  line-height: 1;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* On hover: rotate slightly for a tactile feel */
+.theme-toggle:hover .theme-toggle__icon {
+  transform: rotate(20deg) scale(1.15);
+}
+
+/* Light mode variant — the button gets a sun-yellow tint */
+[data-theme="light"] .theme-toggle {
+  background: rgba(255, 200, 40, 0.12);
+  border-color: rgba(200, 150, 20, 0.28);
+  color: #7a5c00;
+}
+
+[data-theme="light"] .theme-toggle:hover {
+  background: rgba(255, 200, 40, 0.20) !important;
+  border-color: rgba(200, 150, 20, 0.45) !important;
+}
+
+/* Dark mode variant — moon-purple tint */
+.theme-toggle {
+  background: rgba(180, 160, 255, 0.08);
+  border-color: rgba(180, 160, 255, 0.20);
+  color: var(--text-on-dark-deaf);
+}
+
+.theme-toggle:hover {
+  background: rgba(180, 160, 255, 0.14) !important;
+  border-color: rgba(180, 160, 255, 0.35) !important;
 }

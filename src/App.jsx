@@ -1,31 +1,32 @@
 // src/App.jsx
 //
-// App is the root of your entire React tree — every other component
-// lives inside it. That's exactly why we put the notification system here.
+// CHANGES FROM ORIGINAL:
+// ─────────────────────────────────────────────────────────────────────────
+// 1. Import `useTheme` from './useTheme'
+// 2. Import `ThemeToggle` from './ThemeToggle'
+// 3. Call useTheme() and destructure { theme, toggleTheme }
+// 4. Pass `theme` and `toggleTheme` to AdminLayout
+//    (AdminLayout renders the nav bar where the toggle button lives)
 //
-// HOW THE WIRING WORKS:
+// WHY IS THE HOOK CALLED HERE AND NOT IN AdminLayout?
+// The theme must be initialized as early as possible — before the page
+// renders — to avoid a "flash of wrong theme" (FOWT).
+// App.jsx is the root component, so it runs first. useTheme() applies
+// the theme to document.documentElement immediately via its useEffect.
 //
-// 1. We call useNotification() here. It returns state (toast, confirm)
-//    and functions (showToast, showConfirm, hideToast, hideConfirm).
-//
-// 2. We render <NotificationHost /> here, passing it the state and
-//    hide-functions. It watches the state and renders/removes the banner
-//    and modal accordingly.
-//
-// 3. We pass showToast and showConfirm DOWN to child components as props.
-//    Each child that needs to notify the user receives these functions and
-//    calls them instead of calling alert() or window.confirm().
-//
-// This pattern is called "lifting state up" — the state lives at the
-// highest level that needs to share it, and gets passed downward.
+// Also: the theme toggle button is only visible in the admin layout,
+// but we still initialize the theme here at the root level so the
+// public form page (/form/:id) also respects the saved theme.
+// ─────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import PublicFormPage from './PublicFormPage'
 import LoginPage from './LoginPage'
-import NotificationHost from './NotificationHost'      // NEW
-import { useNotification } from './useNotification'   // NEW
+import NotificationHost from './NotificationHost'
+import { useNotification } from './useNotification'
+import { useTheme } from './useTheme'             // NEW
 import { apiUrl } from './apiBase'
 import './App.css'
 
@@ -66,11 +67,10 @@ function normalizeViewportForZoomLock(originalContent) {
 }
 
 function App() {
-  // ── Existing auth state (unchanged) ──────────────────────────────────────
+  // ── Auth state (unchanged) ────────────────────────────────────────────
   const [authUser, setAuthUser] = useState(null)
 
-  // ── NEW: notification system ──────────────────────────────────────────────
-  // Destructure everything the hook returns so we can use it below.
+  // ── Notification system (unchanged) ──────────────────────────────────
   const {
     toast,
     confirm,
@@ -80,7 +80,19 @@ function App() {
     hideConfirm,
   } = useNotification()
 
-  // ── Existing session check (unchanged) ───────────────────────────────────
+  // ── Theme system (NEW) ────────────────────────────────────────────────
+  //
+  // We call useTheme() here at the root level.
+  //
+  // useTheme() does two things immediately (via useEffect on mount):
+  //   1. Sets document.documentElement.dataset.theme = 'dark' or 'light'
+  //   2. This triggers the CSS variable overrides in THEME_ADDITIONS.css
+  //
+  // We only need to pass theme and toggleTheme to AdminLayout because
+  // that's the only place the toggle button is rendered (in the nav bar).
+  const { theme, toggleTheme } = useTheme()
+
+  // ── Session check (unchanged) ─────────────────────────────────────────
   useEffect(() => {
     fetch(apiUrl('/check_session.php'), { credentials: 'include' })
       .then(r => r.json())
@@ -88,6 +100,7 @@ function App() {
       .catch(() => setAuthUser(false))
   }, [])
 
+  // ── iOS Safari viewport zoom lock (unchanged) ─────────────────────────
   useEffect(() => {
     if (!isIosSafari()) return
 
@@ -149,14 +162,6 @@ function App() {
 
   return (
     <BrowserRouter>
-
-      {/* ── NotificationHost sits OUTSIDE <Routes> ──────────────────────────
-          It needs to be always present, not swapped out when routes change.
-          It uses position: fixed so it floats above everything anyway,
-          but it needs to be in the DOM at all times to catch notifications
-          triggered from any route.
-          We pass it the state to display, and the functions to dismiss.
-      ──────────────────────────────────────────────────────────────────── */}
       <NotificationHost
         toast={toast}
         confirm={confirm}
@@ -165,13 +170,13 @@ function App() {
       />
 
       <Routes>
-        {/* Public route — pass showToast so FormDisplay can notify the user */}
+        {/* Public route — theme applies automatically via CSS variables */}
         <Route
           path="/form/:formId"
           element={<PublicFormPage showToast={showToast} />}
         />
 
-        {/* Admin routes — pass both showToast and showConfirm */}
+        {/* Admin routes — pass theme and toggleTheme for the nav toggle button */}
         <Route
           path="/*"
           element={
@@ -182,6 +187,8 @@ function App() {
                   userRole={authUser.role}
                   showToast={showToast}
                   showConfirm={showConfirm}
+                  theme={theme}                  // NEW: current theme string
+                  toggleTheme={toggleTheme}      // NEW: toggle function
                 />
               : <LoginPage
                   onLoginSuccess={(username, role) => setAuthUser({ username, role })}

@@ -1,3 +1,20 @@
+// src/AdminLayout.jsx
+//
+// CHANGES FROM ORIGINAL:
+// ─────────────────────────────────────────────────────────────────────────
+// 1. Import ThemeToggle from './ThemeToggle'
+// 2. Accept `theme` and `toggleTheme` as new props
+// 3. Render <ThemeToggle> in the nav bar, between the left nav links
+//    and the right user area
+//
+// WHERE THE TOGGLE LIVES IN THE NAV:
+// The nav uses flexbox. Left group: page nav links. Right group: user info
+// + sign out. The toggle sits between them, in its own small group.
+// On mobile it wraps into the nav's second line with the other controls.
+//
+// ALL OTHER LOGIC IS IDENTICAL TO THE ORIGINAL.
+// ─────────────────────────────────────────────────────────────────────────
+
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { useIsMobile } from "./useIsMobile";
@@ -11,6 +28,7 @@ import BannerSettings from "./BannerSettings";
 import UserManagement from "./UserManagement";
 import { useLocation } from "react-router-dom";
 import AdminFormList from "./AdminFormList";
+import ThemeToggle from "./ThemeToggle";    // NEW
 
 function AdminLayout({
   onLogout,
@@ -18,6 +36,8 @@ function AdminLayout({
   userRole,
   showToast,
   showConfirm,
+  theme,          // NEW: 'dark' or 'light'
+  toggleTheme,    // NEW: function to toggle
 }) {
   const isSuperAdmin = userRole === "super_admin";
   const navigate = useNavigate();
@@ -34,6 +54,7 @@ function AdminLayout({
   const [actionsInNavbar, setActionsInNavbar] = useState(false);
   const isMobile = useIsMobile();
 
+  // ── Scroll detection for nav overlay effect (unchanged) ──────────────
   useEffect(() => {
     let frame = null;
     function check() {
@@ -67,8 +88,7 @@ function AdminLayout({
     };
   }, [location.pathname]);
 
-  // ── Navigation handlers (unchanged) ───────────────────────────────────────
-
+  // ── Navigation handlers (unchanged) ──────────────────────────────────
   function handleViewForm(formId) {
     setViewingFormId(formId);
     navigate("/view");
@@ -106,39 +126,22 @@ function AdminLayout({
     navigate("/responses");
   }
 
-  // ── Helper: build the nav button class name ────────────────────────────────
-  //
-  // This small helper function reads the current URL path and returns the
-  // correct class string for a nav button.
-  //
-  // How it works:
-  //   navButtonClass("/")  →  "glass-button glass-button--active"   (if on "/" )
-  //   navButtonClass("/")  →  "glass-button"                        (if NOT on "/")
-  //
-  // Template literals (backtick strings) let us embed expressions with ${}.
-  // The .trim() at the end removes any trailing space if the second class
-  // is an empty string — keeps the DOM tidy.
-  //
-  // We also accept an optional "exact" parameter. When exact is true, the
-  // button is only active when the path matches exactly. When false, it's
-  // active when the path STARTS WITH the given route. This matters for
-  // cases like "/create" — without exact matching, "/create" would also
-  // activate a button watching for "/".
+  // ── Nav button class helper (unchanged) ──────────────────────────────
   function navButtonClass(path, exact = true) {
     const isActive = exact
       ? location.pathname === path
       : location.pathname.startsWith(path);
-
     return `glass-button ${isActive ? "glass-button--active" : ""}`.trim();
   }
 
+  // ── Render ────────────────────────────────────────────────────────────
   return (
     <div style={{ paddingBottom: "40px" }}>
       <nav
         ref={navRef}
         className={`glass-nav${navOverForm ? " glass-nav--over-form" : ""}${navStickyActive ? " glass-nav--sticky-active" : ""}${actionsInNavbar ? " glass-nav--actions-migrated" : ""}`}
       >
-        {/* Primary nav links */}
+        {/* ── Left group: primary nav links ─────────────────────────── */}
         <div className="nav-nav nav-left">
           <button onClick={() => navigate("/")} className={navButtonClass("/")}>
             {isSuperAdmin ? "All Forms" : "My Forms"}
@@ -170,7 +173,7 @@ function AdminLayout({
           )}
         </div>
 
-        {/* Action buttons: render in the nav only when the original actions are overlapped */}
+        {/* ── Migrated action buttons (unchanged) ──────────────────── */}
         {actionsInNavbar &&
           !isMobile &&
           location.pathname === "/view" &&
@@ -187,15 +190,27 @@ function AdminLayout({
             </>
           )}
 
-        {/* User info + sign out — pushed to the right via .nav-user's margin-left:auto */}
-        <div className="nav-right nav-user">
-          {/* The 👤 icon + username */}
-          <span>👤 {currentUser}</span>
+        {/* ── Right group: theme toggle + user info + sign out ─────── */}
+        {/*
+          The theme toggle sits between the left links and the user area.
+          On desktop: it floats in the space between them.
+          On mobile: it wraps to the nav's second row with the sign-out button.
 
-          {/* Sign Out uses the danger variant for its hover state.
-              glass-button--danger is defined in index.css and shows
-              a red border/text on hover — a subtle warning signal
-              that this action has consequences. */}
+          WHY NOT put the toggle inside nav-user?
+          nav-user has margin-left: auto which pushes everything to the right.
+          We want the toggle to be visually separate from the user info —
+          it's a display preference, not a user account action.
+          So it gets its own wrapper that sits just before nav-user.
+
+          In practice it appears right next to the user info because the
+          only thing between them is empty flex space.
+        */}
+        <div className="nav-theme-area">
+          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+        </div>
+
+        <div className="nav-right nav-user">
+          <span>👤 {currentUser}</span>
           <button
             onClick={onLogout}
             className="glass-button glass-button--danger"
@@ -205,10 +220,7 @@ function AdminLayout({
         </div>
       </nav>
 
-      {/* ── Page Content ────────────────────────────────────────────────────
-          All routes and props are completely unchanged from the original.
-          We're only touching the nav, not the page content.
-      ──────────────────────────────────────────────────────────────────── */}
+      {/* ── Page Content (unchanged) ─────────────────────────────────── */}
       <Routes>
         <Route
           path="/"
