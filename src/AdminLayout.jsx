@@ -210,7 +210,8 @@ function AdminLayout({
         </div>
 
         <div className="nav-right nav-user">
-          <span>👤 {currentUser}</span>
+          <span> {isSuperAdmin ? '🫂': '👤' }
+            {currentUser}</span>
           <button
             onClick={onLogout}
             className="glass-button glass-button--danger"
