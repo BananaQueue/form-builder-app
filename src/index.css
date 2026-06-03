@@ -290,30 +290,6 @@ body {
   background-attachment: fixed;
 }
 
-/* Grain texture overlay.
-   We use the body's ::after pseudo-element to layer a noise SVG
-   over the entire page without adding an extra HTML element.
-
-   A pseudo-element is a "virtual" element that CSS creates.
-   ::before and ::after are attached to their parent and can
-   be styled like real elements. They require a content property
-   (even an empty string) to appear. */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  /* inset: 0 is shorthand for top:0; right:0; bottom:0; left:0 */
-  pointer-events: none;
-  /* pointer-events: none means clicks pass THROUGH this element
-     to whatever is behind it. Without this, the overlay would
-     block all clicks on the page. */
-  z-index: 0;
-  opacity: 0;
-  background-image: none;
-}
-
-/* All content must sit ABOVE the grain overlay.
-   We set z-index: 1 on #root so every component is layered correctly. */
 #root {
   position: relative;
   z-index: 1;
@@ -620,56 +596,6 @@ body::after {
   outline: none;
   border-color: var(--accent);
   box-shadow: var(--shadow-glow);
-}
-
-/* ============================================================
-   NAV ADDITIONS FOR THEME TOGGLE
-   ============================================================
-
-   These rules handle the placement of the theme toggle inside
-   the navigation bar. Copy them into index.css, just after the
-   existing .nav-user rule in Section 4 (Navigation).
-
-   ============================================================ */
-
-
-/* ── Theme toggle area ─────────────────────────────────────────────────── */
-/*
-  This wrapper sits between the left nav links and the right user area.
-  On desktop it floats between them (flex fills the gap automatically).
-  On mobile it collapses naturally into the wrapped nav content.
-
-  We give it flex-shrink: 0 so it never compresses when the nav is tight.
-*/
-.nav-theme-area {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-
-/* ── Mobile nav adjustment for the theme toggle ─────────────────────────── */
-/*
-  On mobile, the nav switches from horizontal to wrapped rows.
-  The theme toggle should sit in the same row as the Sign Out button.
-  We don't need to force this — flexbox wrapping handles it naturally
-  because .nav-theme-area and .nav-user both have flex-shrink: 0.
-
-  The only thing we need to do is ensure the toggle doesn't take up
-  the full row width on very narrow screens.
-*/
-@media (max-width: 767px) {
-  .nav-theme-area {
-    /* Let it sit inline with the user area */
-    margin-left: 0;
-  }
-
-  /* Adjust user area so theme toggle and user info share the bottom row */
-  .nav-right.nav-user {
-    /* The existing rule already has width: 100%, flex, justify-content:
-       space-between. The theme toggle is OUTSIDE nav-user so it naturally
-       sits to its left in the same wrapped row. No change needed. */
-  }
 }
 
 /* ============================================================
@@ -4965,6 +4891,7 @@ body::after {
 
 /* ── Table ── */
 .afl-table-wrap {
+  position: relative;
   background: var(--bg-glass);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-xl);
@@ -4998,6 +4925,9 @@ body::after {
 .afl-th-center { text-align: center; }
 
 .afl-tr {
+  opacity: 0;
+  transform: translateY(6px);
+  animation: rowIn 180ms ease forwards;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   transition: background var(--transition-fast);
 }
@@ -5102,11 +5032,6 @@ body::after {
   opacity: 1;
 }
 
-.afl-table-wrap {
-  position: relative;
-  overflow: hidden;
-}
-
 .afl-table-wrap--refreshing tbody {
   opacity: 0;
   transform: translateY(-10px) scaleY(0.88);
@@ -5139,12 +5064,6 @@ body::after {
 
 .afl-loading-overlay.show {
   opacity: 1;
-}
-
-.afl-tr {
-  opacity: 0;
-  transform: translateY(6px);
-  animation: rowIn 180ms ease forwards;
 }
 
 .afl-table-wrap--rolling .afl-tr {

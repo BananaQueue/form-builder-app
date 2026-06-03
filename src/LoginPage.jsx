@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { apiUrl } from './apiBase'
 import PasswordInput from './PasswordInput'
 
@@ -8,6 +8,11 @@ function LoginPage({ onLoginSuccess }) {
   const [error, setError]       = useState(null)
   const [loading, setLoading]   = useState(false)
   const [leaving, setLeaving]   = useState(false)
+  const loginTimerRef           = useRef(null)
+
+  useEffect(() => {
+    return () => window.clearTimeout(loginTimerRef.current)
+  }, [])
 
   // ── Form submission (unchanged) ────────────────────────────────────────────
 
@@ -28,7 +33,8 @@ function LoginPage({ onLoginSuccess }) {
 
       if (result.success) {
         setLeaving(true)
-        window.setTimeout(() => {
+        window.clearTimeout(loginTimerRef.current)
+        loginTimerRef.current = window.setTimeout(() => {
           onLoginSuccess(result.username, result.role)
         }, 260)
       } else {

@@ -19,7 +19,7 @@
 // public form page (/form/:id) also respects the saved theme.
 // ─────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import PublicFormPage from './PublicFormPage'
@@ -71,6 +71,7 @@ function App() {
   const [authUser, setAuthUser] = useState(null)
   const [notificationGateComplete, setNotificationGateComplete] = useState(false)
   const [authTransition, setAuthTransition] = useState('idle')
+  const logoutTimerRef = useRef(null)
 
   // ── Notification system (unchanged) ──────────────────────────────────
   const {
@@ -151,8 +152,9 @@ function App() {
   }, [])
 
   async function handleLogout() {
+    window.clearTimeout(logoutTimerRef.current)
     setAuthTransition('signingOut')
-    window.setTimeout(async () => {
+    logoutTimerRef.current = window.setTimeout(async () => {
       try {
         await fetch(apiUrl('/logout.php'), {
           method: 'POST',
@@ -165,6 +167,10 @@ function App() {
       }
     }, 220)
   }
+
+  useEffect(() => {
+    return () => window.clearTimeout(logoutTimerRef.current)
+  }, [])
 
   const needsNotificationGate =
     authUser &&
@@ -205,7 +211,7 @@ function App() {
                     showToast={showToast}
                     onComplete={() => setNotificationGateComplete(true)}
                   />
-                : <div className={`auth-stage ${authTransition === 'signingOut' ? 'auth-stage--leaving' : 'auth-stage--active'}`}>
+                : <div className={`auth-stage ${authTransition === 'signingOut' ? 'auth-stage--leaving' : ''}`.trim()}>
                   <AdminLayout
                     onLogout={handleLogout}
                     currentUser={authUser.username}
