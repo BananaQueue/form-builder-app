@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiUrl } from "./apiBase";
 
 function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConfirm, scopedUserId = null, isSuperAdmin = false }) {
@@ -9,6 +9,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
   const [categories, setCategories]         = useState([]);
   const [isRefreshing, setIsRefreshing]     = useState(false);
   const [searchQuery, setSearchQuery]       = useState("");
+  const hasLoadedRef                        = useRef(false);
 
   useEffect(() => {
     fetchForms();
@@ -18,7 +19,8 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
   // ── Data fetching ──────────────────────────────────────────────────────────
 
   async function fetchForms() {
-    setIsRefreshing(true);
+    const showSoftRefresh = hasLoadedRef.current;
+    if (showSoftRefresh) setIsRefreshing(true);
     setError(null);
 
     try {
@@ -40,7 +42,10 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
       setError("Could not connect to server: " + err.message);
     } finally {
       setLoading(false);
-      setTimeout(() => setIsRefreshing(false), 1000);
+      hasLoadedRef.current = true;
+      if (showSoftRefresh) {
+        setTimeout(() => setIsRefreshing(false), 220);
+      }
     }
   }
 
@@ -141,7 +146,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
 
   return (
     <div
-      className={`form-list-shell ${isRefreshing ? "refreshing-background" : ""}`}
+      className={`form-list-shell ${isRefreshing ? "form-list-shell--refreshing" : ""}`}
     >
 
       <div className="form-list-header">
@@ -173,7 +178,8 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
             disabled={isRefreshing}
             onClick={fetchForms}
           >
-            {isRefreshing ? "✓ Refreshed" : "↻ Refresh"}
+            {isRefreshing && <span className="refresh-button__spinner" aria-hidden="true" />}
+            {isRefreshing ? "Refreshing..." : "Refresh"}
           </button>
         </div>
       </div>

@@ -279,6 +279,9 @@ function AdminFormList({
   const [formPendingDelete, setFormPendingDelete] = useState(null);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRollingRows, setIsRollingRows] = useState(false);
+  const hasLoadedRef = useRef(false);
+  const rowAnimationTimer = useRef(null);
 
   // We store a debounced version of the search string separately.
   // This means the API call only fires after the user stops typing
@@ -296,11 +299,16 @@ function AdminFormList({
     return () => clearTimeout(debounceTimer.current);
   }, [search]);
 
+  useEffect(() => {
+    return () => clearTimeout(rowAnimationTimer.current);
+  }, []);
+
   // ── Fetch forms ──────────────────────────────────────────────────────────
   // useCallback wraps the function so it only gets recreated when its
   // dependencies change. This prevents unnecessary re-renders.
   const fetchForms = useCallback(async () => {
-    setIsRefreshing(true); // 👈 soft loading (NOT hard loading)
+    const showSoftRefresh = hasLoadedRef.current;
+    if (showSoftRefresh) setIsRefreshing(true);
     setError(null);
 
     try {
@@ -330,7 +338,17 @@ function AdminFormList({
     } catch (err) {
       setError("Could not connect to server: " + err.message);
     } finally {
-      setIsRefreshing(false);
+      hasLoadedRef.current = true;
+      if (showSoftRefresh) {
+        clearTimeout(rowAnimationTimer.current);
+        rowAnimationTimer.current = setTimeout(() => {
+          setIsRefreshing(false);
+          setIsRollingRows(true);
+          rowAnimationTimer.current = setTimeout(() => {
+            setIsRollingRows(false);
+          }, 620);
+        }, 220);
+      }
       setLoading(false);
     }
   }, [page, sortBy, debouncedSearch, categoryId, ownerId]);
@@ -417,13 +435,6 @@ function AdminFormList({
             </p>
           )}
         </div>
-        <button
-          className={`glass-button ${loading ? "" : ""}`}
-          onClick={fetchForms}
-          disabled={loading}
-        >
-          {loading ? "…" : "↻ Refresh"}
-        </button>
       </div>
 
       {/* ── Metric cards ── */}
@@ -450,6 +461,15 @@ function AdminFormList({
             </button>
           )}
         </div>
+
+        <button
+          className={`glass-button refresh-button ${isRefreshing ? "refresh-button--active" : ""}`}
+          onClick={fetchForms}
+          disabled={loading || isRefreshing}
+        >
+          {isRefreshing && <span className="refresh-button__spinner" aria-hidden="true" />}
+          {loading ? "..." : isRefreshing ? "Refreshing..." : "Refresh"}
+        </button>
 
         <select
           className="glass-select"
@@ -519,13 +539,9 @@ function AdminFormList({
       {/* ── Table (desktop) ── */}
       {!error && (
         <div
-          className={`afl-table-wrap afl-fade ${isRefreshing ? "afl-fade-out" : "afl-fade-in"}`}
+          className={`afl-table-wrap afl-fade ${isRefreshing ? "afl-fade-out afl-table-wrap--refreshing" : "afl-fade-in"} ${isRollingRows ? "afl-table-wrap--rolling" : ""}`}
         >
-          {isRefreshing && (
-            <div className="afl-loading-overlay show">
-              <div className="spinner">Loading...</div>
-            </div>
-          )}
+          {isRefreshing && <div className="afl-loading-overlay show" aria-hidden="true" />}
           <table className="afl-table">
             <thead>
               <tr>
@@ -542,11 +558,7 @@ function AdminFormList({
               {loading ? (
                 <tr>
                   <td colSpan={7} className="afl-td-loading">
-                    <div className="form-list-loading__dots">
-                      <span className="form-list-dot" />
-                      <span className="form-list-dot" />
-                      <span className="form-list-dot" />
-                    </div>
+                    Loading forms...
                   </td>
                 </tr>
               ) : forms.length === 0 ? (
@@ -566,8 +578,12 @@ function AdminFormList({
                   </td>
                 </tr>
               ) : (
-                forms.map((form) => (
-                  <tr key={form.id} className="afl-tr">
+                forms.map((form, index) => (
+                  <tr
+                    key={form.id}
+                    className="afl-tr"
+                    style={{ "--row-index": index }}
+                  >
                     <td className="afl-td-title">
                       <span className="afl-form-title">{form.title}</span>
                       {form.description &&
@@ -620,11 +636,6 @@ function AdminFormList({
           className={`afl-mobile-cards afl-fade ${isRefreshing ? "afl-fade-out" : "afl-fade-in"}`}
           style={{ position: "relative" }}
         >
-          {isRefreshing && (
-            <div className="afl-loading-overlay show">
-              <div className="spinner">Loading...</div>
-            </div>
-          )}
           {forms.map((form) => (
             <div key={form.id} className="glass-card afl-mobile-card">
               <div className="form-card-header">

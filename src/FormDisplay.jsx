@@ -324,7 +324,14 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   if (loading) {
     return (
       <div className="fd-state-screen fd-state-screen--loading">
-        Loading form...
+        <div className="form-list-loading">
+          <div className="form-list-loading__dots">
+            <span className="form-list-dot" />
+            <span className="form-list-dot" />
+            <span className="form-list-dot" />
+          </div>
+          <p>Loading form...</p>
+        </div>
       </div>
     );
   }

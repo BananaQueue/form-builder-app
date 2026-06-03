@@ -49,7 +49,6 @@ import { useLocation } from "react-router-dom";
 import AdminFormList from "./AdminFormList";
 import ThemeToggle from "./ThemeToggle";
 import NotificationCenter from "./NotificationCenter";
-import { apiUrl } from "./apiBase";
 
 function AdminLayout({
   onLogout,
@@ -59,6 +58,7 @@ function AdminLayout({
   showConfirm,
   theme,
   toggleTheme,
+  signingOut = false,
 }) {
   const isSuperAdmin = userRole === "super_admin";
   const navigate = useNavigate();
@@ -69,43 +69,48 @@ function AdminLayout({
 
   const location = useLocation();
   const navRef = useRef(null);
-  const [navOverForm, setNavOverForm] = useState(false);
+  const [navOverContent, setNavOverContent] = useState(false);
   const [navStickyActive, setNavStickyActive] = useState(false);
   const formActionsRef = useRef(null);
   const [actionsInNavbar, setActionsInNavbar] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    if (isSuperAdmin) return undefined;
-
-    fetch(apiUrl("/get_notifications.php"), { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success) {
-          setUnreadNotifications(data.unread_count ?? 0);
-        }
-      })
-      .catch(() => {});
-
-    return undefined;
-  }, [isSuperAdmin, location.pathname]);
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname]);
 
   useEffect(() => {
     let frame = null;
     function check() {
-      const formEl = document.querySelector(".fv-paper, .fb-shell, .fv-shell");
-      if (!formEl || !navRef.current) {
-        setNavOverForm(false);
+      if (!navRef.current) {
+        setNavOverContent(false);
         setNavStickyActive(false);
         return;
       }
-      const navBottom = navRef.current.getBoundingClientRect().bottom;
-      const navTop = navRef.current.getBoundingClientRect().top;
+
+      const navRect = navRef.current.getBoundingClientRect();
       const stickyTop = 16;
-      const formTop = formEl.getBoundingClientRect().top;
-      setNavOverForm(formTop < navBottom);
-      setNavStickyActive(Math.abs(navTop - stickyTop) <= 1);
+      const overlapTargets = document.querySelectorAll(
+        ".fv-paper, .fv-shell, .fb-shell, .form-list-shell, .afl-shell, .rl-shell, .rv-shell, .um-shell, .bs-shell, .nc-shell"
+      );
+
+      const isOverContent = Array.from(overlapTargets).some((target) => {
+        const targetRect = target.getBoundingClientRect();
+        const overlapsHorizontally =
+          targetRect.left < navRect.right && targetRect.right > navRect.left;
+        const overlapsVertically =
+          targetRect.top < navRect.bottom && targetRect.bottom > navRect.top;
+
+        return (
+          targetRect.width > 0 &&
+          targetRect.height > 0 &&
+          overlapsHorizontally &&
+          overlapsVertically
+        );
+      });
+
+      setNavOverContent(isOverContent);
+      setNavStickyActive(Math.abs(navRect.top - stickyTop) <= 1);
     }
     function onScrollOrResize() {
       if (frame !== null) return;
@@ -240,7 +245,7 @@ function AdminLayout({
     <div style={{ paddingBottom: "40px" }}>
       <nav
         ref={navRef}
-        className={`glass-nav${navOverForm ? " glass-nav--over-form" : ""}${navStickyActive ? " glass-nav--sticky-active" : ""}${actionsInNavbar ? " glass-nav--actions-migrated" : ""}`}
+        className={`glass-nav${navOverContent ? " glass-nav--over-form" : ""}${navStickyActive ? " glass-nav--sticky-active" : ""}${actionsInNavbar ? " glass-nav--actions-migrated" : ""}`}
       >
         <div className="nav-nav nav-left">
           <button onClick={() => navigate("/")} className={navButtonClass("/")}>
@@ -253,18 +258,6 @@ function AdminLayout({
           >
             + New Form
           </button>
-
-          {!isSuperAdmin && (
-            <button
-              onClick={() => navigate("/notifications")}
-              className={navButtonClass("/notifications")}
-            >
-              Notifications
-              {unreadNotifications > 0 && (
-                <span className="nav-notif-badge">{unreadNotifications}</span>
-              )}
-            </button>
-          )}
 
           {isSuperAdmin && (
             <>
@@ -300,17 +293,15 @@ function AdminLayout({
             </>
           )}
 
-        <div className="nav-theme-area">
-          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-        </div>
-
         <div className="nav-right nav-user">
-          <span>👤 {currentUser}</span>
+          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+          <span className="nav-user-chip">👤 {currentUser}</span>
           <button
             onClick={onLogout}
+            disabled={signingOut}
             className="glass-button glass-button--danger"
           >
-            Sign Out
+            {signingOut ? "Signing Out..." : "Sign Out"}
           </button>
         </div>
       </nav>

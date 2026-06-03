@@ -67,7 +67,14 @@ function ResponseList({ formId, onBack, onViewResponse, isSuperAdmin = false }) 
   if (loading) {
     return (
       <div className="rl-shell">
-        <p className="rl-meta">Loading responses…</p>
+        <div className="form-list-loading">
+          <div className="form-list-loading__dots">
+            <span className="form-list-dot" />
+            <span className="form-list-dot" />
+            <span className="form-list-dot" />
+          </div>
+          <p>Loading responses...</p>
+        </div>
       </div>
     )
   }

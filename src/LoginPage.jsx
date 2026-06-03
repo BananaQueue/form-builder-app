@@ -7,6 +7,7 @@ function LoginPage({ onLoginSuccess }) {
   const [password, setPassword] = useState('')
   const [error, setError]       = useState(null)
   const [loading, setLoading]   = useState(false)
+  const [leaving, setLeaving]   = useState(false)
 
   // ── Form submission (unchanged) ────────────────────────────────────────────
 
@@ -26,7 +27,10 @@ function LoginPage({ onLoginSuccess }) {
       const result = await response.json()
 
       if (result.success) {
-        onLoginSuccess(result.username, result.role)
+        setLeaving(true)
+        window.setTimeout(() => {
+          onLoginSuccess(result.username, result.role)
+        }, 260)
       } else {
         setError(result.error || 'Login failed')
       }
@@ -38,7 +42,7 @@ function LoginPage({ onLoginSuccess }) {
   }
 
   return (
-    <div className="login-shell">
+    <div className={`login-shell ${leaving ? 'login-shell--leaving' : ''}`}>
 
       <div className="login-agency-banner">
         <img
@@ -99,10 +103,15 @@ function LoginPage({ onLoginSuccess }) {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || leaving}
             className={`login-btn ${loading ? 'login-btn--loading' : ''}`}
           >
-            {loading ? 'Signing in…' : 'Sign In'}
+            {loading ? (
+              <>
+                <span className="login-btn__spinner" aria-hidden="true" />
+                Signing in...
+              </>
+            ) : 'Sign In'}
           </button>
 
         </form>
@@ -112,3 +121,4 @@ function LoginPage({ onLoginSuccess }) {
 }
 
 export default LoginPage
+

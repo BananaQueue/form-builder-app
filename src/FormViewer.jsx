@@ -216,7 +216,14 @@ function FormViewer({
   if (loading) {
     return (
       <div className="fv-shell">
-        <p className="fv-meta">Loading form…</p>
+        <div className="form-list-loading">
+          <div className="form-list-loading__dots">
+            <span className="form-list-dot" />
+            <span className="form-list-dot" />
+            <span className="form-list-dot" />
+          </div>
+          <p>Loading form...</p>
+        </div>
       </div>
     );
   }

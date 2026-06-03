@@ -70,6 +70,7 @@ function normalizeViewportForZoomLock(originalContent) {
 function App() {
   const [authUser, setAuthUser] = useState(null)
   const [notificationGateComplete, setNotificationGateComplete] = useState(false)
+  const [authTransition, setAuthTransition] = useState('idle')
 
   // ── Notification system (unchanged) ──────────────────────────────────
   const {
@@ -150,12 +151,19 @@ function App() {
   }, [])
 
   async function handleLogout() {
-    await fetch(apiUrl('/logout.php'), {
-      method: 'POST',
-      credentials: 'include',
-    })
-    setNotificationGateComplete(false)
-    setAuthUser(false)
+    setAuthTransition('signingOut')
+    window.setTimeout(async () => {
+      try {
+        await fetch(apiUrl('/logout.php'), {
+          method: 'POST',
+          credentials: 'include',
+        })
+      } finally {
+        setNotificationGateComplete(false)
+        setAuthUser(false)
+        setAuthTransition('idle')
+      }
+    }, 220)
   }
 
   const needsNotificationGate =
@@ -197,19 +205,23 @@ function App() {
                     showToast={showToast}
                     onComplete={() => setNotificationGateComplete(true)}
                   />
-                : <AdminLayout
-                  onLogout={handleLogout}
-                  currentUser={authUser.username}
-                  userRole={authUser.role}
-                  showToast={showToast}
-                  showConfirm={showConfirm}
-                  theme={theme}
-                  toggleTheme={toggleTheme}
-                />
+                : <div className={`auth-stage ${authTransition === 'signingOut' ? 'auth-stage--leaving' : 'auth-stage--active'}`}>
+                  <AdminLayout
+                    onLogout={handleLogout}
+                    currentUser={authUser.username}
+                    userRole={authUser.role}
+                    showToast={showToast}
+                    showConfirm={showConfirm}
+                    theme={theme}
+                    toggleTheme={toggleTheme}
+                    signingOut={authTransition === 'signingOut'}
+                  />
+                </div>
               : <LoginPage
                   onLoginSuccess={(username, role) => {
                     setNotificationGateComplete(false)
                     setAuthUser({ username, role })
+                    setAuthTransition('idle')
                   }}
                   showToast={showToast}
                 />
