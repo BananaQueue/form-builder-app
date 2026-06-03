@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { apiUrl } from "./apiBase";
+import DeleteFormModal from "./DeleteFormModal";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const PER_PAGE = 10;
@@ -276,6 +277,7 @@ function AdminFormList({
   const [ownerId, setOwnerId] = useState(0);
   const [sortBy, setSortBy] = useState("created_desc");
   const [page, setPage] = useState(1);
+  const [formPendingDelete, setFormPendingDelete] = useState(null);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -361,28 +363,33 @@ function AdminFormList({
 
   // ── Delete form ──────────────────────────────────────────────────────────
   function handleDelete(form) {
-    showConfirm(
-      `Delete "${form.title}" permanently? This cannot be undone.`,
-      async () => {
-        try {
-          const res = await fetch(apiUrl("/delete_form.php"), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ form_id: form.id, admin_override: 1 }),
-            credentials: "include",
-          });
-          const result = await res.json();
-          if (result.success) {
-            showToast("Form deleted.", "success");
-            fetchForms();
-          } else {
-            showToast("Delete failed.", "error");
-          }
-        } catch {
-          showToast("Could not connect to server.", "error");
-        }
-      },
-    );
+    setFormPendingDelete(form);
+  }
+
+  async function confirmDelete(deletionReason) {
+    if (!formPendingDelete) return;
+
+    try {
+      const res = await fetch(apiUrl("/delete_form.php"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          form_id: formPendingDelete.id,
+          deletion_reason: deletionReason,
+        }),
+        credentials: "include",
+      });
+      const result = await res.json();
+      if (result.success) {
+        showToast("Form deleted.", "success");
+        setFormPendingDelete(null);
+        fetchForms();
+      } else {
+        showToast(result.error || "Delete failed.", "error");
+      }
+    } catch {
+      showToast("Could not connect to server.", "error");
+    }
   }
 
   // ── Clear filters ────────────────────────────────────────────────────────
@@ -703,6 +710,14 @@ function AdminFormList({
           {Math.min(page * PER_PAGE, pagination.total)} of {pagination.total}{" "}
           forms
         </p>
+      )}
+
+      {formPendingDelete && (
+        <DeleteFormModal
+          form={formPendingDelete}
+          onCancel={() => setFormPendingDelete(null)}
+          onConfirm={confirmDelete}
+        />
       )}
     </div>
   );

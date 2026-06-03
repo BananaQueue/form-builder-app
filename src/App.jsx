@@ -25,6 +25,7 @@ import AdminLayout from './AdminLayout'
 import PublicFormPage from './PublicFormPage'
 import LoginPage from './LoginPage'
 import NotificationHost from './NotificationHost'
+import NotificationGate from './NotificationGate'
 import { useNotification } from './useNotification'
 import { useTheme } from './useTheme'             // NEW
 import { apiUrl } from './apiBase'
@@ -67,8 +68,8 @@ function normalizeViewportForZoomLock(originalContent) {
 }
 
 function App() {
-  // ── Auth state (unchanged) ────────────────────────────────────────────
   const [authUser, setAuthUser] = useState(null)
+  const [notificationGateComplete, setNotificationGateComplete] = useState(false)
 
   // ── Notification system (unchanged) ──────────────────────────────────
   const {
@@ -96,7 +97,11 @@ function App() {
   useEffect(() => {
     fetch(apiUrl('/check_session.php'), { credentials: 'include' })
       .then(r => r.json())
-      .then(data => setAuthUser(data.logged_in ? { username: data.username, role: data.role } : false))
+      .then(data => setAuthUser(
+        data.logged_in
+          ? { username: data.username, role: data.role, userId: data.user_id }
+          : false
+      ))
       .catch(() => setAuthUser(false))
   }, [])
 
@@ -149,8 +154,14 @@ function App() {
       method: 'POST',
       credentials: 'include',
     })
+    setNotificationGateComplete(false)
     setAuthUser(false)
   }
+
+  const needsNotificationGate =
+    authUser &&
+    authUser.role !== 'super_admin' &&
+    !notificationGateComplete
 
   if (authUser === null) {
     return (
@@ -181,17 +192,25 @@ function App() {
           path="/*"
           element={
             authUser
-              ? <AdminLayout
+              ? needsNotificationGate
+                ? <NotificationGate
+                    showToast={showToast}
+                    onComplete={() => setNotificationGateComplete(true)}
+                  />
+                : <AdminLayout
                   onLogout={handleLogout}
                   currentUser={authUser.username}
                   userRole={authUser.role}
                   showToast={showToast}
                   showConfirm={showConfirm}
-                  theme={theme}                  // NEW: current theme string
-                  toggleTheme={toggleTheme}      // NEW: toggle function
+                  theme={theme}
+                  toggleTheme={toggleTheme}
                 />
               : <LoginPage
-                  onLoginSuccess={(username, role) => setAuthUser({ username, role })}
+                  onLoginSuccess={(username, role) => {
+                    setNotificationGateComplete(false)
+                    setAuthUser({ username, role })
+                  }}
                   showToast={showToast}
                 />
           }

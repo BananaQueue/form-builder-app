@@ -28,12 +28,14 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
   const [pinError, setPinError]     = useState('')
   const location = useLocation()
 
-useEffect(() => {
-  const returning = location.state?.viewingUser
-  if (returning) {
-    setViewingUser(returning)
-  }
-}, [])
+  // Restore the drill-down user if we navigated back here from FormViewer
+  // (FormViewer sets location.state.viewingUser when its Back is clicked)
+  useEffect(() => {
+    const returning = location.state?.viewingUser
+    if (returning) {
+      setViewingUser(returning)
+    }
+  }, [])
 
   useEffect(() => { fetchUsers() }, [])
 
@@ -179,9 +181,15 @@ useEffect(() => {
           scopedUserId={viewingUser.id}
           showToast={showToast}
           showConfirm={showConfirm}
+          // Already correct — passes viewingUser context so FormViewer
+          // can navigate back here
           onViewForm={(formId) => onViewForm(formId, viewingUser.id, viewingUser.username)}
           onEditForm={onEditForm}
-          onViewResponses={onViewResponses}
+          // FIX: wrap to pass viewingUser alongside formId.
+          // AdminLayout.handleViewResponses(formId, fromUser) uses this
+          // second argument to attach route state, so ResponseList's Back
+          // button knows to return to /users instead of /.
+          onViewResponses={(formId) => onViewResponses(formId, viewingUser)}
           isSuperAdmin={isSuperAdmin}
         />
       </div>
@@ -331,6 +339,8 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+      {/* ── Super Admin PIN modal ──────────────────────────────────────────── */}
       {pinModal && (
         <div className="um-modal-overlay" onClick={() => setPinModal(null)}>
           <div className="um-modal" onClick={e => e.stopPropagation()}>

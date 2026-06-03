@@ -1,18 +1,37 @@
 // src/AdminLayout.jsx
 //
-// CHANGES FROM ORIGINAL:
+// CHANGES FROM PREVIOUS VERSION:
 // ─────────────────────────────────────────────────────────────────────────
-// 1. Import ThemeToggle from './ThemeToggle'
-// 2. Accept `theme` and `toggleTheme` as new props
-// 3. Render <ThemeToggle> in the nav bar, between the left nav links
-//    and the right user area
+// The "Back to Responses" button was landing on "/" instead of the
+// response list. Root cause explained below.
 //
-// WHERE THE TOGGLE LIVES IN THE NAV:
-// The nav uses flexbox. Left group: page nav links. Right group: user info
-// + sign out. The toggle sits between them, in its own small group.
-// On mobile it wraps into the nav's second line with the other controls.
+// ── WHY "BACK TO RESPONSES" WAS BROKEN ───────────────────────────────────
 //
-// ALL OTHER LOGIC IS IDENTICAL TO THE ORIGINAL.
+// handleBackToResponses() was doing two things in sequence:
+//
+//   1. setViewingResponseId(null)   ← state update (React batches this)
+//   2. navigate("/responses")       ← navigation
+//
+// React 18 batches state updates. So on the next render BOTH changes
+// apply at once. At that point, the router evaluates which route to show.
+//
+// The /response-detail route is:
+//   viewingResponseId ? <ResponseViewer> : <Navigate to="/" />
+//
+// Because viewingResponseId is now null, that route renders
+// <Navigate to="/" /> — which fires as a redirect and wins over the
+// navigate("/responses") call, sending the user to "/" instead.
+//
+// THE FIX:
+// Don't clear viewingResponseId inside handleBackToResponses.
+// Just navigate. The old value stays in state harmlessly — it will be
+// overwritten the next time a response is opened. The /response-detail
+// route's guard only matters if someone manually types that URL directly.
+//
+// The same race condition existed in handleBackFromResponseList clearing
+// responsesFormId (though in practice that one was less likely to fire
+// because the /responses route's guard is evaluated AFTER we've already
+// navigated away from it — but we clean it up for consistency).
 // ─────────────────────────────────────────────────────────────────────────
 
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
@@ -28,7 +47,9 @@ import BannerSettings from "./BannerSettings";
 import UserManagement from "./UserManagement";
 import { useLocation } from "react-router-dom";
 import AdminFormList from "./AdminFormList";
-import ThemeToggle from "./ThemeToggle";    // NEW
+import ThemeToggle from "./ThemeToggle";
+import NotificationCenter from "./NotificationCenter";
+import { apiUrl } from "./apiBase";
 
 function AdminLayout({
   onLogout,
@@ -36,8 +57,8 @@ function AdminLayout({
   userRole,
   showToast,
   showConfirm,
-  theme,          // NEW: 'dark' or 'light'
-  toggleTheme,    // NEW: function to toggle
+  theme,
+  toggleTheme,
 }) {
   const isSuperAdmin = userRole === "super_admin";
   const navigate = useNavigate();
@@ -52,9 +73,24 @@ function AdminLayout({
   const [navStickyActive, setNavStickyActive] = useState(false);
   const formActionsRef = useRef(null);
   const [actionsInNavbar, setActionsInNavbar] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const isMobile = useIsMobile();
 
-  // ── Scroll detection for nav overlay effect (unchanged) ──────────────
+  useEffect(() => {
+    if (isSuperAdmin) return undefined;
+
+    fetch(apiUrl("/get_notifications.php"), { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setUnreadNotifications(data.unread_count ?? 0);
+        }
+      })
+      .catch(() => {});
+
+    return undefined;
+  }, [isSuperAdmin, location.pathname]);
+
   useEffect(() => {
     let frame = null;
     function check() {
@@ -88,7 +124,8 @@ function AdminLayout({
     };
   }, [location.pathname]);
 
-  // ── Navigation handlers (unchanged) ──────────────────────────────────
+  // ── Form navigation ───────────────────────────────────────────────────
+
   function handleViewForm(formId) {
     setViewingFormId(formId);
     navigate("/view");
@@ -106,27 +143,92 @@ function AdminLayout({
     navigate("/edit");
   }
 
-  function handleViewResponses(formId) {
-    setResponsesFormId(formId);
-    navigate("/responses");
-  }
-
-  function handleViewResponseDetail(responseId) {
-    setViewingResponseId(responseId);
-    navigate("/response-detail");
-  }
-
   function handleEditComplete() {
     setEditingFormId(null);
     navigate("/");
   }
 
-  function handleBackToResponses() {
-    setViewingResponseId(null);
-    navigate("/responses");
+  // ── Response navigation ───────────────────────────────────────────────
+  //
+  // handleViewResponses accepts an optional second argument `fromUser`.
+  //
+  // When called from a normal form list (My Forms / All Forms):
+  //   fromUser is undefined → no state attached → Back goes to "/"
+  //
+  // When called from inside a user drill-down (Users → [username]):
+  //   fromUser = { id, username } → state attached → Back goes to /users
+  //   with that user's context restored, exactly like FormViewer does.
+
+  function handleViewResponses(formId, fromUser) {
+    setResponsesFormId(formId);
+    navigate("/responses", {
+      state: fromUser
+        ? { fromUserId: fromUser.id, fromUsername: fromUser.username }
+        : undefined,
+    });
   }
 
-  // ── Nav button class helper (unchanged) ──────────────────────────────
+  // Called by the Back button inside ResponseList.
+  //
+  // Reads the route state that was attached when we navigated to /responses.
+  // If fromUserId is present we came from a user drill-down → restore it.
+  // If not, we came from the main form list → go to "/".
+  //
+  // NOTE: We do NOT clear responsesFormId here. See the explanation at the
+  // top of this file for why clearing state before navigating causes issues.
+  function handleBackFromResponseList() {
+    const state = location.state;
+    if (state?.fromUserId) {
+      navigate("/users", {
+        state: {
+          viewingUser: {
+            id: state.fromUserId,
+            username: state.fromUsername,
+          },
+        },
+      });
+      return;
+    }
+    navigate("/");
+  }
+
+  // Called when opening a response detail from within ResponseList.
+  //
+  // We forward whatever route state /responses currently carries onto
+  // /response-detail. This keeps the fromUserId context alive through
+  // the full Back → Back → Back chain.
+  function handleViewResponseDetail(responseId) {
+    setViewingResponseId(responseId);
+    navigate("/response-detail", {
+      state: location.state ?? undefined,
+    });
+  }
+
+  // Called by the "← Back to Responses" button inside ResponseViewer.
+  //
+  // FIX: We no longer call setViewingResponseId(null) here.
+  //
+  // Previously this was:
+  //   setViewingResponseId(null);   ← removed
+  //   navigate("/responses", ...);
+  //
+  // The state clear + navigate combination caused React to batch both
+  // changes, then re-evaluate the /response-detail route guard
+  // (viewingResponseId ? <ResponseViewer> : <Navigate to="/" />).
+  // With viewingResponseId null, that guard fired <Navigate to="/" />
+  // which overrode the navigate("/responses") call.
+  //
+  // Solution: just navigate. viewingResponseId stays set to the old value
+  // harmlessly — it gets overwritten the next time a response is opened.
+  //
+  // We also re-attach the route state so ResponseList's own Back button
+  // still works correctly (it reads location.state to decide where to go).
+  function handleBackToResponses() {
+    navigate("/responses", {
+      state: location.state ?? undefined,
+    });
+  }
+
   function navButtonClass(path, exact = true) {
     const isActive = exact
       ? location.pathname === path
@@ -134,14 +236,12 @@ function AdminLayout({
     return `glass-button ${isActive ? "glass-button--active" : ""}`.trim();
   }
 
-  // ── Render ────────────────────────────────────────────────────────────
   return (
     <div style={{ paddingBottom: "40px" }}>
       <nav
         ref={navRef}
         className={`glass-nav${navOverForm ? " glass-nav--over-form" : ""}${navStickyActive ? " glass-nav--sticky-active" : ""}${actionsInNavbar ? " glass-nav--actions-migrated" : ""}`}
       >
-        {/* ── Left group: primary nav links ─────────────────────────── */}
         <div className="nav-nav nav-left">
           <button onClick={() => navigate("/")} className={navButtonClass("/")}>
             {isSuperAdmin ? "All Forms" : "My Forms"}
@@ -153,6 +253,18 @@ function AdminLayout({
           >
             + New Form
           </button>
+
+          {!isSuperAdmin && (
+            <button
+              onClick={() => navigate("/notifications")}
+              className={navButtonClass("/notifications")}
+            >
+              Notifications
+              {unreadNotifications > 0 && (
+                <span className="nav-notif-badge">{unreadNotifications}</span>
+              )}
+            </button>
+          )}
 
           {isSuperAdmin && (
             <>
@@ -173,7 +285,6 @@ function AdminLayout({
           )}
         </div>
 
-        {/* ── Migrated action buttons (unchanged) ──────────────────── */}
         {actionsInNavbar &&
           !isMobile &&
           location.pathname === "/view" &&
@@ -190,28 +301,12 @@ function AdminLayout({
             </>
           )}
 
-        {/* ── Right group: theme toggle + user info + sign out ─────── */}
-        {/*
-          The theme toggle sits between the left links and the user area.
-          On desktop: it floats in the space between them.
-          On mobile: it wraps to the nav's second row with the sign-out button.
-
-          WHY NOT put the toggle inside nav-user?
-          nav-user has margin-left: auto which pushes everything to the right.
-          We want the toggle to be visually separate from the user info —
-          it's a display preference, not a user account action.
-          So it gets its own wrapper that sits just before nav-user.
-
-          In practice it appears right next to the user info because the
-          only thing between them is empty flex space.
-        */}
         <div className="nav-theme-area">
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
         </div>
 
         <div className="nav-right nav-user">
-          <span> {isSuperAdmin ? '🫂': '👤' }
-            {currentUser}</span>
+          <span>👤 {currentUser}</span>
           <button
             onClick={onLogout}
             className="glass-button glass-button--danger"
@@ -221,7 +316,6 @@ function AdminLayout({
         </div>
       </nav>
 
-      {/* ── Page Content (unchanged) ─────────────────────────────────── */}
       <Routes>
         <Route
           path="/"
@@ -300,7 +394,7 @@ function AdminLayout({
             responsesFormId ? (
               <ResponseList
                 formId={responsesFormId}
-                onBack={() => navigate("/")}
+                onBack={handleBackFromResponseList}
                 onViewResponse={handleViewResponseDetail}
                 showToast={showToast}
                 isSuperAdmin={isSuperAdmin}
@@ -320,6 +414,17 @@ function AdminLayout({
                 onBack={handleBackToResponses}
                 isSuperAdmin={isSuperAdmin}
               />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            !isSuperAdmin ? (
+              <NotificationCenter showToast={showToast} />
             ) : (
               <Navigate to="/" />
             )

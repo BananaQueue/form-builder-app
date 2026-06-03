@@ -69,7 +69,8 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
           const res = await fetch(apiUrl("/delete_form.php"), {
             method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body:    JSON.stringify({ form_id: formId, admin_override: isSuperAdmin ? 1 : 0 }),
+            body:    JSON.stringify({ form_id: formId }),
+            credentials: "include",
           });
 
           const result = await res.json();

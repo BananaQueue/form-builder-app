@@ -275,7 +275,9 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
       form_id: form.id,
       answers: form.questions.map((q) => ({
         question_id: q.id,
-        answer_text: answers[q.id],
+        question_text: q.question_text,
+        question_type: q.question_type,
+        answer_text: answers[q.id] ?? '',
       })),
     };
 

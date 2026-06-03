@@ -36,28 +36,41 @@ function ResponseViewer({ responseId, onBack, isSuperAdmin = false }) {
 
   // ── Data fetching (unchanged) ──────────────────────────────────────────────
 
-  async function fetchResponseDetails() {
-    setIsRefreshing(true)
-    try {
-      const res    = await fetch(apiUrl(`/get_response_details.php?id=${responseId}${isSuperAdmin ? '&admin_override=1' : ''}`), { credentials: 'include' })
-      const result = await res.json()
-      if (result.success) {
-        setResponse(result.response)
-      } else {
-        setError(result.error || 'Failed to load response')
-      }
-    } catch (err) {
-      setError('Could not connect to server: ' + err.message)
-    } finally {
-      setLoading(false)
-      setTimeout(() => setIsRefreshing(false), 1000)
-    }
-  }
-
   useEffect(() => {
-    fetchResponseDetails()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [responseId])
+    const controller = new AbortController()
+
+    async function fetchResponseDetails() {
+      setLoading(true)
+      setError(null)
+      setResponse(null)
+      setIsRefreshing(true)
+
+      try {
+        const res = await fetch(
+          apiUrl(`/get_response_details.php?id=${responseId}${isSuperAdmin ? '&admin_override=1' : ''}`),
+          { credentials: 'include', signal: controller.signal }
+        )
+        const result = await res.json()
+        if (result.success) {
+          setResponse(result.response)
+        } else {
+          setError(result.error || 'Failed to load response')
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setError('Could not connect to server: ' + err.message)
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false)
+          setTimeout(() => setIsRefreshing(false), 1000)
+        }
+      }
+    }
+
+    if (responseId) fetchResponseDetails()
+    return () => controller.abort()
+  }, [responseId, isSuperAdmin])
 
   // ── Guards ─────────────────────────────────────────────────────────────────
 
@@ -89,6 +102,8 @@ function ResponseViewer({ responseId, onBack, isSuperAdmin = false }) {
   }
 
   // ── Main render ────────────────────────────────────────────────────────────
+
+  const answers = Array.isArray(response?.answers) ? response.answers : []
 
   // This counter tracks the question number shown to the user.
   // It increments only for real questions, not section blocks.
@@ -125,9 +140,14 @@ function ResponseViewer({ responseId, onBack, isSuperAdmin = false }) {
 
       <h2 className="rv-answers-heading">Answers</h2>
 
-      {/* ── Answer list ─────────────────────────────────────────────────── */}
+      {answers.length === 0 ? (
+        <p className="rv-meta">
+          No answers were found for this response. The submission record exists,
+          but there are no linked rows in the answers table for response #{response.id}.
+        </p>
+      ) : (
       <div className="rv-answer-list">
-        {response.answers.map((answer) => {
+        {answers.map((answer) => {
 
           // ── Section block ────────────────────────────────────────────────
           // Section blocks appear as visual dividers between groups of
@@ -186,6 +206,7 @@ function ResponseViewer({ responseId, onBack, isSuperAdmin = false }) {
           )
         })}
       </div>
+      )}
 
     </div>
   )
