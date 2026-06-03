@@ -255,7 +255,6 @@ function AdminFormList({
   onEditForm,
   onViewResponses,
   showToast,
-  showConfirm,
 }) {
   // ── State ────────────────────────────────────────────────────────────────
   const [forms, setForms] = useState([]);

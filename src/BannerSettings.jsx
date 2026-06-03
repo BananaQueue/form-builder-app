@@ -74,7 +74,7 @@ function BannerSettings({ showToast }) {
 
   async function applyCrop() {
     const blob = await getCroppedBlob()
-    if (!blob) { useOriginal(); return }
+    if (!blob) { applyOriginalImage(); return }
     const croppedFile = new File([blob], rawFile.name, { type: 'image/png' })
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setFile(croppedFile)
@@ -82,7 +82,7 @@ function BannerSettings({ showToast }) {
     setShowCropModal(false)
   }
 
-  function useOriginal() {
+  function applyOriginalImage() {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setFile(rawFile)
     setPreviewUrl(URL.createObjectURL(rawFile))
@@ -150,7 +150,7 @@ function BannerSettings({ showToast }) {
 
       {/* ── Crop modal ──────────────────────────────────────────────────────── */}
       {showCropModal && rawObjectUrl && (
-        <div className="bs-crop-overlay" onClick={useOriginal}>
+        <div className="bs-crop-overlay" onClick={applyOriginalImage}>
           <div className="bs-crop-modal" onClick={e => e.stopPropagation()}>
             <h3 className="bs-crop-title">Crop Banner</h3>
             <p className="bs-crop-hint">
@@ -175,7 +175,7 @@ function BannerSettings({ showToast }) {
               <button className="bs-upload-btn" onClick={applyCrop}>
                 Apply Crop
               </button>
-              <button className="bs-remove-btn" onClick={useOriginal}>
+              <button className="bs-remove-btn" onClick={applyOriginalImage}>
                 Use Original
               </button>
             </div>

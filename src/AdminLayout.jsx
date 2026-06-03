@@ -287,15 +287,14 @@ function AdminLayout({
 
         {actionsInNavbar &&
           !isMobile &&
-          location.pathname === "/view" &&
-          formActionsRef.current && (
+          location.pathname === "/view" && (
             <>
               <div className="nav-actions-divider" />
               <div className="nav-actions">
                 <ActionButtons
-                  onFillOut={() => formActionsRef.current.fillOut()}
-                  onCopyLink={() => formActionsRef.current.copyLink()}
-                  onShowQr={() => formActionsRef.current.showQr()}
+                  onFillOut={() => formActionsRef.current?.fillOut()}
+                  onCopyLink={() => formActionsRef.current?.copyLink()}
+                  onShowQr={() => formActionsRef.current?.showQr()}
                 />
               </div>
             </>

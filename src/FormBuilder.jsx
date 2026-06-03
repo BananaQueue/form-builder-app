@@ -255,7 +255,7 @@ function SortableQuestionRow({
 
 function getAllowedConditionTypes(questionType) {
   const baseTypes = ["equals", "not_equals", "is_answered"];
-  if (questionType === "multiple_choice") {
+  if (questionType === "checkbox") {
     return [...baseTypes, "contains", "not_contains"];
   }
   return baseTypes;
@@ -943,7 +943,7 @@ function EditQuestionModal({ question, questions, onSave, onClose, showToast }) 
                             >
                               <option value="equals">Answer equals</option>
                               <option value="not_equals">Answer does NOT equal</option>
-                              {selectedQ.type === "multiple_choice" && (
+                              {selectedQ.type === "checkbox" && (
                                 <>
                                   <option value="contains">Selected answers contain</option>
                                   <option value="not_contains">Selected answers do NOT contain</option>
@@ -1150,6 +1150,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
     try {
       const response = await fetch(
         apiUrl(`/get_form_details.php?id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`),
+        { credentials: "include" },
       );
       const result = await response.json();
 
@@ -1429,6 +1430,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 
@@ -1909,7 +1911,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
                               <option value="not_equals">
                                 Answer does NOT equal
                               </option>
-                              {selectedQ.type === "multiple_choice" && (
+                              {selectedQ.type === "checkbox" && (
                                 <>
                                   <option value="contains">
                                     Selected answers contain

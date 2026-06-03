@@ -151,12 +151,24 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
       return selectedOptions.includes(question.condition_value);
     }
 
+    if (conditionType === "contains") {
+      const selectedOptions = conditionAnswer.split(",").map((s) => s.trim());
+      return selectedOptions.includes(String(question.condition_value ?? ""));
+    }
+
+    if (conditionType === "not_contains") {
+      const selectedOptions = conditionAnswer.split(",").map((s) => s.trim());
+      return !selectedOptions.includes(String(question.condition_value ?? ""));
+    }
+
+    const conditionValue = String(question.condition_value ?? "").trim();
+
     if (conditionType === "equals") {
       if (conditionQuestion && conditionQuestion.question_type === "checkbox") {
         const selectedOptions = conditionAnswer.split(",").map((s) => s.trim());
         return selectedOptions.includes(question.condition_value);
       }
-      return conditionAnswer.trim() === question.condition_value.trim();
+      return conditionAnswer.trim() === conditionValue;
     }
 
     if (conditionType === "not_equals") {
@@ -164,7 +176,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
         const selectedOptions = conditionAnswer.split(",").map((s) => s.trim());
         return !selectedOptions.includes(question.condition_value);
       }
-      return conditionAnswer.trim() !== question.condition_value.trim();
+      return conditionAnswer.trim() !== conditionValue;
     }
 
     return true;
@@ -423,7 +435,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
             <label className="fd-date-range-toggle">
               <input
                 type="checkbox"
-                checked={!!dateRangeEnabled[question.id]}
+                checked={Boolean(dateRangeEnabled[question.id])}
                 onChange={(e) => {
                   const checked = e.target.checked;
                   setDateRangeEnabled((prev) => ({
@@ -444,7 +456,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
               </span>
             </label>
 
-            {!!dateRangeEnabled[question.id] ? (
+            {dateRangeEnabled[question.id] ? (
               (() => {
                 const inputType = question.datetime_type || "date";
                 const { start, end } = parseDateRangeAnswer(
@@ -499,7 +511,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
         {question.question_type === "multiple_choice" && (
           <div className="fd-options-row">
-            {question.options.map((option, optIndex) => (
+            {(Array.isArray(question.options) ? question.options : []).map((option, optIndex) => (
               <div key={optIndex} className="fd-option-item">
                 <label className="fd-option-label">
                   <input
@@ -521,7 +533,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
         {question.question_type === "checkbox" && (
           <div className="fd-options-row">
-            {question.options.map((option, optIndex) => (
+            {(Array.isArray(question.options) ? question.options : []).map((option, optIndex) => (
               <div key={optIndex} className="fd-option-item">
                 <label className="fd-option-label">
                   <input
@@ -550,7 +562,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
         {question.question_type === "rating" && (
           <div className="fd-rating-row">
-            {question.options.map((option, optIndex) => (
+            {(Array.isArray(question.options) ? question.options : []).map((option, optIndex) => (
               <label
                 key={optIndex}
                 className={`fd-rating-label ${
