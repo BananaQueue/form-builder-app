@@ -1,0 +1,470 @@
+﻿/* ============================================================
+   12. RESPONSIVE
+   ============================================================
+
+   We handle three breakpoints:
+   - Desktop: 768px and above
+   - Tablet: 480px – 767px
+   - Mobile: below 480px
+
+   Media queries are read from top to bottom. When the screen
+   matches a breakpoint, those styles override the base styles.
+   ============================================================ */
+
+/* Tablet and below */
+@media (max-width: 767px) {
+
+  /* Reduce root padding */
+  #root {
+    padding: var(--space-3);
+  }
+
+  /* Reduce padding on shells */
+  .fv-shell,
+  .fb-shell,
+  .fd-shell {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .fv-paper,
+  .fb-paper {
+    padding: var(--space-5);
+  }
+
+  /* Single column grid on narrow screens */
+  .forms-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Question top row wraps on small screens */
+  .fv-question-top {
+    flex-wrap: wrap;
+  }
+
+  .fv-question-type {
+    width: 100%;
+    white-space: normal;
+    padding-top: 0;
+    padding-left: 40px;
+  }
+
+  /* -- Nav ------------------------------------------------------ */
+  .glass-nav {
+    position: static;
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .nav-nav.nav-left {
+    flex: 1 1 100%;
+    gap: var(--space-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-wrap: wrap;
+    min-width: 0;
+    padding: var(--space-2);
+  }
+
+  .nav-nav.nav-left::-webkit-scrollbar { display: none; }
+
+  .nav-right.nav-user {
+    margin-left: 0;
+    width: 100%;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: var(--space-2);
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .nav-right.nav-user > * {
+    min-width: 0;
+  }
+
+  .glass-nav .glass-button {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+    white-space: normal;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  /* -- Form list controls --------------------------------------- */
+  .form-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .form-list-controls {
+    width: 100%;
+  }
+
+  .glass-select {
+    flex: 1;
+  }
+
+  .form-list-search {
+    margin-bottom: var(--space-4);
+  }
+
+  /* -- FormBuilder topbar (mobile only) ------------------------ */
+  /* .fb-topbar {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(15, 14, 23, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-glass);
+    margin: 0 calc(-1 * var(--space-3)) var(--space-4);
+  }
+
+  .fb-topbar__title {
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--text-on-dark);
+    margin: 0;
+    text-align: center;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .fb-topbar__actions {
+    display: flex;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .fb-topbar__btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-on-dark-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    padding: var(--space-2) var(--space-1);
+    cursor: pointer;
+    transition: color var(--transition-base), background var(--transition-base);
+    white-space: nowrap;
+  }
+
+  .fb-topbar__btn + .fb-topbar__btn {
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .fb-topbar__btn:active {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .fb-topbar__btn--publish {
+    color: var(--accent);
+  }
+
+  /* Hide the desktop title and save panel on mobile */
+  /* .fb-page-title,
+  .fb-page-subtitle,
+  .fb-save-panel {
+    display: none;
+  } */ 
+
+  /* -- Global --------------------------------------------------- */
+  body { overflow-x: hidden; }
+
+  /* -- Typography ----------------------------------------------- */
+  .form-list-title  { font-size: var(--text-xl); }
+  .rv-title         { font-size: var(--text-xl); }
+  .rl-title         { font-size: var(--text-xl); }
+  .bs-heading       { font-size: var(--text-xl); }
+  .um-heading       { font-size: var(--text-xl); }
+
+  /* -- Form cards ----------------------------------------------- */
+  .glass-card { padding: var(--space-4); }
+  .form-card-header { flex-wrap: wrap; gap: var(--space-2); }
+  .form-card-meta { flex-wrap: wrap; }
+
+  /* -- FormViewer ----------------------------------------------- */
+  .fv-action-bar { justify-content: center; }
+  .fv-action-bar .glass-button { flex: 1; justify-content: center; min-width: 0; }
+
+  /* -- FormBuilder shell ---------------------------------------- */
+  .fb-shell { padding-top: var(--space-2); }
+  .fb-paper { margin-bottom: var(--space-4); }
+
+  /* Condition/option panel rows — stack selects vertically */
+  .fb-condition-panel select,
+  .fb-condition-panel input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* -- FormDisplay ---------------------------------------------- */
+  .fd-shell { padding-left: var(--space-3); padding-right: var(--space-3); }
+  .fd-form-header { margin-bottom: var(--space-5); }
+  .fd-step-nav { gap: var(--space-2); }
+  .fd-step-nav button { min-height: 44px; }
+  .fd-stepper-row { padding-bottom: var(--space-2); }
+
+  /* -- Response List -------------------------------------------- */
+  .rl-shell { padding: var(--space-4) var(--space-3) var(--space-8); }
+  .rl-action-bar { flex-wrap: wrap; gap: var(--space-2); }
+  .rl-action-bar .glass-button { flex: 1; justify-content: center; }
+  .rl-response-row { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+  .rl-response-row .glass-button { width: 100%; justify-content: center; }
+
+  /* -- Response Viewer ------------------------------------------ */
+  .rv-shell { padding: var(--space-4) var(--space-3) var(--space-8); }
+  .rv-action-bar { flex-wrap: wrap; gap: var(--space-2); }
+  .rv-action-bar .glass-button { flex: 1; justify-content: center; }
+  .rv-title { word-break: break-word; }
+
+  /* -- Banner Settings ------------------------------------------ */
+  .bs-shell { padding: 0 var(--space-3); margin-top: var(--space-5); }
+  .bs-card { padding: var(--space-4); }
+
+  /* -- User Management ------------------------------------------ */
+  .um-shell { padding: 0; margin-top: var(--space-5); }
+  .um-card { padding: var(--space-4); }
+  .um-add-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+  .um-add-form > * {
+    width: 100%;
+    min-width: 0;
+  }
+  .um-input,
+  .um-select,
+  .password-input-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+  .um-input,
+  .um-select {
+    min-height: 44px;
+  }
+  /* .um-input { flex: 1 1 160px; } */
+  .um-select { max-width: 100%; }
+  .um-add-btn {
+    width: 100%;
+    align-self: stretch;
+  }
+  .um-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .um-table {
+    width: 100%;
+    min-width: 0;
+  }
+  .um-table th,
+  .um-table td {
+    min-width: 0;
+    white-space: normal;
+  }
+  .um-actions {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .um-action-btn {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  /* Hide less critical columns on mobile */
+  .um-table .um-td-date,
+  .um-table th:nth-child(4) { display: none; }
+
+  /* -- QR Modal ------------------------------------------------- */
+  .qr-modal {
+    width: calc(100vw - var(--space-8));
+    padding: var(--space-5);
+    max-width: 100%;
+  }
+  .qr-modal__canvas { width: 100% !important; height: auto !important; }
+  .qr-modal__actions { flex-direction: column; }
+  .qr-modal__btn { width: 100%; }
+
+  /* -- Nav action buttons (FormViewer in nav) ------------------- */
+  .nav-actions { gap: var(--space-1); }
+  .nav-actions .glass-button { padding: var(--space-2); font-size: var(--text-xs); }
+  .nav-actions-divider { display: none; }
+
+}
+
+/* Narrow mobile — between tablet and very small */
+@media (max-width: 600px) {
+
+  /* -- Form list controls: stack select + refresh vertically --- */
+  .form-list-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .glass-select {
+    width: 100%;
+  }
+
+  .refresh-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* -- Form card meta: tighten text --------------------------- */
+  .form-card-meta {
+    font-size: var(--text-xs);
+  }
+
+  /* -- Login banner: smaller on narrow phones ------------------- */
+  .login-agency-banner img {
+    max-height: 80px;
+  }
+
+  /* -- Nav action buttons: show emoji only, drop label text ----- */
+  .nav-actions .glass-button--fill  span,
+  .nav-actions .glass-button--share span,
+  .nav-actions .glass-button--qr   span {
+    display: none;
+  }
+
+  /* -- FormViewer action bar: reduce padding ------------------- */
+  .fv-action-bar .glass-button {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+  }
+
+  /* -- Response list: compress response rows ------------------- */
+  .rl-response-meta {
+    font-size: var(--text-xs);
+  }
+
+  /* -- FormDisplay: tighten form paper ------------------------ */
+  .fd-question-card {
+    padding: var(--space-4);
+  }
+
+}
+
+/* Very small screens */
+@media (max-width: 479px) {
+  .fd-form-title { font-size: var(--text-xl); }
+  .fd-rating-row { gap: var(--space-2); }
+  .fd-rating-label { padding: 8px var(--space-3); min-width: 60px; }
+  .fb-page-title { font-size: var(--text-xl); }
+}
+
+/* (removed temporary nav-overlap padding change) */
+
+/* Mobile responsiveness fixes: prevent overflow, wrap chips/badges, tighten spacing */
+@media (max-width: 768px) {
+  /* Ensure no accidental horizontal scrolling */
+  html, body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Make main shells and papers constrain to viewport */
+  .fv-shell,
+  .fv-paper,
+  .fb-shell,
+  .fb-paper,
+  .fd-shell {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  /* Question cards: full width, reduced padding on mobile */
+  .fv-question-card,
+  .fv-section-block {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    padding: var(--space-4) !important;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* Allow question top row to wrap without overflow */
+  .fv-question-top {
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  /* Chips / option pills container should wrap */
+  .fv-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  /* Option pills: allow wrapping and prevent oversized pills */
+  .fv-option-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Conditional badges: wrap long text and never overflow */
+  .fv-badge,
+.fv-badge-condition,
+  .fv-badge-row {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Make Action bar buttons stack/wrap nicely */
+  .fv-action-bar {
+    gap: var(--space-2);
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .action-buttons {
+    gap: var(--space-1);
+  }
+  /* .fv-action-bar .glass-button { flex: 0 1 auto; min-width: 0; } */
+
+  /* Prevent large text sizes from colliding on mobile */
+  .fv-title { font-size: calc(var(--text-xl) - 2px); }
+  .fv-section-title { font-size: calc(var(--text-lg) - 1px); }
+
+  /* Ensure any flex child can shrink to avoid overflow */
+  .fv-shell *,
+  .fv-paper *,
+  .fv-question-card *,
+  .fv-options * {
+    min-width: 0;
+  }
+
+  /* Avoid fixed width images or elements causing overflow */
+  img, canvas { max-width: 100%; height: auto; }
+
+  /* Tidy up spacing for very narrow phones */
+  @media (max-width: 420px) {
+    .fv-shell,
+    .fv-paper { padding-left: var(--space-3); padding-right: var(--space-3); }
+    .fv-question-card { padding: var(--space-3); }
+    .fv-title { font-size: var(--text-lg); }
+  }
+}
+
+

@@ -1,0 +1,256 @@
+﻿/* ============================================================
+   10. USER MANAGEMENT PAGE  (.um-*)
+   ============================================================ */
+
+.um-shell {
+  max-width: 900px;
+  margin: var(--space-10) auto;
+  padding: 0 var(--space-4);
+}
+
+.um-heading {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text-on-dark);
+  margin: 0 0 var(--space-6);
+}
+
+.um-card {
+  background: var(--bg-paper-subtle);
+  border: 1px solid var(--border-paper);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.um-card-title {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-4);
+}
+
+.um-meta {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* -- Add user form ----------------------------------------------------------- */
+
+.um-add-form {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.um-input {
+  flex: 1 1 auto;
+  padding: 9px var(--space-3);
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-family: var(--font-base);
+  background: var(--bg-input, #fff);
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast);
+}
+
+.um-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.um-select {
+  /* flex: 0 1 140px; */
+  padding: 9px var(--space-3);
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-base);
+  background: var(--bg-input, #fff);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.um-add-btn {
+  padding: 9px var(--space-5);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast);
+}
+
+.um-add-btn:hover:not(.um-add-btn--disabled) { background: var(--accent-hover); }
+.um-add-btn--disabled { background: #c5c4e0; cursor: not-allowed; }
+
+/* -- User table -------------------------------------------------------------- */
+
+.um-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.um-table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 2px solid var(--border-paper);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.um-table td {
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--border-paper);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.um-table tr:last-child td { border-bottom: none; }
+
+.um-td-username { font-weight: 600; }
+.um-td-center   { text-align: center; }
+.um-td-date     { color: var(--text-muted); }
+
+.um-role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.um-role-badge--user        { background: rgba(108,99,255,0.10); color: var(--accent); }
+.um-role-badge--super_admin { background: rgba(243,156,18,0.15); color: #b7770d; }
+
+.um-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.um-action-btn {
+  padding: 5px 12px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-family: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.um-action-btn--view {
+  background: rgba(108,99,255,0.08);
+  color: var(--accent);
+  border-color: rgba(108,99,255,0.25);
+}
+.um-action-btn--view:hover { background: var(--accent); color: #fff; }
+
+.um-action-btn--pw {
+  background: rgba(52,152,219,0.08);
+  color: #2980b9;
+  border-color: rgba(52,152,219,0.25);
+}
+.um-action-btn--pw:hover { background: #2980b9; color: #fff; }
+
+.um-action-btn--delete {
+  background: rgba(231,76,60,0.08);
+  color: var(--danger, #e74c3c);
+  border-color: rgba(231,76,60,0.25);
+}
+.um-action-btn--delete:hover { background: var(--danger, #e74c3c); color: #fff; }
+
+/* -- Change password modal --------------------------------------------------- */
+
+.um-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.um-modal {
+  background: var(--bg-paper, #fff);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-medium);
+}
+
+.um-modal-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1);
+}
+
+.um-modal-sub {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-4);
+}
+
+.um-modal-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.um-cancel-btn {
+  padding: 9px var(--space-5);
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+.um-cancel-btn:hover { border-color: var(--text-secondary); }
+
+/* -- Breadcrumb (drill-down) ------------------------------------------------- */
+
+.um-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  font-size: var(--text-sm);
+}
+
+.um-back-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-family: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.um-back-btn:hover { text-decoration: underline; }
+
+.um-breadcrumb-sep  { color: var(--text-muted); }
+.um-breadcrumb-name { font-weight: 600; color: var(--text-on-dark-deaf); }
+
+

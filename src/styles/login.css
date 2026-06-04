@@ -1,0 +1,495 @@
+﻿/* ============================================================
+   LOGIN PAGE
+   ============================================================
+
+   ADD THIS BLOCK to index.css.
+   A good place is right after Section 4 (Navigation) and before
+   Section 5 (Card System), since the login page is seen before
+   the admin interface.
+
+   The login page has three layers:
+   1. .login-shell      — the full-viewport centering wrapper
+   2. .login-card       — the glass card that holds everything
+   3. Inside the card:  brand, heading, form fields, button
+   ============================================================ */
+
+
+/* -- Shell: full-viewport centered layout ----------------------------------- */
+/*
+  We need the card to sit exactly in the center of the screen
+  both horizontally AND vertically. The standard modern technique
+  is flexbox on the shell:
+
+    display: flex
+    align-items: center       ? vertical centering
+    justify-content: center   ? horizontal centering
+
+  min-height: 100dvh uses the "dynamic viewport height" unit.
+  On mobile browsers, 100vh includes the browser chrome (address bar),
+  which can cause content to be hidden behind it. 100dvh is the
+  actual visible area. We fall back to 100vh for older browsers
+  using the cascade (100vh is listed first, then 100dvh overrides it
+  in browsers that support it).
+*/
+.login-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  box-sizing: border-box;
+  overflow-y: auto;
+  animation: loginShellIn 260ms ease-out both;
+}
+
+.login-shell--leaving {
+  pointer-events: none;
+  animation: loginShellOut 260ms ease-in both;
+}
+
+.login-agency-banner {
+  width: 100%;
+  max-width: 560px;
+  padding: var(--space-2) var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.45));
+  animation: loginBannerIn 340ms ease-out both;
+}
+
+.login-agency-banner img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+
+/* -- Card ------------------------------------------------------------------- */
+/*
+  The login card uses our new design tokens from Phase 1.
+
+  Compare to the original hardcoded values:
+    background: 'rgba(255,255,255,0.85)'  ?  var(--bg-glass-strong) + paper blend
+    backdropFilter: 'blur(18px)'           ?  var(--blur-lg)
+    borderRadius: '22px'                   ?  var(--radius-xl)
+    boxShadow: '0 10px 40px ...'           ?  var(--shadow-strong)
+
+  The new card uses a slightly different background approach:
+  we layer a dark glass effect (rgba white at low opacity) over
+  a slightly lighter base. This makes the card feel like it's
+  floating above the gradient rather than punching a white hole in it.
+
+  width: 100% with max-width: 420px means the card fills the screen
+  on mobile but caps at 420px on desktop — a common login card width.
+*/
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: var(--blur-lg);
+  -webkit-backdrop-filter: var(--blur-lg);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-strong);
+  padding: var(--space-10) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transform-origin: center top;
+  animation: loginCardIn 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms both;
+}
+
+
+/* -- Brand mark ------------------------------------------------------------- */
+/*
+  The brand area sits at the top of the card.
+  It contains a logo mark (a styled icon in a rounded square)
+  and the app name beside it.
+
+  display: flex with align-items: center puts them side by side
+  on the same vertical midpoint.
+*/
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+/*
+  The logo mark is a small rounded square with a gradient background.
+  The ? character inside is just a Unicode glyph — no image files needed.
+
+  The gradient runs diagonally from the accent color to a lighter purple.
+  This ties the logo mark visually to the page's overall color palette.
+*/
+.login-logo-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent) 0%, #9b8fff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(108, 99, 255, 0.35);
+}
+
+.login-app-name {
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--text-on-dark);
+  letter-spacing: -0.01em;
+}
+
+
+/* -- Heading and subtitle --------------------------------------------------- */
+/*
+  The heading is larger and bolder than the subtitle.
+  Together they give the user immediate context:
+  - "Welcome back" — emotional, friendly
+  - "Sign in to manage your forms" — functional, clear
+
+  margin-bottom: 0 on the heading lets the parent gap (var(--space-3))
+  control spacing instead. This is the "single source of spacing truth"
+  principle — let the layout control gaps, not individual elements.
+*/
+.login-heading {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-on-dark);
+  margin: 0;
+  letter-spacing: -0.02em;
+  /* Negative letter-spacing on large headings tightens the spacing
+     between letters, making them feel more premium and intentional.
+     You see this on Vercel, Linear, and Stripe. Only effective on
+     headings — body text should stay at default letter-spacing. */
+}
+
+.login-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-on-dark-muted);
+  margin: 0 0 var(--space-3);
+}
+
+
+/* -- Form ------------------------------------------------------------------- */
+/*
+  The form uses flexbox column layout with a gap between fields.
+  This is more reliable than margin-bottom on each field because
+  the gap only applies BETWEEN children, never after the last one.
+
+  So if the error message appears, it slots naturally into the
+  flow — the gap handles spacing uniformly.
+*/
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+
+/* -- Form fields ------------------------------------------------------------ */
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.login-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-on-dark-muted);
+  /* Labels on the dark card use a muted white, not pure white.
+     Pure white labels compete with the input values for attention.
+     Muted labels recede slightly, letting the input content lead. */
+}
+
+.login-input {
+  width: 100%;
+  padding: 11px var(--space-4);
+  font-size: var(--text-base);
+  font-family: var(--font-base);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+
+  /* Input background: slightly lighter than the card.
+     This creates the "inset" effect — inputs look like they're
+     recessed into the surface, which helps users understand
+     "this is where I type." */
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-on-dark);
+  box-sizing: border-box;
+
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+/* Placeholder text — more muted than the real value */
+.login-input::placeholder {
+  color: var(--text-on-dark-faint);
+}
+
+.login-input:hover {
+  border-color: rgba(255, 255, 255, 0.20);
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.10);
+  /* The focus ring uses the accent color so keyboard users always
+     know which field is active. This is an accessibility requirement —
+     focus indicators must be visible. */
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.20);
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.password-input {
+  width: 100%;
+  padding-right: 44px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.password-input-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-on-dark-faint, #999);
+  transition: color var(--transition-fast);
+  border-radius: var(--radius-sm, 4px);
+}
+
+.password-input-toggle:hover,
+.password-input-toggle:focus-visible {
+  color: var(--text-on-dark, #ccc);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.password-input-toggle:focus-visible {
+  outline: 2px solid rgba(108, 99, 255, 0.28);
+  outline-offset: 2px;
+}
+
+/* Override browser autofill background — browsers apply a yellow
+   or blue tint to autofilled fields by default. We override it
+   to match our dark card. The transition trick delays the browser's
+   override for a very long time (9999s), effectively disabling it. */
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-on-dark);
+  -webkit-box-shadow: 0 0 0px 1000px rgba(48, 43, 99, 0.95) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+
+/* -- Error message ---------------------------------------------------------- */
+/*
+  The error message slides down from above using a CSS animation.
+
+  HOW THE ANIMATION WORKS:
+  1. The element starts at translateY(-8px) — 8px above its natural position
+  2. It also starts at opacity: 0
+  3. Over 200ms it transitions to translateY(0) and opacity: 1
+
+  The @keyframes loginErrorSlide defines this motion.
+  The animation only runs when login-error--visible is present,
+  meaning every time a new error appears, the animation replays.
+  This gives the user a visual signal that something changed —
+  not just that an error exists, but that a NEW error just appeared.
+*/
+.login-error {
+  font-size: var(--text-sm);
+  color: #ffb3be;
+  /* A warm pink-red that reads clearly on the dark card background.
+     Pure red (#ff0000) has poor contrast on dark. This softened
+     version is easier to read while still signaling an error. */
+  background: rgba(255, 77, 109, 0.12);
+  border: 1px solid rgba(255, 77, 109, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.login-error--visible {
+  animation: loginErrorSlide 0.20s ease-out forwards;
+}
+
+@keyframes loginErrorSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* -- Submit button ---------------------------------------------------------- */
+/*
+  The login button is the primary action on this page.
+  It gets the full accent color background and a subtle shadow
+  that matches the accent color — a technique called "colored shadows"
+  that makes buttons feel like they're glowing.
+
+  On hover: lifts slightly (translateY(-1px)) and shadow deepens.
+  On active (click): snaps back down (translateY(0)) — physical click feel.
+*/
+.login-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-family: var(--font-base);
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  /* margin-top: space-2 adds a little extra breathing room between
+     the last field and the button — buttons that crowd inputs
+     feel like they're rushing you. */
+
+  transition:
+    background var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
+
+  box-shadow: 0 4px 20px rgba(108, 99, 255, 0.30);
+}
+
+.login-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(108, 99, 255, 0.40);
+}
+
+.login-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 12px rgba(108, 99, 255, 0.25);
+}
+
+/*
+  Loading state: the button becomes slightly transparent instead
+  of switching to grey. This is subtler than the original approach
+  and keeps the color palette consistent even in the loading state.
+
+  pointer-events: none means you physically cannot click it even
+  if JavaScript's `disabled` attribute somehow gets bypassed.
+*/
+.login-btn--loading {
+  opacity: 0.82;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.login-btn__spinner {
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  opacity: 0.85;
+  animation: refreshSpin 720ms linear infinite;
+}
+
+.auth-stage {
+  min-height: 100vh;
+}
+
+.auth-stage--leaving {
+  pointer-events: none;
+  animation: authStageOut 180ms ease-in both;
+}
+
+@keyframes loginShellIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes loginShellOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes loginBannerIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loginCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes authStageOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+
+/* -- Responsive ------------------------------------------------------------- */
+/*
+  On very small screens, reduce the card padding so it doesn't
+  feel cramped against the screen edges.
+*/
+@media (max-width: 400px) {
+  .login-card {
+    padding: var(--space-8) var(--space-5);
+  }
+  .login-agency-banner {
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+

@@ -1,0 +1,575 @@
+﻿/* ============================================================
+   RESPONSE LIST PAGE  (.rl-*)
+   RESPONSE VIEWER PAGE  (.rv-*)
+   ============================================================
+
+
+   Two namespaces here:
+   .rl-*  ?  ResponseList  (the list of all submissions)
+   .rv-*  ?  ResponseViewer (a single submission's detail view)
+
+   Both pages share the same visual language: dark glass shell,
+   white paper-style content cards, consistent typography.
+   ============================================================ */
+
+
+/* +----------------------------------------------------------+
+   ¦  RESPONSE LIST  (.rl-*)                                  ¦
+   +----------------------------------------------------------+ */
+
+/* -- Shell ------------------------------------------------------------------ */
+/*
+  Same shell pattern used across all admin pages:
+  constrained width, centered, generous bottom padding so
+  content never crowds the bottom of the viewport.
+*/
+.rl-shell {
+  padding: var(--space-5) var(--space-5) var(--space-16);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.rl-meta {
+  color: var(--text-on-dark-muted);
+  font-size: var(--text-sm);
+  padding: var(--space-10) 0;
+  text-align: center;
+}
+
+/* -- Action bar ------------------------------------------------------------- */
+/*
+  Two buttons aligned to opposite ends of the row.
+  justify-content: space-between puts Back on the left
+  and Export on the right with all available space between them.
+*/
+.rl-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+
+/* -- Export button ---------------------------------------------------------- */
+/*
+  The export button is a standalone styled button — not a glass-button
+  variant — because its appearance changes significantly between
+  enabled and disabled states. Making it a separate class is cleaner
+  than stacking modifiers on glass-button.
+
+  Enabled:  green background, cursor pointer
+  Disabled: muted background, cursor not-allowed, reduced opacity
+*/
+.rl-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--accent-success);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(0, 200, 150, 0.25);
+  transition:
+    background var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.rl-export-btn:hover:not(.rl-export-btn--disabled) {
+  background: var(--accent-success-hover);
+  box-shadow: 0 5px 16px rgba(0, 200, 150, 0.30);
+  transform: translateY(-1px);
+}
+
+.rl-export-btn:active:not(.rl-export-btn--disabled) {
+  transform: translateY(0);
+}
+
+/*
+  Disabled state modifier.
+  We use opacity + cursor instead of changing the background color —
+  this approach keeps the button's identity (it's still the export button)
+  while clearly communicating it's unavailable.
+
+  pointer-events: none means the button is unclickable even if
+  JavaScript's `disabled` attribute is bypassed somehow.
+*/
+.rl-export-btn--disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+/* -- Page header ------------------------------------------------------------ */
+
+.rl-header {
+  margin-bottom: var(--space-5);
+}
+
+.rl-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text-on-dark);
+  margin: 0 0 var(--space-2);
+  text-shadow: 0 2px 20px rgba(108, 99, 255, 0.25);
+}
+
+.rl-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-on-dark-muted);
+  margin: 0;
+}
+
+.rl-divider {
+  border: none;
+  border-top: 1px solid var(--border-glass);
+  margin: var(--space-5) 0;
+}
+
+/* -- Response rows ---------------------------------------------------------- */
+/*
+  The response list is a vertical stack of rows.
+  Each row is a glass card with two zones:
+  - Left:  response number + submitted date
+  - Right: "View Details" button
+
+  justify-content: space-between puts info on the left and
+  the button on the right, no matter how wide the container is.
+*/
+.rl-response-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rl-response-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.rl-response-row:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--border-glass-strong);
+  transform: translateY(-1px);
+}
+
+.rl-response-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.rl-response-row__number {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-on-dark);
+}
+
+.rl-response-row__date {
+  font-size: var(--text-sm);
+  color: var(--text-on-dark-muted);
+}
+
+/*
+  "View Details" button — a compact accent-colored button.
+  flex-shrink: 0 prevents it from compressing when the row is narrow.
+*/
+.rl-view-btn {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-4);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.rl-view-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.rl-view-btn:active {
+  transform: translateY(0);
+}
+
+/* -- Empty state ------------------------------------------------------------ */
+/*
+  ?? (empty mailbox) is used instead of the generic ?? clipboard
+  because this state specifically means "no one has submitted anything yet"
+  — the mailbox without mail is more precise to that meaning.
+
+  Choosing the right emoji matters for these designed empty states:
+  it's the first thing the eye hits before reading the text.
+*/
+.rl-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-5);
+  text-align: center;
+  gap: var(--space-4);
+}
+
+.rl-empty__icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 4px 16px rgba(108, 99, 255, 0.15));
+  margin-bottom: var(--space-2);
+}
+
+.rl-empty__title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-on-dark);
+  margin: 0;
+}
+
+.rl-empty__message {
+  font-size: var(--text-base);
+  color: var(--text-on-dark-muted);
+  max-width: 340px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* -- Error state ------------------------------------------------------------ */
+
+.rl-error {
+  max-width: 480px;
+  margin: var(--space-16) auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.rl-error__text {
+  font-size: var(--text-base);
+  color: var(--accent-danger);
+  font-weight: 500;
+}
+
+
+/* +----------------------------------------------------------+
+   ¦  RESPONSE VIEWER  (.rv-*)                                ¦
+   +----------------------------------------------------------+ */
+
+/* -- Shell ------------------------------------------------------------------ */
+
+.rv-shell {
+  padding: var(--space-5) var(--space-5) var(--space-16);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.rv-meta {
+  color: var(--text-on-dark-muted);
+  font-size: var(--text-sm);
+  padding: var(--space-10) 0;
+  text-align: center;
+}
+
+/* -- Action bar ------------------------------------------------------------- */
+
+.rv-action-bar {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+
+/* -- Page header ------------------------------------------------------------ */
+
+.rv-header {
+  margin-bottom: var(--space-5);
+}
+
+.rv-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text-on-dark);
+  margin: 0 0 var(--space-3);
+  text-shadow: 0 2px 20px rgba(108, 99, 255, 0.25);
+}
+
+/*
+  The header meta row shows form title and submission date side by side.
+  Same pattern as the form card meta row from Phase 3 — flex row with
+  a divider character between items.
+*/
+.rv-header__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.rv-header__item {
+  font-size: var(--text-sm);
+  color: var(--text-on-dark-muted);
+}
+
+.rv-header__item strong {
+  color: var(--text-on-dark);
+  font-weight: 600;
+}
+
+.rv-header__divider {
+  font-size: var(--text-sm);
+  color: var(--text-on-dark-faint);
+}
+
+.rv-divider {
+  border: none;
+  border-top: 1px solid var(--border-glass);
+  margin: var(--space-5) 0;
+}
+
+.rv-answers-heading {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-on-dark);
+  margin: 0 0 var(--space-5);
+}
+
+/* -- Answer list ------------------------------------------------------------ */
+
+.rv-answer-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* -- Section block ---------------------------------------------------------- */
+/*
+  Section blocks in the response viewer act as visual dividers between
+  groups of answers. They don't contain answer data — just the section title.
+
+  We use the same left-border-accent pattern as .fv-section-block and
+  .fb-section-card for visual consistency across the app.
+  A user moving between the form viewer, builder, and response viewer
+  will see the same visual language for section blocks.
+*/
+.rv-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-5);
+  background: rgba(108, 99, 255, 0.05);
+  /* border-left: 3px solid var(--accent); */
+  border-radius: var(--radius-md);
+  margin-top: var(--space-2);
+}
+
+.rv-section-block__label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.rv-section-block__title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-on-dark);
+}
+
+/* -- Answer card ------------------------------------------------------------ */
+/*
+  Each answer card has three zones stacked vertically:
+  1. Question (number + text)
+  2. Question type label
+  3. Answer value box
+
+  The card uses the same glass treatment as the response rows above
+  for visual consistency across the page.
+
+  BEFORE: a div with inline background, padding, border, borderRadius
+  AFTER:  <div className="rv-answer-card">
+*/
+.rv-answer-card {
+  background: var(--bg-glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Question header: number badge + question text side by side */
+.rv-answer-card__question {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.rv-answer-card__number {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  min-width: 32px;
+  /* min-width ensures Q1 and Q10 are the same visual width,
+     keeping the question text aligned across all cards */
+}
+
+.rv-answer-card__text {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-on-dark);
+  line-height: 1.4;
+}
+
+/* Question type — shown in monospace, muted */
+.rv-answer-card__type {
+  font-size: var(--text-xs);
+  color: var(--text-on-dark-muted);
+  font-family: var(--font-mono);
+  padding-left: calc(32px + var(--space-3));
+  /* The padding-left aligns the type label with the question text above,
+     accounting for the number badge width (32px) + the gap (space-3) */
+}
+
+/* -- Answer value box ------------------------------------------------------- */
+/*
+  The answer box sits below the question and type label.
+  It uses a white/paper background to visually distinguish it from
+  the card itself — creating a "content inside a container" feel.
+
+  This is the same layering principle used in IDE editors where
+  the code area has a different background than the surrounding UI.
+*/
+.rv-answer-value {
+  background: rgba(255, 255, 255, 0.90);
+  border: 1px solid var(--border-paper);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-4);
+}
+
+.rv-answer-value__label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+}
+
+.rv-answer-value__text {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  /* pre-wrap preserves line breaks in multi-line answers
+     (like textarea responses) without collapsing whitespace */
+}
+
+.rv-answer-value__empty {
+  color: var(--text-faint);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* -- Error state ------------------------------------------------------------ */
+
+.rv-error {
+  max-width: 480px;
+  margin: var(--space-16) auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.rv-error__text {
+  font-size: var(--text-base);
+  color: var(--accent-danger);
+  font-weight: 500;
+}
+
+
+/* -- Responsive ------------------------------------------------------------- */
+/*
+  On mobile, the response row switches from a horizontal layout
+  (info on left, button on right) to a vertical stack (info on top,
+  button full width on bottom). This prevents the button from being
+  compressed to an unreadable width on narrow screens.
+*/
+@media (max-width: 520px) {
+
+  .rl-response-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .rl-view-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .rl-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rl-export-btn {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .rv-header__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  .rv-header__divider {
+    display: none;
+    /* On mobile the stacked layout makes the · separator
+       look like a bullet point — hiding it is cleaner */
+  }
+}
+
+

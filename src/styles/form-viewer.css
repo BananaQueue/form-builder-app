@@ -1,0 +1,512 @@
+﻿/* ============================================================
+   7. FORM VIEWER PAGE  (.fv-*)
+   ============================================================
+
+   The FormViewer is the admin's read-only preview of a form.
+   It uses a "paper" metaphor: a white card on the dark background.
+   This makes the content feel like a real document.
+   ============================================================ */
+
+.fv-shell {
+  padding: var(--space-5) var(--space-5) var(--space-16);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.fv-action-bar {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.fv-action-bar > .glass-button--back {
+  flex: 0 0 80px;
+  width: 80px;
+  max-width: 80px;
+}
+
+.fv-action-bar > .action-buttons {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 545px) {
+  .fv-action-bar > .glass-button--back {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    align-self: flex-start;
+  }
+
+  .fv-action-bar > .action-buttons {
+    flex: 1 1 100%;
+  }
+}
+
+/* The white "paper" document card */
+.fv-paper {
+  background: var(--bg-paper);
+  border-radius: var(--radius-xl);
+  padding: var(--space-10) var(--space-10);
+  box-shadow: var(--shadow-strong);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.fv-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.fv-title {
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.fv-description {
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  margin-top: var(--space-2);
+}
+
+.fv-meta {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-top: var(--space-2);
+}
+
+.fv-divider {
+  border: none;
+  border-top: 1px solid var(--border-paper);
+  margin: var(--space-8) 0;
+}
+
+.fv-questions-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.fv-section-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.fv-question-count {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(108, 99, 255, 0.20);
+}
+
+.fv-question-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Individual question row */
+.fv-question-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--bg-paper-subtle);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: var(--space-3) var(--space-5);
+  flex-wrap: wrap;
+}
+
+.fv-question-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  order: 1;
+}
+
+.fv-question-number {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  min-width: 32px;
+  flex-shrink: 0;
+}
+
+.fv-question-text {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  font-weight: 500;
+  flex-shrink: 1;
+  word-break: break-word;
+}
+
+.fv-question-type {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-left: auto;
+  order: 3;
+}
+
+.fv-badge-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  order: 2;
+}
+
+.fv-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-left: 0;
+  flex-basis: 100%;
+  margin-top: var(--space-2);
+  order: 4;
+}
+
+.fv-option-pill {
+  background: #fff;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-pill);
+  padding: 3px 12px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.fv-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.fv-badge-required {
+  background: var(--accent-danger-soft);
+  color: var(--accent-danger);
+  border: 1px solid rgba(255, 77, 109, 0.20);
+}
+
+.fv-badge-condition {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(108, 99, 255, 0.20);
+}
+
+/* ============================================================
+   FORM VIEWER PAGE — additional rules
+   ============================================================
+
+
+   Three groups of new rules:
+   1. glass-button color variants (used by the action bar)
+   2. .qr-* namespace (the QR code modal)
+   3. .fv-section-block (section dividers in the question list)
+   4. .fv-badge-row and .fv-error-text (small additions)
+   ============================================================ */
+
+
+/* -- glass-button color variants -------------------------------------------- */
+/*
+  These modifier classes give the action bar buttons distinct colors
+  without using inline styles.
+
+  The naming convention uses the button's PURPOSE, not its color:
+    --fill   = opens the form to fill it out (green = "go")
+    --share  = copies the sharing link       (blue = "information")
+    --qr     = opens the QR code modal       (purple = "special feature")
+
+  Each modifier only sets the background. All other button styles
+  (padding, border-radius, transitions, hover lift) come from the
+  base .glass-button class defined earlier in index.css.
+
+  We use !important on hover to ensure these overrides win against
+  the generic .glass-button:hover background.
+*/
+
+.glass-button--fill {
+  background: rgba(0, 200, 150, 0.25);
+  border-color: rgba(0, 200, 150, 0.30);
+}
+
+.glass-button--fill:hover {
+  background: rgba(0, 200, 150, 0.38) !important;
+  border-color: rgba(0, 200, 150, 0.50) !important;
+}
+
+.glass-button--share {
+  background: rgba(52, 152, 219, 0.25);
+  border-color: rgba(52, 152, 219, 0.30);
+}
+
+.glass-button--share:hover {
+  background: rgba(52, 152, 219, 0.38) !important;
+  border-color: rgba(52, 152, 219, 0.50) !important;
+}
+
+.glass-button--qr {
+  background: rgba(155, 89, 182, 0.25);
+  border-color: rgba(155, 89, 182, 0.30);
+}
+
+.glass-button--qr:hover {
+  background: rgba(155, 89, 182, 0.38) !important;
+  border-color: rgba(155, 89, 182, 0.50) !important;
+}
+
+
+/* -- QR Code Modal ---------------------------------------------------------- */
+/*
+  The QR modal uses its own .qr-* namespace to keep it isolated
+  from the .notif-* modal and the .fd-* modal systems.
+
+  Having three modal systems in the same app is common — each one
+  serves a different purpose and may need different visual treatment.
+  Namespacing prevents them from accidentally sharing styles.
+
+  Structure:
+    .qr-overlay     — full-screen dark backdrop
+    .qr-modal       — white card centered on screen
+      .qr-modal__header
+      .qr-modal__title
+      .qr-modal__subtitle
+      .qr-modal__canvas
+      .qr-modal__url
+      .qr-modal__actions
+      .qr-modal__btn (+ --download and --close variants)
+*/
+
+.qr-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 12, 41, 0.65);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-5);
+  box-sizing: border-box;
+  animation: fadeIn 0.18s ease;
+}
+
+.qr-modal {
+  background: var(--bg-paper);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) var(--space-8);
+  max-width: 360px;
+  width: 100%;
+  box-shadow: var(--shadow-strong);
+  border: 1px solid var(--border-paper);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  animation: modalPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.qr-modal__header {
+  width: 100%;
+  /* Full width so the title aligns left, matching the card edge */
+}
+
+.qr-modal__title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1);
+}
+
+.qr-modal__subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+
+  /* Clamp to 1 line so long form titles don't push the QR code
+     off screen. The ellipsis signals the title continues. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+  The canvas element renders the actual QR code.
+  display: block removes the small gap that appears below inline
+  canvas elements — browsers treat inline elements as sitting on
+  a text baseline, leaving space for descenders (g, y, p).
+  Block removes that baseline gap.
+*/
+.qr-modal__canvas {
+  display: block;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-input);
+}
+
+.qr-modal__url {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  /* Mono font makes URLs easier to read — the fixed-width characters
+     make it obvious where words and symbols begin and end */
+  word-break: break-all;
+  /* break-all allows the URL to wrap at any character, preventing
+     it from overflowing the card on long URLs */
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.qr-modal__actions {
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* Base button styles — shared by both action buttons */
+.qr-modal__btn {
+  flex: 1;
+  padding: 10px var(--space-4);
+  font-size: var(--text-sm);
+  font-family: var(--font-base);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: none;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.qr-modal__btn:active {
+  transform: translateY(0) !important;
+}
+
+/* Download — primary action, gets accent color */
+.qr-modal__btn--download {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(108, 99, 255, 0.25);
+}
+
+.qr-modal__btn--download:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(108, 99, 255, 0.30);
+}
+
+/* Close — secondary action, muted appearance */
+.qr-modal__btn--close {
+  background: var(--bg-paper-subtle);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-input);
+}
+
+.qr-modal__btn--close:hover {
+  background: #eeeef8;
+  transform: translateY(-1px);
+}
+
+
+/* -- Section block in question list ----------------------------------------- */
+/*
+  Section blocks appear between groups of questions in the viewer.
+  They use a left accent border (same as question cards) but with
+  a blue-tinted background and different text treatment.
+
+  The original used a hardcoded inline style object:
+    style={{
+      marginBottom: '20px',
+      padding: '14px 20px',
+      background: 'rgba(255, 255, 255, 0.5)',
+      backdropFilter: 'blur(10px)',
+      ...etc
+    }}
+
+  We replace this entire object with one class name.
+*/
+.fv-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: var(--space-6) 0 var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: linear-gradient(
+    to right,
+    rgba(108, 99, 255, 0.14),
+    rgba(108, 99, 255, 0.04)
+  );
+  border: 1.5px solid rgba(108, 99, 255, 0.28);
+  border-radius: var(--radius-md);
+}
+
+.fv-section-block__label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.fv-section-block__title {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.fv-section-block__desc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+
+/* -- Small additions to existing fv-* classes ------------------------------- */
+
+/*
+  Badge row: a flex container for the Required and Condition badges.
+  These were inside an inline-styled div in the original.
+  A dedicated class gives us control over spacing and wrapping.
+*/
+.fv-badge-row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+
+/*
+  Error text inside the paper card (shown when form fails to load).
+  Uses the danger accent color since it represents a failure state.
+*/
+.fv-error-text {
+  color: var(--accent-danger);
+  margin-bottom: var(--space-4);
+  font-weight: 500;
+}
+
+

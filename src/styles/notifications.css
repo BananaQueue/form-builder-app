@@ -1,0 +1,384 @@
+﻿/* ============================================================
+   NOTIFICATION SYSTEM  — Toast & Confirm Modal
+   ============================================================
+
+   ADD THIS BLOCK to index.css.
+   A good place is right before Section 11 (the existing
+   @keyframes toastSlideDown block). You can replace the old
+   Section 11 entirely with this block since it covers the same
+   animations plus the new component styles.
+
+   Two components live here:
+   1. .notif-toast     — the sliding banner at the top of the screen
+   2. .notif-overlay   — the confirm modal overlay
+   3. .notif-modal     — the confirm modal card
+   ============================================================ */
+
+
+/* -- Toast Banner ----------------------------------------------------------- */
+/*
+  The toast is position: fixed, which means it stays in place
+  relative to the VIEWPORT (the browser window), not the page.
+  Even if the user scrolls down 2000px, the toast stays at the top.
+
+  The left: 50% + transform: translateX(-50%) trick horizontally
+  centers an element of unknown width:
+  - left: 50% moves the LEFT EDGE to the center of the screen
+  - translateX(-50%) moves it LEFT by 50% of its OWN width
+  - Result: the element's CENTER is at the screen's center
+
+  This works regardless of how wide the toast text is.
+*/
+.notif-toast {
+  position: fixed;
+  top: var(--space-5);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9000;
+
+  /* Width: fills the screen on mobile (minus 40px total margin),
+     but caps at 480px on desktop */
+  max-width: 480px;
+  width: calc(100% - 40px);
+
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-4);
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  /* The toastSlideDown animation was defined in the original index.css.
+     We keep it exactly as it was — spring easing, drops in from above. */
+  animation: toastSlideDown 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid transparent;
+  /* border: transparent as default, overridden by type variants below */
+}
+
+/* -- Toast type variants ---------------------------------------------------- */
+/*
+  Each type gets its own background and border color.
+  We also apply a left border accent (border-left) that's stronger
+  than the surrounding border — this gives each toast a "color coded"
+  edge that's immediately readable at a glance.
+
+  The background uses a semi-transparent dark color so the page
+  gradient shows through slightly — keeping the glass aesthetic
+  even on the toast.
+
+  Color choices:
+  success ? green  (positive outcome)
+  error   ? red    (something went wrong, needs attention)
+  warning ? amber  (caution, check this)
+  info    ? accent purple (neutral information)
+*/
+.notif-toast--success {
+  background: rgba(0, 40, 30, 0.92);
+  border-color: rgba(0, 200, 150, 0.25);
+  border-left: 3px solid var(--accent-success);
+}
+
+.notif-toast--error {
+  background: rgba(40, 10, 15, 0.92);
+  border-color: rgba(255, 77, 109, 0.25);
+  border-left: 3px solid var(--accent-danger);
+}
+
+.notif-toast--warning {
+  background: rgba(40, 30, 5, 0.92);
+  border-color: rgba(255, 179, 71, 0.25);
+  border-left: 3px solid var(--accent-warning);
+}
+
+.notif-toast--info {
+  background: rgba(20, 15, 50, 0.92);
+  border-color: rgba(108, 99, 255, 0.25);
+  border-left: 3px solid var(--accent);
+}
+
+/* -- Toast inner elements --------------------------------------------------- */
+
+/*
+  The icon circle — a small rounded container that frames the
+  status icon. The background uses the same color as the border
+  at a lower opacity, creating a "tinted ring" effect.
+*/
+.notif-toast__icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Per-type icon tints — each icon ring matches its toast color */
+.notif-toast--success .notif-toast__icon { background: rgba(0, 200, 150, 0.20); }
+.notif-toast--error   .notif-toast__icon { background: rgba(255, 77, 109, 0.20); }
+.notif-toast--warning .notif-toast__icon { background: rgba(255, 179, 71, 0.20); }
+.notif-toast--info    .notif-toast__icon { background: rgba(108, 99, 255, 0.20); }
+
+.notif-toast__message {
+  flex: 1;
+  /* flex: 1 makes this element grow to fill all available horizontal space.
+     This pushes the close button to the far right regardless of message length. */
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/*
+  The × close button.
+  We use a square button (equal width and height) so the click target
+  is large enough to tap comfortably on mobile (minimum 28×28px).
+  The WCAG accessibility guideline recommends at least 44×44px for
+  touch targets, but 28×28px is a practical minimum for secondary actions.
+*/
+.notif-toast__close {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: rgba(255, 255, 255, 0.60);
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 700;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.notif-toast__close:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.90);
+}
+
+
+/* -- Confirm Modal Overlay -------------------------------------------------- */
+/*
+  The overlay covers the ENTIRE screen using position: fixed + inset: 0.
+  inset is shorthand for top, right, bottom, left all set to 0.
+
+  We add backdrop-filter: blur here — this blurs the PAGE CONTENT behind
+  the overlay, making the modal feel more like a floating layer and less
+  like it's stamped on top of the page.
+
+  z-index: 9001 puts it one level above the toast (9000) in case both
+  appear at the same time — the confirm modal should always be on top.
+*/
+.notif-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 12, 41, 0.65);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9001;
+  padding: var(--space-5);
+  box-sizing: border-box;
+  animation: fadeIn 0.20s ease;
+}
+
+
+/* -- Confirm Modal Card ----------------------------------------------------- */
+/*
+  The white card that floats above the overlay.
+  Uses our paper background (near-white) for maximum readability
+  since this contains important decision text.
+
+  max-width: 400px is the sweet spot for a dialog — wide enough
+  to read comfortably, narrow enough to feel focused and intentional.
+*/
+.notif-modal {
+  background: var(--bg-paper);
+  border-radius: var(--radius-md);
+  padding: var(--space-6) var(--space-8);
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-strong);
+  border: 1px solid var(--border-paper);
+  animation: modalPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* -- Modal inner elements --------------------------------------------------- */
+
+/*
+  The icon wrapper: a rounded square with a red tint.
+  This immediately communicates "this is a destructive/dangerous action"
+  before the user reads the text — color and shape front-load the message.
+
+  We use border-radius: var(--radius-md) (10px) rather than 50% (circle)
+  because the square shape reads as more serious and grounded.
+  Circles feel friendlier and less alarming.
+*/
+.notif-modal__icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--accent-danger-soft);
+  border: 1px solid rgba(255, 77, 109, 0.20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.notif-modal__icon {
+  /* The ? character, no additional styles needed —
+     the wrapper handles all the visual treatment */
+}
+
+/*
+  The question message.
+  font-weight: 500 (medium) rather than 400 (regular) because this
+  is the most important text on the screen — it needs to be readable
+  at a glance without being as heavy as a heading.
+*/
+.notif-modal__message {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* -- Modal action buttons --------------------------------------------------- */
+
+.notif-modal__actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* Base styles shared by both buttons */
+.notif-modal__btn {
+  flex: 1;
+  padding: 11px var(--space-4);
+  font-size: var(--text-base);
+  font-family: var(--font-base);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: none;
+  transition:
+    background var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.notif-modal__btn:active {
+  transform: translateY(0) !important;
+  /* !important here overrides the hover translateY(-1px) on click.
+     This ensures both buttons have the same "press down" feel. */
+}
+
+/*
+  Cancel button: low visual weight.
+  It should be visible but not competing with the Confirm button.
+  The subtle background and border make it look "safe" — clicking
+  Cancel won't do anything destructive.
+*/
+.notif-modal__btn--cancel {
+  background: var(--bg-paper-subtle);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-input);
+}
+
+.notif-modal__btn--cancel:hover {
+  background: #eeeef8;
+  transform: translateY(-1px);
+}
+
+/*
+  Confirm button: high visual weight, danger color.
+  It must be immediately obvious this is the "yes, do the thing" button.
+
+  The gradient (red ? slightly lighter red) gives it more depth than
+  a flat color. The colored box-shadow creates a glow that reinforces
+  the danger signal.
+
+  font-weight: 700 (bold) on Confirm vs 600 (semibold) on Cancel
+  adds another layer of visual hierarchy — the heavier weight
+  draws the eye even before color does.
+*/
+.notif-modal__btn--confirm {
+  background: linear-gradient(
+    135deg,
+    var(--accent-danger) 0%,
+    #e8365a 100%
+  );
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(255, 77, 109, 0.25);
+}
+
+.notif-modal__btn--confirm:hover {
+  background: linear-gradient(
+    135deg,
+    var(--accent-danger-hover) 0%,
+    #d42e50 100%
+  );
+  box-shadow: 0 6px 20px rgba(255, 77, 109, 0.35);
+  transform: translateY(-1px);
+}
+
+
+/* -- Keyframe animations ---------------------------------------------------- */
+/*
+  These replace the original @keyframes toastSlideDown, modalPop, and
+  fadeIn that were in the old Section 11 of index.css.
+  The values are identical — we're just keeping them here alongside
+  the components that use them.
+
+  If you're appending this to an existing index.css that already has
+  these @keyframes, remove the old ones to avoid duplication.
+*/
+
+@keyframes toastSlideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+

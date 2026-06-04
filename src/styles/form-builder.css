@@ -1,0 +1,522 @@
+﻿/* ============================================================
+   8. FORM BUILDER PAGE  (.fb-*)
+   ============================================================
+
+   The FormBuilder is the most complex page — it's where admins
+   create and edit forms. It uses the white "paper" card style
+   for its editing zones, keeping the atmosphere dark but making
+   content areas easy to read and interact with.
+   ============================================================ */
+
+.fb-shell {
+  padding: var(--space-5) var(--space-5) var(--space-16);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Each white card zone in the builder */
+.fb-paper {
+  background: var(--bg-paper);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  margin-bottom: var(--space-5);
+}
+
+/* Small uppercase label above each paper card zone */
+.fb-section-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+  margin: 0 0 var(--space-6) 0;
+}
+
+.fb-topbar { display: none; }
+
+.fb-page-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text-on-dark);
+  text-align: center;
+  margin: 0 0 var(--space-2);
+}
+
+.fb-page-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-on-dark-muted);
+  text-align: center;
+  margin: 0 0 var(--space-6);
+}
+
+/* -- Form Fields --------------------------------------------- */
+
+.fb-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.fb-field:last-child {
+  margin-bottom: 0;
+}
+
+.fb-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Shared input/textarea/select base */
+.fb-input,
+.fb-textarea,
+.fb-select {
+  width: 100%;
+  padding: 10px var(--space-4);
+  font-size: var(--text-base);
+  font-family: var(--font-base);
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--text-primary);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.fb-input:hover,
+.fb-textarea:hover,
+.fb-select:hover {
+  border-color: #c5c4e0;
+}
+
+.fb-input:focus,
+.fb-textarea:focus,
+.fb-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+  background: #fdfcff;
+  /* fdfcff is a very slightly purple-tinted white —
+     subtle but ties the focus state back to the accent color */
+}
+
+.fb-textarea {
+  height: 90px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* -- Toggle Row (required checkbox) ------------------------- */
+
+.fb-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 11px var(--space-4);
+  background: var(--bg-paper-subtle);
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  margin-bottom: var(--space-5);
+  transition: border-color var(--transition-fast);
+  user-select: none;
+}
+
+.fb-toggle-row:hover {
+  border-color: #c5c4e0;
+}
+
+.fb-toggle-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  /* accent-color sets the checkbox's checked color to our accent */
+  flex-shrink: 0;
+}
+
+.fb-toggle-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fb-toggle-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* -- Condition Panel ----------------------------------------- */
+
+.fb-condition-panel {
+  background: rgba(255, 179, 71, 0.05);
+  border: 1.5px solid rgba(255, 179, 71, 0.25);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.fb-condition-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: #b38a30;
+  margin: 0 0 var(--space-4);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.fb-condition-hint {
+  font-size: var(--text-sm);
+  color: #a08028;
+  margin: var(--space-3) 0 0;
+}
+
+/* -- Options Panel ------------------------------------------- */
+
+.fb-options-panel {
+  background: rgba(108, 99, 255, 0.04);
+  border: 1.5px solid rgba(108, 99, 255, 0.15);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.fb-options-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 0 var(--space-4);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.fb-add-option-row {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.fb-add-option-row .fb-input {
+  flex: 1;
+  margin: 0;
+}
+
+.fb-option-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.fb-option-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px 12px;
+  background: #fff;
+  border: 1.5px solid rgba(108, 99, 255, 0.20);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.fb-option-pill-remove {
+  background: none;
+  border: none;
+  color: var(--accent-danger);
+  font-size: 1em;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  font-weight: 700;
+  transition: opacity var(--transition-fast);
+}
+
+.fb-option-pill-remove:hover { opacity: 0.7; }
+
+/* -- Section Block Cards -------------------------------------- */
+
+.fb-section-card {
+  background: linear-gradient(
+    to right,
+    rgba(108, 99, 255, 0.14),
+    rgba(108, 99, 255, 0.04)
+  );
+  border: 1.5px solid rgba(108, 99, 255, 0.28);
+  border-radius: var(--radius-md);
+  padding: 10px var(--space-4);
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.fb-section-card-label {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  color: var(--accent);
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+
+.fb-section-card-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fb-btn-section {
+  width: 100%;
+  padding: 11px;
+  background: rgba(108, 99, 255, 0.05);
+  color: var(--accent);
+  border: 1.5px dashed rgba(108, 99, 255, 0.30);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-family: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+  margin-top: var(--space-1);
+}
+
+.fb-btn-section:hover {
+  background: rgba(108, 99, 255, 0.10);
+  border-color: var(--accent);
+}
+
+/* -- Preview Question Cards ---------------------------------- */
+
+.fb-preview-card {
+  background: var(--bg-paper-subtle);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: var(--space-4) var(--space-4);
+  margin-bottom: var(--space-3);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  border-top: 1px solid var(--border-paper);
+  border-right: 1px solid var(--border-paper);
+  border-bottom: 1px solid var(--border-paper);
+  transition: box-shadow var(--transition-fast);
+}
+
+.fb-preview-card.fb-preview-card--dragging {
+  box-shadow: var(--shadow-medium);
+  border-left-color: var(--accent-hover);
+  z-index: 2;
+  background: #fff;
+}
+
+.fb-drag-handle {
+  cursor: grab;
+  touch-action: none;
+  align-self: center;
+  flex-shrink: 0;
+  background: var(--bg-paper-subtle);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  padding: 7px 5px;
+  font-size: 13px;
+  line-height: 1;
+  user-select: none;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.fb-drag-handle:hover {
+  background: #eeeef8;
+  color: var(--text-secondary);
+}
+
+.fb-drag-handle:active { cursor: grabbing; }
+
+.fb-preview-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.fb-preview-question {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fb-preview-meta {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.fb-preview-condition {
+  font-size: var(--text-xs);
+  color: #a08028;
+  background: rgba(255, 179, 71, 0.08);
+  border: 1px solid rgba(255, 179, 71, 0.20);
+  border-radius: var(--radius-sm);
+  padding: 3px 10px;
+  display: inline-block;
+  margin-top: var(--space-1);
+}
+
+/* -- Buttons -------------------------------------------------- */
+
+.fb-btn-add {
+  width: 100%;
+  padding: 11px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-family: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+  margin-top: var(--space-1);
+}
+
+.fb-btn-add:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.fb-btn-add:active { transform: translateY(0); }
+
+/* -- Save Panel ---------------------------------------------- */
+
+.fb-save-panel {
+  background: rgba(0, 200, 150, 0.06);
+  border: 1.5px solid rgba(0, 200, 150, 0.20);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8) var(--space-8);
+  text-align: center;
+  margin-bottom: var(--space-5);
+}
+
+.fb-save-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-on-dark);
+  margin: 0 0 var(--space-1);
+}
+
+.fb-save-count {
+  font-size: var(--text-sm);
+  color: var(--text-on-dark-muted);
+  margin: 0 0 var(--space-5);
+}
+
+.fb-btn-save {
+  padding: 12px var(--space-10);
+  background: var(--accent-success);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-family: var(--font-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.fb-btn-save:hover {
+  background: var(--accent-success-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 200, 150, 0.30);
+}
+
+.fb-btn-save:active { transform: translateY(0); }
+
+/* -- Question Action Buttons (Edit/Delete on preview cards) -- */
+
+/* Shared resets */
+.fb-action-soft,
+.fb-action-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: var(--font-base);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: none;
+}
+
+/* Desktop: soft-filled with icon + text */
+.fb-action-soft {
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: var(--radius-sm);
+}
+
+.fb-action-soft--edit {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.fb-action-soft--edit:hover {
+  background: rgba(108, 99, 255, 0.18);
+}
+
+.fb-action-soft--delete {
+  background: var(--accent-danger-soft);
+  color: var(--accent-danger);
+}
+.fb-action-soft--delete:hover {
+  background: rgba(255, 77, 109, 0.16);
+}
+
+/* Mobile: icon-only ghost buttons */
+.fb-action-ghost {
+  width: 30px;
+  height: 30px;
+  font-size: 15px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--border-input);
+  color: var(--text-faint);
+}
+
+.fb-action-ghost--edit:hover {
+  background: var(--accent-soft);
+  border-color: rgba(108, 99, 255, 0.30);
+  color: var(--accent);
+}
+
+.fb-action-ghost--delete:hover {
+  background: var(--accent-danger-soft);
+  border-color: rgba(255, 77, 109, 0.30);
+  color: var(--accent-danger);
+}
+
+/* Responsive visibility */
+@media (min-width: 768px) { .fb-action-ghost { display: none; } }
+@media (max-width: 767px) { .fb-action-soft  { display: none; } }
+
+
