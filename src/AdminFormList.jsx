@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { apiUrl } from "./apiBase";
+import { apiUrl, csrfHeaders } from "./apiBase";
 import DeleteFormModal from "./DeleteFormModal";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -53,8 +53,8 @@ function ThreeDotMenu({ form, onView, onEdit, onViewResponses, onDelete }) {
       // left = where the button's right edge is, then shift left
       //        by a fixed width so it doesn't fly off screen
       setMenuPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.right + window.scrollX,
+        top: rect.bottom + 4,
+        left: rect.right,
       });
     }
     setOpen((prev) => !prev);
@@ -90,8 +90,15 @@ function ThreeDotMenu({ form, onView, onEdit, onViewResponses, onDelete }) {
     function handleScroll() {
       setOpen(false);
     }
+    const scrollContainer = buttonRef.current?.closest(".theme-scope") ?? window;
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll, { passive: true });
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
   }, [open]);
 
   // The dropdown itself. We render this via createPortal, which
@@ -109,11 +116,11 @@ function ThreeDotMenu({ form, onView, onEdit, onViewResponses, onDelete }) {
             // viewport, not any parent element. This is what lets us
             // use getBoundingClientRect() values directly.
             position: "fixed",
-            top: menuPosition.top - window.scrollY,
+            top: menuPosition.top,
             // We shift left by the dropdown's width (150px min-width)
             // so the right edge of the dropdown aligns with the
             // right edge of the button, rather than overflowing right.
-            left: menuPosition.left - 150,
+            left: Math.max(8, menuPosition.left - 150),
             // z-index here competes at the document root level,
             // not inside any stacking context — so 9999 truly wins.
             zIndex: 9999,
@@ -389,7 +396,7 @@ function AdminFormList({
     try {
       const res = await fetch(apiUrl("/delete_form.php"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           form_id: formPendingDelete.id,
           deletion_reason: deletionReason,

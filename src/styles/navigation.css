@@ -226,7 +226,7 @@
   min-width: 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .glass-nav {
     position: static;
     top: auto;
@@ -263,6 +263,25 @@
   }
 
   .glass-nav.glass-nav--sticky-active.glass-nav--actions-migrated .nav-actions .glass-button span {
+    display: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .glass-nav.glass-nav--actions-migrated .nav-actions .action-buttons {
+    gap: var(--space-1);
+  }
+
+  .glass-nav.glass-nav--actions-migrated .nav-actions .glass-button {
+    width: 44px;
+    min-width: 44px;
+    height: 40px;
+    padding: var(--space-2);
+    justify-content: center;
+    font-size: var(--text-sm);
+  }
+
+  .glass-nav.glass-nav--actions-migrated .nav-actions .glass-button span {
     display: none;
   }
 }

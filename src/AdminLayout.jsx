@@ -68,6 +68,7 @@ function AdminLayout({
   const [viewingResponseId, setViewingResponseId] = useState(null);
 
   const location = useLocation();
+  const layoutRef = useRef(null);
   const navRef = useRef(null);
   const [navOverContent, setNavOverContent] = useState(false);
   const [navStickyActive, setNavStickyActive] = useState(false);
@@ -76,11 +77,31 @@ function AdminLayout({
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    const scrollContainer = document.querySelector(".theme-scope");
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname]);
 
   useEffect(() => {
     let frame = null;
+    const overlapTargetSelector = [
+      ".fv-paper",
+      ".fb-paper",
+      ".fb-save-panel",
+      ".glass-card",
+      ".afl-metric-card",
+      ".afl-table-wrap",
+      ".rl-response-row",
+      ".rv-answer-card",
+      ".bs-card",
+      ".um-card",
+      ".nc-card",
+      ".nc-empty",
+      ".nc-filters",
+    ].join(", ");
+
     function check() {
       if (!navRef.current) {
         setNavOverContent(false);
@@ -90,9 +111,7 @@ function AdminLayout({
 
       const navRect = navRef.current.getBoundingClientRect();
       const stickyTop = 16;
-      const overlapTargets = document.querySelectorAll(
-        ".fv-paper, .fv-shell, .fb-shell, .form-list-shell, .afl-shell, .rl-shell, .rv-shell, .um-shell, .bs-shell, .nc-shell"
-      );
+      const overlapTargets = document.querySelectorAll(overlapTargetSelector);
 
       const isOverContent = Array.from(overlapTargets).some((target) => {
         const targetRect = target.getBoundingClientRect();
@@ -119,12 +138,32 @@ function AdminLayout({
         check();
       });
     }
-    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    const scrollContainer = navRef.current?.closest(".theme-scope") ?? window;
+    let resizeObserver = null;
+    let mutationObserver = null;
+
+    scrollContainer.addEventListener("scroll", onScrollOrResize, { passive: true });
     window.addEventListener("resize", check, { passive: true });
+
+    if (layoutRef.current && "ResizeObserver" in window) {
+      resizeObserver = new ResizeObserver(onScrollOrResize);
+      resizeObserver.observe(layoutRef.current);
+    }
+
+    if (layoutRef.current && "MutationObserver" in window) {
+      mutationObserver = new MutationObserver(onScrollOrResize);
+      mutationObserver.observe(layoutRef.current, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
     check();
     return () => {
-      window.removeEventListener("scroll", onScrollOrResize);
+      scrollContainer.removeEventListener("scroll", onScrollOrResize);
       window.removeEventListener("resize", check);
+      resizeObserver?.disconnect();
+      mutationObserver?.disconnect();
       if (frame !== null) window.cancelAnimationFrame(frame);
     };
   }, [location.pathname]);
@@ -242,7 +281,7 @@ function AdminLayout({
   }
 
   return (
-    <div style={{ paddingBottom: "40px" }}>
+    <div ref={layoutRef} style={{ paddingBottom: "40px" }}>
       <nav
         ref={navRef}
         className={`glass-nav${navOverContent ? " glass-nav--over-form" : ""}${navStickyActive ? " glass-nav--sticky-active" : ""}${actionsInNavbar ? " glass-nav--actions-migrated" : ""}`}
@@ -352,7 +391,6 @@ function AdminLayout({
                 actionsRef={formActionsRef}
                 onActionBarOverlapChange={setActionsInNavbar}
                 actionsInNavbar={actionsInNavbar}
-                navStickyActive={navStickyActive}
                 isSuperAdmin={isSuperAdmin}
               />
             ) : (

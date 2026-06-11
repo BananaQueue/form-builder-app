@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { apiUrl } from "./apiBase";
+import { apiUrl, csrfHeaders } from "./apiBase";
 
 function formatDateTime(value) {
   if (!value) return "—";
@@ -58,7 +58,7 @@ export default function NotificationGate({ showToast, onComplete }) {
       const res = await fetch(apiUrl("/acknowledge_notification.php"), {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ notification_id: current.id }),
       });
       const data = await res.json();

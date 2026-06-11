@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { apiUrl } from "./apiBase";
+import { apiUrl, csrfHeaders } from "./apiBase";
 
 function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConfirm, scopedUserId = null, isSuperAdmin = false }) {
   const [forms, setForms]                   = useState([]);
@@ -73,7 +73,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
         try {
           const res = await fetch(apiUrl("/delete_form.php"), {
             method:  "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: csrfHeaders({ "Content-Type": "application/json" }),
             body:    JSON.stringify({ form_id: formId }),
             credentials: "include",
           });

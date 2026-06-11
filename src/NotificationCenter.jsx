@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { apiUrl } from "./apiBase";
+import { apiUrl, csrfHeaders } from "./apiBase";
 
 const FILTERS = [
   { id: "all", label: "All" },
@@ -52,7 +52,7 @@ export default function NotificationCenter({ showToast }) {
       const res = await fetch(apiUrl("/mark_notification_read.php"), {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ notification_id: notificationId }),
       });
       const data = await res.json();

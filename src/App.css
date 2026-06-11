@@ -37,6 +37,26 @@
   padding: 2em;
 }
 
+.theme-scope {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  padding: var(--space-8);
+  background: var(--bg-page);
+  background-attachment: fixed;
+  color-scheme: dark;
+}
+
+[data-theme="light"].theme-scope {
+  color-scheme: light;
+}
+
+.theme-scope > * {
+  max-width: 1380px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* Public form page layout: full-width on mobile, capped with min-width on larger screens */
 .public-main {
   width: 100%;

@@ -11,7 +11,6 @@ function FormViewer({
   actionsRef,
   onActionBarOverlapChange,
   actionsInNavbar,
-  navStickyActive = false,
   isSuperAdmin = false
 }) {
   const [form, setForm]           = useState(null);
@@ -161,30 +160,42 @@ function FormViewer({
     const nav = document.querySelector('.glass-nav');
     if (!nav) return;
 
-    let observer = null;
+    let frame = null;
+    const scrollContainer = nav.closest(".theme-scope") ?? window;
 
-    const observerOptions = () => ({
-      root: null,
-      rootMargin: `-${nav.getBoundingClientRect().height}px 0px 0px 0px`,
-      threshold: [0],
-    });
+    function checkActionBarPosition() {
+      const navCanStick = window.getComputedStyle(nav).position === "sticky";
+      if (!actionBarRef.current || !navCanStick) {
+        onActionBarOverlapChange(false);
+        return;
+      }
 
-    function observeActionBar() {
-      if (observer) observer.disconnect();
-      observer = new IntersectionObserver(([entry]) => {
-        onActionBarOverlapChange(!entry.isIntersecting && navStickyActive);
-      }, observerOptions());
-      observer.observe(actionBarRef.current);
+      const navRect = nav.getBoundingClientRect();
+      const actionBarRect = actionBarRef.current.getBoundingClientRect();
+      const hasNavReachedActionBar = actionBarRect.top <= navRect.bottom;
+
+      onActionBarOverlapChange(hasNavReachedActionBar);
     }
 
-    observeActionBar();
-    window.addEventListener('resize', observeActionBar);
+    function onScrollOrResize() {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        checkActionBarPosition();
+      });
+    }
+
+    scrollContainer.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize, { passive: true });
+    checkActionBarPosition();
 
     return () => {
-      window.removeEventListener('resize', observeActionBar);
-      if (observer) observer.disconnect();
+      scrollContainer.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      onActionBarOverlapChange(false);
     };
-  }, [form, onActionBarOverlapChange, isMobile, navStickyActive]);
+  }, [form, onActionBarOverlapChange, isMobile]);
 
   useEffect(() => {
     if (!showQrModal) return undefined;
@@ -320,21 +331,21 @@ function FormViewer({
         </div>
       )}
 
-      <div ref={actionBarRef} className="fv-action-bar">
-        {!actionsInNavbar && (
-          <>
-            {isSuperAdmin && (
-              <button className="glass-button glass-button--back" onClick={handleBackNavigation}>
-                ← Back
-              </button>
-            )}
-            <ActionButtons
-              onFillOut={() => window.open(buildPublicUrl(), "_blank", "noopener,noreferrer")}
-              onCopyLink={copyPublicLink}
-              onShowQr={() => setShowQrModal(true)}
-            />
-          </>
+      <div
+        ref={actionBarRef}
+        className={`fv-action-bar${actionsInNavbar ? " fv-action-bar--placeholder" : ""}`}
+        aria-hidden={actionsInNavbar ? "true" : undefined}
+      >
+        {isSuperAdmin && (
+          <button className="glass-button glass-button--back" onClick={handleBackNavigation}>
+            ← Back
+          </button>
         )}
+        <ActionButtons
+          onFillOut={() => window.open(buildPublicUrl(), "_blank", "noopener,noreferrer")}
+          onCopyLink={copyPublicLink}
+          onShowQr={() => setShowQrModal(true)}
+        />
       </div>
 
       <div className="fv-paper">

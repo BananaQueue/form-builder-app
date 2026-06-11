@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { apiUrl } from './apiBase'
+import { apiUrl, csrfHeaders } from './apiBase'
 import FormList from './FormList'
 import PasswordInput from './PasswordInput'
 
@@ -64,7 +64,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
       const res    = await fetch(apiUrl('/create_user_api.php'), {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ username: newUsername.trim(), password: newPassword, role: newRole }),
       })
       const result = await res.json()
@@ -97,7 +97,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
           const res    = await fetch(apiUrl('/delete_user.php'), {
             method: 'POST',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
+            headers: csrfHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ user_id: user.id }),
           })
           const result = await res.json()
@@ -122,7 +122,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
       const res    = await fetch(apiUrl('/change_password.php'), {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ user_id: pwModal.id, new_password: newPw }),
       })
       const result = await res.json()

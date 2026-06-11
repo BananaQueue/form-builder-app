@@ -28,7 +28,7 @@ import NotificationHost from './NotificationHost'
 import NotificationGate from './NotificationGate'
 import { useNotification } from './useNotification'
 import { useTheme } from './useTheme'             // NEW
-import { apiUrl } from './apiBase'
+import { apiUrl, csrfHeaders, setCsrfToken } from './apiBase'
 import './App.css'
 
 function isIosSafari() {
@@ -99,12 +99,18 @@ function App() {
   useEffect(() => {
     fetch(apiUrl('/check_session.php'), { credentials: 'include' })
       .then(r => r.json())
-      .then(data => setAuthUser(
-        data.logged_in
-          ? { username: data.username, role: data.role, userId: data.user_id }
-          : false
-      ))
-      .catch(() => setAuthUser(false))
+      .then(data => {
+        setCsrfToken(data.csrf_token)
+        setAuthUser(
+          data.logged_in
+            ? { username: data.username, role: data.role, userId: data.user_id }
+            : false
+        )
+      })
+      .catch(() => {
+        setCsrfToken(null)
+        setAuthUser(false)
+      })
   }, [])
 
   // ── iOS Safari viewport zoom lock (unchanged) ─────────────────────────
@@ -158,9 +164,11 @@ function App() {
       try {
         await fetch(apiUrl('/logout.php'), {
           method: 'POST',
+          headers: csrfHeaders(),
           credentials: 'include',
         })
       } finally {
+        setCsrfToken(null)
         setNotificationGateComplete(false)
         setAuthUser(false)
         setAuthTransition('idle')
@@ -176,6 +184,8 @@ function App() {
     authUser &&
     authUser.role !== 'super_admin' &&
     !notificationGateComplete
+
+  const themedStageClass = `theme-scope auth-stage ${authTransition === 'signingOut' ? 'auth-stage--leaving' : ''}`.trim()
 
   if (authUser === null) {
     return (
@@ -198,7 +208,11 @@ function App() {
         {/* Public route — theme applies automatically via CSS variables */}
         <Route
           path="/form/:formId"
-          element={<PublicFormPage showToast={showToast} />}
+          element={
+            <div className="theme-scope" data-theme={theme}>
+              <PublicFormPage showToast={showToast} />
+            </div>
+          }
         />
 
         {/* Admin routes — pass theme and toggleTheme for the nav toggle button */}
@@ -207,11 +221,13 @@ function App() {
           element={
             authUser
               ? needsNotificationGate
-                ? <NotificationGate
-                    showToast={showToast}
-                    onComplete={() => setNotificationGateComplete(true)}
-                  />
-                : <div className={`auth-stage ${authTransition === 'signingOut' ? 'auth-stage--leaving' : ''}`.trim()}>
+                ? <div className="theme-scope" data-theme={theme}>
+                    <NotificationGate
+                      showToast={showToast}
+                      onComplete={() => setNotificationGateComplete(true)}
+                    />
+                  </div>
+                : <div className={themedStageClass} data-theme={theme}>
                   <AdminLayout
                     onLogout={handleLogout}
                     currentUser={authUser.username}

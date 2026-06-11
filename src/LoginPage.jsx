@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { apiUrl } from './apiBase'
+import { apiUrl, setCsrfToken } from './apiBase'
 import PasswordInput from './PasswordInput'
 
 function LoginPage({ onLoginSuccess }) {
@@ -32,6 +32,7 @@ function LoginPage({ onLoginSuccess }) {
       const result = await response.json()
 
       if (result.success) {
+        setCsrfToken(result.csrf_token)
         setLeaving(true)
         window.clearTimeout(loginTimerRef.current)
         loginTimerRef.current = window.setTimeout(() => {

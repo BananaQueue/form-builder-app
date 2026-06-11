@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { apiUrl } from "./apiBase";
+import { apiUrl, csrfHeaders } from "./apiBase";
 import { isOrderValidForConditions } from "./questionOrder";
 import { useIsMobile } from "./useIsMobile";
 
@@ -1429,7 +1429,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
 
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         credentials: "include",
         body: JSON.stringify(formData),
       });

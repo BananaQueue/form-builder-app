@@ -118,8 +118,9 @@ export function useTheme() {
   // clicks the button). useEffect with [theme] guarantees it runs
   // on mount and on every change.
   useEffect(() => {
-    // Apply to the DOM
-    document.documentElement.dataset.theme = theme
+    // The active route owns the data-theme scope so unauthenticated screens
+    // like LoginPage can stay visually independent.
+    delete document.documentElement.dataset.theme
 
     // Save to localStorage for persistence
     // We do this in useEffect rather than in toggleTheme() so that

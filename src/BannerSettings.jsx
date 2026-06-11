@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import ReactCrop from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { apiUrl } from './apiBase'
+import { apiUrl, csrfHeaders } from './apiBase'
 
 function BannerSettings({ showToast }) {
   const [file, setFile] = useState(null)
@@ -100,6 +100,7 @@ function BannerSettings({ showToast }) {
       formData.append('banner', file)
       const response = await fetch(apiUrl('/upload_banner.php'), {
         method: 'POST',
+        headers: csrfHeaders(),
         credentials: 'include',
         body: formData,
       })
@@ -128,6 +129,7 @@ function BannerSettings({ showToast }) {
     try {
       const response = await fetch(apiUrl('/remove_banner.php'), {
         method: 'POST',
+        headers: csrfHeaders(),
         credentials: 'include',
       })
       const result = await response.json()
