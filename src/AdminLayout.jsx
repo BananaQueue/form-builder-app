@@ -49,6 +49,7 @@ import { useLocation } from "react-router-dom";
 import AdminFormList from "./AdminFormList";
 import ThemeToggle from "./ThemeToggle";
 import NotificationCenter from "./NotificationCenter";
+import AuditLog from "./AuditLog";
 
 function AdminLayout({
   onLogout,
@@ -97,6 +98,7 @@ function AdminLayout({
       ".rv-answer-card",
       ".bs-card",
       ".um-card",
+      ".al-table-wrap",
       ".nc-card",
       ".nc-empty",
       ".nc-filters",
@@ -313,6 +315,13 @@ function AdminLayout({
               >
                 Users
               </button>
+
+              <button
+                onClick={() => navigate("/audit-logs")}
+                className={navButtonClass("/audit-logs")}
+              >
+                Audit Logs
+              </button>
             </>
           )}
         </div>
@@ -482,6 +491,17 @@ function AdminLayout({
                 onViewResponses={handleViewResponses}
                 isSuperAdmin={isSuperAdmin}
               />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
+          path="/audit-logs"
+          element={
+            isSuperAdmin ? (
+              <AuditLog showToast={showToast} />
             ) : (
               <Navigate to="/" />
             )

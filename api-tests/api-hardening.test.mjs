@@ -62,6 +62,7 @@ const superAdminEndpoints = [
   'create_user_api.php',
   'delete_user.php',
   'get_all_forms.php',
+  'get_audit_logs.php',
   'get_users.php',
 ];
 
@@ -152,6 +153,8 @@ test('committed schema dump excludes production-like data and password hashes', 
 
 test('privileged and sensitive actions write audit log entries', () => {
   const auditedEndpoints = {
+    'login.php': 'USER_LOGIN',
+    'logout.php': 'USER_LOGOUT',
     'create_user_api.php': 'USER_CREATED',
     'change_password.php': 'USER_PASSWORD_CHANGED',
     'delete_user.php': 'USER_DELETED',

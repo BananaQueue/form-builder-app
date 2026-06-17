@@ -14,9 +14,8 @@
 // App.jsx is the root component, so it runs first. useTheme() applies
 // the theme to document.documentElement immediately via its useEffect.
 //
-// Also: the theme toggle button is only visible in the admin layout,
-// but we still initialize the theme here at the root level so the
-// public form page (/form/:id) also respects the saved theme.
+// The public form page (/form/:id) uses the browser/OS color scheme
+// directly, so it is not affected by the admin theme toggle.
 // ─────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef } from 'react'
@@ -27,7 +26,7 @@ import LoginPage from './LoginPage'
 import NotificationHost from './NotificationHost'
 import NotificationGate from './NotificationGate'
 import { useNotification } from './useNotification'
-import { useTheme } from './useTheme'             // NEW
+import { useSystemTheme, useTheme } from './useTheme'             // NEW
 import { apiUrl, csrfHeaders, setCsrfToken } from './apiBase'
 import './App.css'
 
@@ -94,6 +93,7 @@ function App() {
   // We only need to pass theme and toggleTheme to AdminLayout because
   // that's the only place the toggle button is rendered (in the nav bar).
   const { theme, toggleTheme } = useTheme()
+  const publicTheme = useSystemTheme()
 
   // ── Session check (unchanged) ─────────────────────────────────────────
   useEffect(() => {
@@ -209,7 +209,7 @@ function App() {
         <Route
           path="/form/:formId"
           element={
-            <div className="theme-scope" data-theme={theme}>
+            <div className="theme-scope" data-theme={publicTheme}>
               <PublicFormPage showToast={showToast} />
             </div>
           }

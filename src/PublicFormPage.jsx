@@ -7,7 +7,6 @@
 //   was inside the if(isMobile) branch (that was a React rules violation —
 //   you can't call hooks conditionally or inside branches)
 
-import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import FormDisplay from './FormDisplay'
 import { useIsMobile } from './useIsMobile.js'
@@ -16,26 +15,10 @@ function PublicFormPage({ showToast }) {
   const { formId } = useParams()
   const isMobile = useIsMobile()
 
-  useEffect(() => {
-    if (isMobile) {
-      document.body.style.background = '#ffffff'
-    }
-    return () => {
-      document.body.style.background = ''
-    }
-  }, [isMobile])
-
   if (isMobile) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: '#ffffff',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <div style={{ flex: 1 }}>
+      <div className="public-form-page public-form-page--mobile">
+        <div className="public-form-page__content">
           <FormDisplay formCode={formId} isMobile={true} showToast={showToast} />
         </div>
       </div>
@@ -43,42 +26,17 @@ function PublicFormPage({ showToast }) {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        padding: '28px 16px 40px',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+    <div className="public-form-page">
       <main className="public-main">
-        <div
-          style={{
-            width: '100%',
-            borderRadius: '18px',
-            background: 'rgb(255, 250, 245)',
-            border: '1px solid rgba(255,255,255,0.6)',
-            boxShadow: '0 18px 60px rgba(0,0,0,0.22)',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ padding: '18px 14px', color: '#333' }}>
+        <div className="public-form-card">
+          <div className="public-form-card__inner">
             <FormDisplay formCode={formId} isMobile={false} showToast={showToast} />
           </div>
         </div>
       </main>
 
-      <footer
-        style={{
-          textAlign: 'center',
-          marginTop: '16px',
-          color: 'rgba(255,255,255,0.88)',
-          fontSize: '13px',
-        }}
-      >
-        <div style={{ opacity: 0.9, color: '#c7c5c5' }}>
-          Powered by Form Builder System
-        </div>
+      <footer className="public-form-footer">
+        Powered by Form Builder System
       </footer>
     </div>
   )

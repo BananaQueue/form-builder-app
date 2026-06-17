@@ -742,6 +742,85 @@
 }
 
 
+/* -- Audit Logs (.al-*) ---------------------------------------------------- */
+
+[data-theme="light"] .al-title {
+  text-shadow: none;
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .al-subtitle {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .al-search-input {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: var(--border-glass);
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .al-search-input:focus {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+[data-theme="light"] .al-search-clear {
+  color: var(--text-on-dark-muted);
+}
+
+[data-theme="light"] .al-table-wrap {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-theme="light"] .al-table thead tr {
+  background: rgba(15, 23, 42, 0.03);
+  border-bottom-color: rgba(15, 23, 42, 0.10);
+}
+
+[data-theme="light"] .al-table th {
+  color: var(--text-muted);
+}
+
+[data-theme="light"] .al-table td,
+[data-theme="light"] .al-actor,
+[data-theme="light"] .al-entity-label,
+[data-theme="light"] .al-action-badge {
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .al-table td {
+  border-bottom-color: rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="light"] .al-tr:hover {
+  background: rgba(108, 99, 255, 0.03);
+}
+
+[data-theme="light"] .al-muted,
+[data-theme="light"] .al-td-date,
+[data-theme="light"] .al-td-ip,
+[data-theme="light"] .al-results-count {
+  color: var(--text-on-dark-muted) !important;
+}
+
+[data-theme="light"] .al-detail-pill {
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--text-on-dark-deaf);
+}
+
+[data-theme="light"] .al-page-btn {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: var(--text-on-dark);
+}
+
+[data-theme="light"] .al-page-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(15, 23, 42, 0.20);
+}
+
+
 /* -- User Management (.um-*) ---------------------------------------------- */
 
 [data-theme="light"] .um-heading {
