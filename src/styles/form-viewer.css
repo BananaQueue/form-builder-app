@@ -281,6 +281,22 @@
   border-color: rgba(155, 89, 182, 0.50) !important;
 }
 
+.glass-button--duplicate {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.glass-button--duplicate:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.38) !important;
+  border-color: rgba(245, 158, 11, 0.55) !important;
+}
+
+.glass-button--duplicate:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
 
 /* -- QR Code Modal ---------------------------------------------------------- */
 /*

@@ -28,12 +28,70 @@ function parseMetadata(value) {
   }
 }
 
+function formatMetadataKey(key) {
+  return String(key || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function formatMetadataValue(value) {
+  if (Array.isArray(value)) return value.join('; ')
+  if (value && typeof value === 'object') return JSON.stringify(value)
+  return String(value)
+}
+
+function getChanges(metadata) {
+  return Array.isArray(metadata?.changes)
+    ? metadata.changes.map((change) => String(change)).filter(Boolean)
+    : []
+}
+
+function AuditMetadataDetails({ metadata, expanded, onToggle }) {
+  if (!metadata) {
+    return <span className="al-muted">No details</span>
+  }
+
+  const changes = getChanges(metadata)
+  const otherEntries = Object.entries(metadata).filter(([key]) => key !== 'changes')
+
+  return (
+    <div className="al-detail-stack">
+      {otherEntries.map(([key, value]) => (
+        <span key={key} className="al-detail-pill">
+          {formatMetadataKey(key)}: {formatMetadataValue(value)}
+        </span>
+      ))}
+
+      {changes.length > 0 && (
+        <div className="al-change-summary">
+          <span className="al-detail-pill al-detail-pill--summary">
+            Changes: {changes.length === 1 ? changes[0] : `${changes.length} changes`}
+          </span>
+          {changes.length > 1 && (
+            <button className="al-detail-toggle" type="button" onClick={onToggle}>
+              {expanded ? 'Hide details' : 'Show details'}
+            </button>
+          )}
+          {expanded && changes.length > 1 && (
+            <ul className="al-change-list">
+              {changes.map((change, index) => (
+                <li key={`${change}-${index}`}>{change}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AuditLog({ showToast }) {
   const [logs, setLogs] = useState([])
   const [actions, setActions] = useState([])
   const [search, setSearch] = useState('')
   const [action, setAction] = useState('')
   const [page, setPage] = useState(1)
+  const [expandedLogIds, setExpandedLogIds] = useState(() => new Set())
   const [pagination, setPagination] = useState({
     page: 1,
     page_size: PAGE_SIZE,
@@ -95,6 +153,18 @@ function AuditLog({ showToast }) {
   function handleActionChange(event) {
     setAction(event.target.value)
     setPage(1)
+  }
+
+  function toggleLogDetails(logId) {
+    setExpandedLogIds((current) => {
+      const next = new Set(current)
+      if (next.has(logId)) {
+        next.delete(logId)
+      } else {
+        next.add(logId)
+      }
+      return next
+    })
   }
 
   const totalPages = Math.max(1, Number(pagination.total_pages) || 1)
@@ -159,6 +229,7 @@ function AuditLog({ showToast }) {
             ) : (
               logs.map((log) => {
                 const metadata = parseMetadata(log.metadata)
+                const isExpanded = expandedLogIds.has(log.id)
 
                 return (
                   <tr key={log.id} className="al-tr">
@@ -177,15 +248,11 @@ function AuditLog({ showToast }) {
                       </span>
                     </td>
                     <td className="al-td-details">
-                      {metadata ? (
-                        Object.entries(metadata).slice(0, 3).map(([key, value]) => (
-                          <span key={key} className="al-detail-pill">
-                            {key}: {String(value)}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="al-muted">No details</span>
-                      )}
+                      <AuditMetadataDetails
+                        metadata={metadata}
+                        expanded={isExpanded}
+                        onToggle={() => toggleLogDetails(log.id)}
+                      />
                     </td>
                     <td className="al-td-ip">{log.ip_address || 'unknown'}</td>
                   </tr>

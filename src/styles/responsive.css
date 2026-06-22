@@ -323,9 +323,7 @@
   }
 
   /* -- Nav action buttons: show emoji only, drop label text ----- */
-  .nav-actions .glass-button--fill  span,
-  .nav-actions .glass-button--share span,
-  .nav-actions .glass-button--qr   span {
+  .nav-actions .action-button-label {
     display: none;
   }
 

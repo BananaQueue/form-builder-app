@@ -98,6 +98,12 @@
   color: #6d3597;
 }
 
+[data-theme="light"] .nav-actions .glass-button--duplicate {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.38);
+  color: #925f05;
+}
+
 [data-theme="light"] .nav-actions-divider {
   background: rgba(15, 23, 42, 0.15);
 }
@@ -252,6 +258,17 @@
 [data-theme="light"] .glass-button--qr:hover {
   background: rgba(140, 70, 175, 0.20) !important;
   border-color: rgba(140, 70, 175, 0.45) !important;
+}
+
+[data-theme="light"] .glass-button--duplicate {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.32);
+  color: #925f05;
+}
+
+[data-theme="light"] .glass-button--duplicate:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.24) !important;
+  border-color: rgba(245, 158, 11, 0.48) !important;
 }
 
 /* QR modal — paper background already works, just fix the overlay */

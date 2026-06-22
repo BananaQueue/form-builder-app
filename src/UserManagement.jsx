@@ -4,7 +4,7 @@ import { apiUrl, csrfHeaders } from './apiBase'
 import FormList from './FormList'
 import PasswordInput from './PasswordInput'
 
-function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onViewResponses, isSuperAdmin = false }) {
+function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onViewResponses, isSuperAdmin = false, currentUser = '' }) {
 
   // ── User list state ────────────────────────────────────────────────────────
   const [users, setUsers]       = useState([])
@@ -85,13 +85,14 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
   }
 
   function handleDeleteUser(user) {
-    if (user.role === 'super_admin') {
-      showToast('Super Admin accounts cannot be deleted through the UI.', 'warning')
+    if (user.username === currentUser) {
+      showToast('You cannot delete your own account.', 'warning')
       return
     }
 
+    const roleLabel = user.role === 'super_admin' ? 'Super Admin' : 'user'
     showConfirm(
-      `Delete "${user.username}"? Their forms will remain in the database unassigned.`,
+      `Delete ${roleLabel} "${user.username}"? Their forms will remain in the database unassigned.`,
       async () => {
         try {
           const res    = await fetch(apiUrl('/delete_user.php'), {
@@ -286,7 +287,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
                         >
                           Change Password
                         </button>
-                        {user.role !== 'super_admin' && (
+                        {user.username !== currentUser && (
                           <button
                             className="um-action-btn um-action-btn--delete"
                             onClick={() => handleDeleteUser(user)}

@@ -115,6 +115,16 @@
   border-color: rgba(155, 89, 182, 0.80) !important;
 }
 
+.nav-actions .glass-button--duplicate {
+  background: rgba(245, 158, 11, 0.45);
+  border-color: rgba(245, 158, 11, 0.65);
+  color: #fff4d6;
+}
+.nav-actions .glass-button--duplicate:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.60) !important;
+  border-color: rgba(245, 158, 11, 0.80) !important;
+}
+
 /* The "My Forms" / "Create New Form" / "Settings" buttons */
 .glass-button {
   display: inline-flex;
@@ -262,7 +272,7 @@
     font-size: var(--text-xs);
   }
 
-  .glass-nav.glass-nav--sticky-active.glass-nav--actions-migrated .nav-actions .glass-button span {
+  .glass-nav.glass-nav--sticky-active.glass-nav--actions-migrated .nav-actions .action-button-label {
     display: none;
   }
 }
@@ -281,7 +291,7 @@
     font-size: var(--text-sm);
   }
 
-  .glass-nav.glass-nav--actions-migrated .nav-actions .glass-button span {
+  .glass-nav.glass-nav--actions-migrated .nav-actions .action-button-label {
     display: none;
   }
 }

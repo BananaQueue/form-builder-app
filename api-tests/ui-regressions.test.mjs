@@ -58,8 +58,63 @@ test('three-dot menu closes on theme-scope scroll instead of sticking to the vie
 
 test('action buttons keep accessible names when labels are hidden responsively', () => {
   const source = readSrc('ActionButtons.jsx');
+  const navigationCss = readSrc('styles/navigation.css');
+  const responsiveCss = readSrc('styles/responsive.css');
 
   assert.match(source, /aria-label=["']Fill out form["']/);
   assert.match(source, /aria-label=["']Copy form link["']/);
   assert.match(source, /aria-label=["']Show QR code["']/);
+  assert.match(source, /aria-label=["']Duplicate form["']/);
+  assert.match(source, /className=["']action-button-icon["']/);
+  assert.match(source, /className=["']action-button-label["']/);
+  assert.match(navigationCss, /\.action-button-label/);
+  assert.match(responsiveCss, /\.action-button-label/);
+  assert.doesNotMatch(navigationCss, /\.glass-button span\s*\{/);
+  assert.doesNotMatch(responsiveCss, /\.glass-button--(?:fill|share|qr|duplicate)\s+span/);
+});
+
+test('form viewer duplicates through create flow and opens the copy', () => {
+  const viewer = readSrc('FormViewer.jsx');
+  const layout = readSrc('AdminLayout.jsx');
+  const css = readSrc('styles/form-viewer.css');
+
+  assert.match(viewer, /apiUrl\(["']\/save_form\.php["']\)/);
+  assert.match(viewer, /buildDuplicatePayload/);
+  assert.match(viewer, /onDuplicateComplete\?\.\(result\.form_id\)/);
+  assert.match(layout, /onDuplicateComplete=\{handleViewForm\}/);
+  assert.match(css, /\.glass-button--duplicate/);
+});
+
+test('public form route forces light theme on mobile screens', () => {
+  const source = readSrc('App.jsx');
+
+  assert.match(source, /function PublicFormRoute/);
+  assert.match(source, /const isMobile = useIsMobile\(\)/);
+  assert.match(source, /const publicTheme = isMobile \? ['"]light['"] : systemTheme/);
+  assert.match(source, /data-theme=\{publicTheme\}/);
+});
+
+test('audit log details summarize and expand multiple changes', () => {
+  const source = readSrc('AuditLog.jsx');
+  const css = readSrc('styles/audit-log.css');
+
+  assert.match(source, /function AuditMetadataDetails/);
+  assert.match(source, /expandedLogIds/);
+  assert.match(source, /Show details/);
+  assert.match(source, /\$\{changes\.length\} changes/);
+  assert.doesNotMatch(source, /hiddenChangeCount|al-change-preview/);
+  assert.match(css, /\.al-change-list/);
+  assert.match(css, /\.al-detail-toggle/);
+  assert.doesNotMatch(css, /\.al-change-preview/);
+});
+
+test('user management permits deleting other super admins but hides self-delete', () => {
+  const source = readSrc('UserManagement.jsx');
+  const layout = readSrc('AdminLayout.jsx');
+
+  assert.match(source, /currentUser = ''/);
+  assert.match(source, /user\.username === currentUser/);
+  assert.match(source, /user\.username !== currentUser/);
+  assert.doesNotMatch(source, /Super Admin accounts cannot be deleted through the UI/);
+  assert.match(layout, /currentUser=\{currentUser\}/);
 });

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { apiUrl } from "./apiBase";
+import { apiUrl, csrfHeaders } from "./apiBase";
 import QRCode from "qrcode";
 import ActionButtons from "./ActionButtons";
 import { useIsMobile } from "./useIsMobile";
@@ -11,12 +11,14 @@ function FormViewer({
   actionsRef,
   onActionBarOverlapChange,
   actionsInNavbar,
+  onDuplicateComplete,
   isSuperAdmin = false
 }) {
   const [form, setForm]           = useState(null);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(null);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const qrCanvasRef               = useRef(null);
   const actionBarRef              = useRef(null);
   const navigate = useNavigate();
@@ -75,6 +77,60 @@ function FormViewer({
       } catch {
         showToast("Copy failed. Please copy manually: " + publicUrl, "warning");
       }
+    }
+  }
+
+  function buildDuplicatePayload() {
+    const questions = Array.isArray(form?.questions) ? form.questions : [];
+
+    return {
+      title: `${form.title} (Copy)`,
+      description: form.description || "",
+      category_id: form.category_id || 1,
+      step_mode: Number(form.step_mode) || 0,
+      questions: questions.map((question, index) => ({
+        id: question.id,
+        question_text: question.question_text,
+        question_type: question.question_type,
+        description: question.description ?? null,
+        rating_scale: question.rating_scale ?? null,
+        number_min: question.number_min ?? null,
+        number_max: question.number_max ?? null,
+        number_step: question.number_step ?? null,
+        datetime_type: question.datetime_type ?? null,
+        position: question.position ?? index,
+        is_required: question.is_required ?? 1,
+        condition_question_id: question.condition_question_id ?? null,
+        condition_type: question.condition_type ?? "equals",
+        condition_value: question.condition_value ?? null,
+        options: Array.isArray(question.options) ? question.options : [],
+      })),
+    };
+  }
+
+  async function duplicateForm() {
+    if (!form || duplicating) return;
+
+    setDuplicating(true);
+    try {
+      const response = await fetch(apiUrl("/save_form.php"), {
+        method: "POST",
+        credentials: "include",
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(buildDuplicatePayload()),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        showToast(`Duplicated "${form.title}".`, "success");
+        onDuplicateComplete?.(result.form_id);
+      } else {
+        showToast(result.error || "Failed to duplicate form.", "error");
+      }
+    } catch (err) {
+      showToast(`Could not duplicate form: ${err.message}`, "error");
+    } finally {
+      setDuplicating(false);
     }
   }
 
@@ -144,9 +200,11 @@ function FormViewer({
       fillOut:  () => window.open(buildPublicUrl(), "_blank", "noopener,noreferrer"),
       copyLink: copyPublicLink,
       showQr:   () => setShowQrModal(true),
+      duplicate: duplicateForm,
+      duplicating,
     };
     return () => { if (actionsRef) actionsRef.current = null; };
-  }, [form, actionsRef]);
+  }, [form, actionsRef, duplicating]);
 
   useEffect(() => {
     if (!actionBarRef.current || !onActionBarOverlapChange) return;
@@ -345,6 +403,8 @@ function FormViewer({
           onFillOut={() => window.open(buildPublicUrl(), "_blank", "noopener,noreferrer")}
           onCopyLink={copyPublicLink}
           onShowQr={() => setShowQrModal(true)}
+          onDuplicate={duplicateForm}
+          duplicateDisabled={duplicating}
         />
       </div>
 

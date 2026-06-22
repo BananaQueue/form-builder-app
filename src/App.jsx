@@ -27,6 +27,7 @@ import NotificationHost from './NotificationHost'
 import NotificationGate from './NotificationGate'
 import { useNotification } from './useNotification'
 import { useSystemTheme, useTheme } from './useTheme'             // NEW
+import { useIsMobile } from './useIsMobile'
 import { apiUrl, csrfHeaders, setCsrfToken } from './apiBase'
 import './App.css'
 
@@ -66,6 +67,18 @@ function normalizeViewportForZoomLock(originalContent) {
   return serializeViewportContent(viewport)
 }
 
+function PublicFormRoute({ showToast }) {
+  const systemTheme = useSystemTheme()
+  const isMobile = useIsMobile()
+  const publicTheme = isMobile ? 'light' : systemTheme
+
+  return (
+    <div className="theme-scope" data-theme={publicTheme}>
+      <PublicFormPage showToast={showToast} />
+    </div>
+  )
+}
+
 function App() {
   const [authUser, setAuthUser] = useState(null)
   const [notificationGateComplete, setNotificationGateComplete] = useState(false)
@@ -93,7 +106,6 @@ function App() {
   // We only need to pass theme and toggleTheme to AdminLayout because
   // that's the only place the toggle button is rendered (in the nav bar).
   const { theme, toggleTheme } = useTheme()
-  const publicTheme = useSystemTheme()
 
   // ── Session check (unchanged) ─────────────────────────────────────────
   useEffect(() => {
@@ -209,9 +221,7 @@ function App() {
         <Route
           path="/form/:formId"
           element={
-            <div className="theme-scope" data-theme={publicTheme}>
-              <PublicFormPage showToast={showToast} />
-            </div>
+            <PublicFormRoute showToast={showToast} />
           }
         />
 

@@ -1,4 +1,4 @@
-// src/AdminLayout.jsx
+np// src/AdminLayout.jsx
 //
 // CHANGES FROM PREVIOUS VERSION:
 // ─────────────────────────────────────────────────────────────────────────
@@ -336,6 +336,7 @@ function AdminLayout({
                   onFillOut={() => formActionsRef.current?.fillOut()}
                   onCopyLink={() => formActionsRef.current?.copyLink()}
                   onShowQr={() => formActionsRef.current?.showQr()}
+                  onDuplicate={() => formActionsRef.current?.duplicate()}
                 />
               </div>
             </>
@@ -400,6 +401,7 @@ function AdminLayout({
                 actionsRef={formActionsRef}
                 onActionBarOverlapChange={setActionsInNavbar}
                 actionsInNavbar={actionsInNavbar}
+                onDuplicateComplete={handleViewForm}
                 isSuperAdmin={isSuperAdmin}
               />
             ) : (
@@ -490,6 +492,7 @@ function AdminLayout({
                 onEditForm={handleEditForm}
                 onViewResponses={handleViewResponses}
                 isSuperAdmin={isSuperAdmin}
+                currentUser={currentUser}
               />
             ) : (
               <Navigate to="/" />
