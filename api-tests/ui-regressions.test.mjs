@@ -147,3 +147,17 @@ test('audit log dates prefer server epoch timestamps', () => {
   assert.match(source, /new Date\(timestamp \* 1000\)\.toLocaleString\(\)/);
   assert.match(source, /formatDate\(log\.created_at, log\.created_at_unix\)/);
 });
+
+test('form viewer action buttons switch to icons at very narrow mobile widths', () => {
+  const css = readSrc('styles/responsive.css');
+
+  assert.match(css, /@media\s*\(max-width:\s*400px\)[\s\S]*\.fv-action-bar \.action-button-icon\s*\{[\s\S]*display:\s*inline;/);
+  assert.match(css, /@media\s*\(max-width:\s*400px\)[\s\S]*\.fv-action-bar \.action-button-label\s*\{[\s\S]*display:\s*none;/);
+});
+
+test('audit pagination text is smaller at very narrow mobile widths', () => {
+  const css = readSrc('styles/audit-log.css');
+
+  assert.match(css, /@media\s*\(max-width:\s*400px\)[\s\S]*\.al-page-btn,[\s\S]*\.al-results-count\s*\{[\s\S]*font-size:\s*var\(--text-xs\);/);
+  assert.match(css, /@media\s*\(max-width:\s*400px\)[\s\S]*\.al-page-btn\s*\{[\s\S]*padding:\s*var\(--space-1\) var\(--space-3\);/);
+});

@@ -11,7 +11,7 @@ This guide assumes a traditional PHP + MySQL/MariaDB hosting environment and a s
 - [ ] Build frontend assets.
 - [ ] Configure API path.
 - [ ] Verify CORS allowed origins.
-- [ ] Create or verify the first Super Admin account.
+- [ ] Create or verify the first Super Admin account using the CLI-only bootstrap script.
 - [ ] Run smoke tests.
 - [ ] Configure backups.
 - [ ] Configure log collection/monitoring.
@@ -61,6 +61,18 @@ form-builder-api/migrations/
 
 If the schema dump already includes the latest changes, migrations may be no-ops or fail if repeated. Treat the dump and migrations as deployment artifacts that need a formal migration strategy before large-scale production use.
 
+## Initial Super Admin Bootstrap
+
+The committed schema intentionally does not seed users or password hashes. On a clean database, run the backend bootstrap script from the server command line after database credentials are configured:
+
+```powershell
+cd form-builder-api
+$env:FB_BOOTSTRAP_ADMIN_USERNAME="admin"
+$env:FB_BOOTSTRAP_ADMIN_PASSWORD="Use-A-Strong-Unique-Password-123"
+php bootstrap_super_admin.php
+```
+
+The script is CLI-only, enforces the backend password policy, and aborts once any Super Admin exists. Do not place bootstrap credentials in committed files or shell history on shared systems.
 ## Frontend Build
 
 Install dependencies and build:
@@ -103,9 +115,13 @@ For the PHP API, make sure endpoint files in `form-builder-api` are reachable by
 
 ## CORS
 
-Each PHP endpoint currently has an allowlist of origins. Before deployment, update the allowed origins to include the production frontend URL and remove unused local origins.
+CORS is centralized in `form-builder-api/cors_helper.php`. For production, set the allowed frontend origins with a comma-separated environment variable:
 
-Recommended improvement: centralize CORS into one helper so production origin changes happen in one place.
+```text
+FB_ALLOWED_ORIGINS=https://your-production-frontend.example
+```
+
+If `FB_ALLOWED_ORIGINS` is not set, the API falls back to local development origins only.
 
 ## Test Endpoints
 

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
@@ -71,6 +71,18 @@ test('super-admin endpoints enforce the super_admin role server-side', () => {
     assertContains(readApiFile(fileName), /fb_require_super_admin\s*\(/, fileName);
   }
 });
+test('CORS headers and origin allowlist are centralized in cors_helper', () => {
+  const helper = readApiFile('cors_helper.php');
+  assertContains(helper, /function\s+fb_allowed_cors_origins\s*\(/, 'cors_helper.php');
+  assertContains(helper, /FB_ALLOWED_ORIGINS/, 'cors_helper.php');
+  assertContains(helper, /function\s+fb_apply_cors\s*\(/, 'cors_helper.php');
+
+  for (const fileName of readdirSync(apiRoot).filter((name) => name.endsWith('.php') && name !== 'cors_helper.php')) {
+    const source = readApiFile(fileName);
+    assert.doesNotMatch(source, /\$allowed_origins\s*=\s*\[/, `${fileName} should not define a local CORS allowlist`);
+    assert.doesNotMatch(source, /Access-Control-Allow-(Origin|Methods|Headers)/, `${fileName} should not emit raw CORS headers`);
+  }
+});
 
 test('login uses password verification, session regeneration, and rate limiting', () => {
   const source = readApiFile('login.php');
@@ -93,6 +105,37 @@ test('user password writes hash passwords instead of storing plaintext', () => {
       `${fileName} should not write raw password variables into password_hash`,
     );
   }
+});
+
+test('user password endpoints enforce the shared stronger password policy', () => {
+  assertContains(readApiFile('auth_helper.php'), /function\s+fb_password_policy_error\s*\(/, 'auth_helper.php');
+  assertContains(readApiFile('auth_helper.php'), /return\s+max\(12,\s*\$configured\)/, 'auth_helper.php');
+
+  for (const fileName of ['create_user_api.php', 'change_password.php']) {
+    const source = readApiFile(fileName);
+    assertContains(source, /fb_password_policy_error\s*\(/, fileName);
+    assert.doesNotMatch(source, /strlen\s*\(\s*\$(?:password|newPassword)\s*\)\s*<\s*6/, `${fileName} should not keep the old 6-character policy`);
+  }
+});
+
+
+test('public response submissions are rate limited by form and client IP', () => {
+  const source = readApiFile('submit_response.php');
+
+  assertContains(source, /fb_is_rate_limited\s*\(\s*'public_submission'/, 'submit_response.php');
+  assertContains(source, /fb_record_rate_limit_attempt\s*\(\s*'public_submission'/, 'submit_response.php');
+  assertContains(source, /http_response_code\(429\)/, 'submit_response.php');
+});
+
+test('initial super admin bootstrap is CLI-only and password-policy protected', () => {
+  const source = readApiFile('bootstrap_super_admin.php');
+
+  assertContains(source, /PHP_SAPI\s*!==\s*'cli'/, 'bootstrap_super_admin.php');
+  assertContains(source, /FB_BOOTSTRAP_ADMIN_USERNAME/, 'bootstrap_super_admin.php');
+  assertContains(source, /FB_BOOTSTRAP_ADMIN_PASSWORD/, 'bootstrap_super_admin.php');
+  assertContains(source, /fb_password_policy_error\s*\(/, 'bootstrap_super_admin.php');
+  assertContains(source, /role\s*=\s*'super_admin'/, 'bootstrap_super_admin.php');
+  assertContains(source, /A Super Admin already exists/, 'bootstrap_super_admin.php');
 });
 
 test('banner upload validates type, image content, size, and fixed destination', () => {

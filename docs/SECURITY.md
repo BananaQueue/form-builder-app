@@ -37,34 +37,34 @@
 
 ### Password Policy
 
-Current minimum password length is 6 characters. This should be strengthened before production.
+Backend password creation and reset now use the shared server policy in `auth_helper.php`:
 
-Recommended:
+- minimum 12 characters by default
+- at least one uppercase letter
+- at least one lowercase letter
+- at least one number
+- optional `FB_MIN_PASSWORD_LENGTH` can raise the minimum further
 
-- minimum 12 characters
+Recommended next steps:
+
 - block common passwords
 - require password reset on first login for generated credentials
 - consider MFA for Super Admins
 
+
 ### Public Submission Abuse
 
-Public response submission does not currently have rate limiting or CAPTCHA.
+Public response submission is rate limited by form and client IP. This reduces accidental or simple spam bursts, but it is not a full bot defense.
 
 Recommended:
 
-- IP + form based rate limiting
-- maximum submissions per time window
+- tune the rate limit after production traffic is observed
 - optional CAPTCHA for public forms
 - server-side maximum answer size remains enforced
 
-### CORS Duplication
+### CORS Configuration
 
-CORS origin allowlists are repeated across many PHP endpoints. This increases the risk of inconsistent production configuration.
-
-Recommended:
-
-- centralize allowed origins in one helper or config file
-- keep production origins separate from local dev origins
+CORS origin handling is centralized in `form-builder-api/cors_helper.php`. Production should set `FB_ALLOWED_ORIGINS` to the exact frontend origin list and avoid relying on local-development defaults.
 
 ### Test Endpoints
 

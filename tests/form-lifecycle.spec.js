@@ -155,8 +155,9 @@ test('super admin can update a form and audit the update', async ({ page, reques
   await page.getByRole('button', { name: /Update Form/ }).click();
 
   await expect(page.getByText('Form updated successfully')).toBeVisible();
-  await expect(page.locator('.afl-form-title', { hasText: updatedTitle })).toBeVisible();
-  await expect(page.locator('.afl-form-title', { hasText: originalTitle }).filter({ hasNotText: 'Updated' })).toHaveCount(0);
+  const updatedRow = page.locator('tr').filter({ hasText: updatedTitle });
+  await expect(updatedRow).toBeVisible();
+  await expect(page.locator('tr').filter({ hasText: originalTitle }).filter({ hasNotText: 'Updated' })).toHaveCount(0);
 
   const logs = await getAuditLogs(request, {
     action: 'FORM_UPDATED',

@@ -39,7 +39,7 @@ test('user creation, password change, and deletion are audited', async ({ page, 
   await expect(page.getByRole('heading', { name: 'User Management' })).toBeVisible();
 
   await page.locator('input[placeholder="Username"]').fill(username);
-  await page.locator('input[placeholder="Password (min 6 chars)"]').fill(initialPassword);
+  await page.locator('input[placeholder="Password (min 12 chars)"]').fill(initialPassword);
   await page.getByRole('button', { name: '+ Add User' }).click();
 
   await expect(page.getByText('User created.')).toBeVisible();
@@ -64,7 +64,7 @@ test('user creation, password change, and deletion are audited', async ({ page, 
   const userRow = rowForUser(page, username);
   await userRow.getByRole('button', { name: 'Change Password' }).click();
   await expect(page.getByRole('heading', { name: 'Change Password' })).toBeVisible();
-  await page.locator('.um-modal input[placeholder="New password (min 6 chars)"]').fill(changedPassword);
+  await page.locator('.um-modal input[placeholder="New password (min 12 chars)"]').fill(changedPassword);
   await page.getByRole('button', { name: 'Save Password' }).click();
 
   await expect(page.getByText(`Password updated for "${username}".`)).toBeVisible();
@@ -93,7 +93,7 @@ test('user creation, password change, and deletion are audited', async ({ page, 
   await expect(rowForUser(page, username)).toBeVisible();
 
   await rowForUser(page, username).getByRole('button', { name: 'Delete' }).click();
-  await expect(page.locator('.notif-modal')).toContainText(`Delete "${username}"?`);
+  await expect(page.locator('.notif-modal')).toContainText(`Delete user "${username}"?`);
   await page.getByRole('button', { name: 'Confirm' }).click();
 
   await expect(page.getByText(`"${username}" deleted.`)).toBeVisible();
@@ -111,4 +111,21 @@ test('user creation, password change, and deletion are audited', async ({ page, 
     entity_label: username,
   });
   expect(Number(deletedLogs[0].entity_id)).toBe(Number(createdUser.id));
+});
+
+test('super admin PIN opens the change password modal', async ({ page }) => {
+  await loginAsSuperAdmin(page);
+  await page.getByRole('button', { name: 'Users' }).click();
+  await expect(page.getByRole('heading', { name: 'User Management' })).toBeVisible();
+
+  const superAdminRow = rowForUser(page, E2E_SUPER_ADMIN.username);
+  await superAdminRow.getByRole('button', { name: 'Change Password' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Protected Super Admin Account' })).toBeVisible();
+  await page.locator('input[placeholder="Enter Super Admin PIN"]').fill('0000');
+  await page.getByRole('button', { name: 'Confirm PIN' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Change Password' })).toBeVisible();
+  await expect(page.locator('.um-modal')).toContainText(`Setting new password for ${E2E_SUPER_ADMIN.username}`);
+  await expect(page.locator('.um-modal input[placeholder="New password (min 12 chars)"]')).toBeVisible();
 });

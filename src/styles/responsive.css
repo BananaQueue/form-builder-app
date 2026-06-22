@@ -469,3 +469,13 @@
 }
 
 
+
+@media (max-width: 400px) {
+  .fv-action-bar .action-button-icon {
+    display: inline;
+  }
+
+  .fv-action-bar .action-button-label {
+    display: none;
+  }
+}

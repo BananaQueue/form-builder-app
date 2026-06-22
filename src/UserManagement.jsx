@@ -159,12 +159,10 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
       setPinError('Incorrect PIN. Please enter the correct Super Admin PIN.')
       return
     }
-
+    setPwModal({ id: pinModal.id, username: pinModal.username })
+    setNewPw('')
     setPinModal(null)
-    showToast(
-      'PIN accepted. Super Admin password resets must still be completed through the secure recovery flow.',
-      'info',
-    )
+    setPinInput('')
   }
 
   // ── Drill-down: view a user's forms ───────────────────────────────────────
@@ -217,7 +215,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
           <PasswordInput
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
-            placeholder="Password (min 6 chars)"
+            placeholder="Password (min 12 chars)"
             autoComplete="new-password"
             className="um-input"
           />
@@ -315,7 +313,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
               <PasswordInput
                 value={newPw}
                 onChange={e => setNewPw(e.target.value)}
-                placeholder="New password (min 6 chars)"
+                placeholder="New password (min 12 chars)"
                 autoFocus
                 autoComplete="new-password"
                 className="um-input"
@@ -323,8 +321,8 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
               <div className="um-modal-actions">
                 <button
                   type="submit"
-                  disabled={savingPw || newPw.length < 6}
-                  className={`um-add-btn${savingPw || newPw.length < 6 ? ' um-add-btn--disabled' : ''}`}
+                  disabled={savingPw || newPw.length < 12}
+                  className={`um-add-btn${savingPw || newPw.length < 12 ? ' um-add-btn--disabled' : ''}`}
                 >
                   {savingPw ? 'Saving…' : 'Save Password'}
                 </button>
