@@ -1,4 +1,4 @@
-np// src/AdminLayout.jsx
+// src/AdminLayout.jsx
 //
 // CHANGES FROM PREVIOUS VERSION:
 // ─────────────────────────────────────────────────────────────────────────
