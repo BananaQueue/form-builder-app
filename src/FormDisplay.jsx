@@ -419,6 +419,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
         {question.question_type === "number" && (
           <input
             type="number"
+            step="1"
             value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
             min={question.number_min || undefined}
@@ -842,7 +843,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
             Original single-page form rendering — completely unchanged.
             Section blocks render as glassmorphism dividers.
         ══════════════════════════════════════════════════════════════════ */
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {(() => {
             let questionCounter = 0;
 

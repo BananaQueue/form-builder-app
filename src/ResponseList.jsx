@@ -171,7 +171,7 @@ function ResponseList({ formId, onBack, onViewResponse, isSuperAdmin = false }) 
 
               <div className="rl-response-row__info">
                 <span className="rl-response-row__number">
-                  Response #{index + 1}
+                  Response #{responses.length - index}
                 </span>
                 <span className="rl-response-row__date">
                   {new Date(response.submitted_at).toLocaleString()}

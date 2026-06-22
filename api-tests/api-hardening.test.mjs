@@ -181,6 +181,8 @@ test('audit log reads bootstrap the audit table before querying', () => {
   assertContains(source, /require_once ['"]audit_helpers\.php['"]/, 'get_audit_logs.php');
   assertContains(source, /fb_ensure_audit_logs_table\s*\(/, 'get_audit_logs.php');
   assertContains(source, /fb_normalize_audit_log_metadata\s*\(/, 'get_audit_logs.php');
+  assertContains(source, /ORDER BY id DESC, created_at DESC/, 'get_audit_logs.php');
+  assertContains(source, /UNIX_TIMESTAMP\(created_at\) AS created_at_unix/, 'get_audit_logs.php');
 });
 
 test('form update audit metadata uses readable owner and change details', () => {
@@ -213,4 +215,12 @@ test('user deletion protects super admin availability and owned forms', () => {
   assertContains(source, /Cannot delete the last Super Admin account/, 'delete_user.php');
   assertContains(source, /UPDATE forms SET created_by = NULL WHERE created_by = \?/, 'delete_user.php');
   assertContains(source, /forms_unassigned/, 'delete_user.php');
+});
+
+test('database connection sets the app timezone for generated timestamps', () => {
+  const source = readApiFile('db.php');
+
+  assertContains(source, /'timezone'\s*=>\s*getenv\('FB_DB_TIMEZONE'\) \?: '\+08:00'/, 'db.php');
+  assertContains(source, /SET time_zone/, 'db.php');
+  assertContains(source, /\$pdo->quote\(\$timezone\)/, 'db.php');
 });

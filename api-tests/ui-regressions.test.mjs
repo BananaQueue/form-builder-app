@@ -118,3 +118,32 @@ test('user management permits deleting other super admins but hides self-delete'
   assert.doesNotMatch(source, /Super Admin accounts cannot be deleted through the UI/);
   assert.match(layout, /currentUser=\{currentUser\}/);
 });
+
+test('public number inputs allow decimal submission while spinner steps by one', () => {
+  const source = readSrc('FormDisplay.jsx');
+
+  assert.match(source, /type=["']number["']\s+step=["']1["']/);
+  assert.match(source, /<form onSubmit=\{handleSubmit\} noValidate>/);
+});
+
+test('response list numbers newest-first rows chronologically', () => {
+  const source = readSrc('ResponseList.jsx');
+
+  assert.match(source, /Response #\{responses\.length - index\}/);
+  assert.doesNotMatch(source, /Response #\{index \+ 1\}/);
+});
+
+test('light mode disables box shadows on mobile', () => {
+  const css = readSrc('styles/theme.css');
+
+  assert.match(css, /@media\s*\(max-width:\s*768px\)[\s\S]*\[data-theme="light"\]\.theme-scope[\s\S]*--shadow-soft:\s*none;/);
+  assert.match(css, /@media\s*\(max-width:\s*768px\)[\s\S]*\[data-theme="light"\]\.theme-scope \*[\s\S]*box-shadow:\s*none\s*!important;/);
+});
+
+test('audit log dates prefer server epoch timestamps', () => {
+  const source = readSrc('AuditLog.jsx');
+
+  assert.match(source, /function formatDate\(value, unixSeconds\)/);
+  assert.match(source, /new Date\(timestamp \* 1000\)\.toLocaleString\(\)/);
+  assert.match(source, /formatDate\(log\.created_at, log\.created_at_unix\)/);
+});

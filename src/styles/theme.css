@@ -1363,3 +1363,16 @@
 }
 
 
+
+@media (max-width: 768px) {
+  [data-theme="light"].theme-scope {
+    --shadow-soft: none;
+    --shadow-medium: none;
+    --shadow-strong: none;
+    --shadow-glow: none;
+  }
+
+  [data-theme="light"].theme-scope * {
+    box-shadow: none !important;
+  }
+}

@@ -284,16 +284,31 @@
 
 @media (max-width: 700px) {
   .al-shell {
-    padding: var(--space-4) var(--space-3) var(--space-12);
+    padding: var(--space-3) var(--space-3) var(--space-12);
+  }
+
+  .al-header {
+    margin-bottom: var(--space-3);
   }
 
   .al-toolbar {
     align-items: stretch;
     flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
   }
 
   .al-search-wrap,
   .al-action-select {
     width: 100%;
+  }
+
+  .al-search-wrap {
+    flex: 0 0 auto;
+  }
+
+  .al-table-wrap {
+    margin-top: 0;
+    margin-bottom: var(--space-4);
   }
 }

@@ -11,9 +11,14 @@ function formatAction(action) {
     .join(' ')
 }
 
-function formatDate(value) {
+function formatDate(value, unixSeconds) {
+  const timestamp = Number(unixSeconds)
+  if (Number.isFinite(timestamp) && timestamp > 0) {
+    return new Date(timestamp * 1000).toLocaleString()
+  }
+
   if (!value) return 'Unknown'
-  const date = new Date(value.replace(' ', 'T'))
+  const date = new Date(String(value).replace(' ', 'T'))
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleString()
 }
@@ -233,7 +238,7 @@ function AuditLog({ showToast }) {
 
                 return (
                   <tr key={log.id} className="al-tr">
-                    <td className="al-td-date">{formatDate(log.created_at)}</td>
+                    <td className="al-td-date">{formatDate(log.created_at, log.created_at_unix)}</td>
                     <td>
                       <span className="al-actor">{log.actor_username || 'System'}</span>
                       <span className="al-muted">{log.actor_role || 'unknown'}</span>

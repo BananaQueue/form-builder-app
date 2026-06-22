@@ -439,6 +439,9 @@
   .action-buttons {
     gap: var(--space-1);
   }
+  .fv-action-bar .action-button-icon {
+    display: none;
+  }
   /* .fv-action-bar .glass-button { flex: 0 1 auto; min-width: 0; } */
 
   /* Prevent large text sizes from colliding on mobile */
