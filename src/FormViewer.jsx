@@ -291,7 +291,7 @@ function FormViewer({
             <span className="form-list-dot" />
             <span className="form-list-dot" />
           </div>
-          <p>Loading form...</p>
+          <p className="afl-td-loading">Loading form...</p>
         </div>
       </div>
     );
