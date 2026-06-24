@@ -161,3 +161,23 @@ test('audit pagination text is smaller at very narrow mobile widths', () => {
   assert.match(css, /@media\s*\(max-width:\s*400px\)[\s\S]*\.al-page-btn,[\s\S]*\.al-results-count\s*\{[\s\S]*font-size:\s*var\(--text-xs\);/);
   assert.match(css, /@media\s*\(max-width:\s*400px\)[\s\S]*\.al-page-btn\s*\{[\s\S]*padding:\s*var\(--space-1\) var\(--space-3\);/);
 });
+
+test('public date/time inputs keep the native picker affordance', () => {
+  const source = readSrc('FormDisplay.jsx');
+  const css = readSrc('styles/form-display.css');
+
+  assert.match(source, /question\.question_type === ["']datetime["']/);
+  assert.match(source, /type=\{question\.datetime_type \|\| ["']date["']\}/);
+  assert.match(css, /\.fd-input\[type="date"\],[\s\S]*\.fd-input\[type="datetime-local"\],[\s\S]*\.fd-input\[type="time"\]\s*\{[\s\S]*-webkit-appearance:\s*auto;/);
+  assert.match(css, /\.fd-input\[type="date"\]::-webkit-calendar-picker-indicator,[\s\S]*\.fd-input\[type="datetime-local"\]::-webkit-calendar-picker-indicator,[\s\S]*\.fd-input\[type="time"\]::-webkit-calendar-picker-indicator\s*\{[\s\S]*opacity:\s*1;/);
+  assert.match(css, /\.fd-input\[type="date"\],[\s\S]*color-scheme:\s*light;/);
+});
+test('public form loading state uses dark text on light surface', () => {
+  const source = readSrc('FormDisplay.jsx');
+  const css = readSrc('styles/form-display.css');
+
+  assert.match(source, /fd-state-screen fd-state-screen--loading/);
+  assert.match(source, /Loading form\.\.\./);
+  assert.match(css, /\.fd-state-screen\s*\{[\s\S]*color:\s*var\(--text-primary\);/);
+  assert.match(css, /\.fd-state-screen--loading \.form-list-loading,[\s\S]*\.fd-state-screen--loading \.afl-td-loading\s*\{[\s\S]*color:\s*var\(--text-primary\);/);
+});

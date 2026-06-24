@@ -7,12 +7,12 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        // Forward frontend calls like /api/get_forms.php to your local PHP backend
-        // hosted at http://localhost/form-builder-api/get_forms.php
-        target: 'http://localhost',
+        // Forward frontend calls like /api/get_forms.php to local Laravel.
+        // Run it with: php artisan serve --host=127.0.0.1 --port=8000
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         xfwd: true,
-        rewrite: (path) => path.replace(/^\/api/, '/form-builder-api')
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   }

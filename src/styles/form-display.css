@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    9. FORM DISPLAY PAGE  (.fd-*)
    ============================================================
 
@@ -26,10 +26,22 @@
 .fd-state-screen {
   padding: var(--space-10);
   text-align: center;
-  color: var(--text-on-dark);
+  color: var(--text-primary);
 }
 
 .fd-state-screen--loading { font-weight: 700; }
+[data-theme="light"] .fd-state-screen--loading .form-list-loading,
+.fd-state-screen--loading .form-list-loading {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .fd-state-screen--loading .afl-td-loading,
+.fd-state-screen--loading .afl-td-loading {
+  color: var(--text-primary) !important;
+}
+.fd-state-screen--loading .form-list-dot {
+  background: var(--accent);
+}
 .fd-state-screen--error   { color: var(--accent-danger); }
 
 .fd-submitted-title   { color: var(--accent-success); }
@@ -121,6 +133,22 @@
   }
 }
 
+.fd-input[type="date"],
+.fd-input[type="datetime-local"],
+.fd-input[type="time"] {
+  -webkit-appearance: auto;
+  appearance: auto;
+  color-scheme: light;
+  padding-right: var(--space-3);
+}
+
+.fd-input[type="date"]::-webkit-calendar-picker-indicator,
+.fd-input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.fd-input[type="time"]::-webkit-calendar-picker-indicator {
+  display: block;
+  opacity: 1;
+  cursor: pointer;
+}
 .fd-input:focus {
   outline: none;
   border-color: var(--accent);
