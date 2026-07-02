@@ -169,7 +169,7 @@ function FormViewer({
   async function fetchFormDetails(signal) {
     try {
       const response = await fetch(
-        apiUrl(`/get_form_details.php?id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`),
+        apiUrl(`/api/forms/${formId}${isSuperAdmin ? '?admin_override=1' : ''}`),
         { credentials: 'include', signal }
       );
       const result   = await response.json();

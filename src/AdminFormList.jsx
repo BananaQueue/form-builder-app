@@ -371,7 +371,7 @@ function AdminFormList({
     async function fetchSupporting() {
       try {
         const [catRes, userRes] = await Promise.all([
-          fetch(apiUrl("/get_categories.php"), { credentials: "include" }),
+          fetch(apiUrl("/api/categories"), { credentials: "include" }),
           fetch(apiUrl("/get_users.php"), { credentials: "include" }),
         ]);
         const catData = await catRes.json();

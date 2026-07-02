@@ -74,7 +74,7 @@ function AuditMetadataDetails({ metadata, expanded, onToggle }) {
           </span>
           {changes.length > 1 && (
             <button className="al-detail-toggle" type="button" onClick={onToggle}>
-              {expanded ? 'Hide details' : 'Show details'}
+              {expanded ? 'Show less' : 'Show more'}
             </button>
           )}
           {expanded && changes.length > 1 && (

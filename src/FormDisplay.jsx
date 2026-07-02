@@ -28,6 +28,7 @@ function buildSteps(questions) {
       if (currentStep) steps.push(currentStep);
       currentStep = {
         title: question.question_text,
+        description: question.description || '',
         sectionId: question.id,
         questions: [],
       };
@@ -36,7 +37,7 @@ function buildSteps(questions) {
       // If no step exists yet (questions before the first section),
       // create the implicit "General" step now.
       if (!currentStep) {
-        currentStep = { title: "General", sectionId: null, questions: [] };
+        currentStep = { title: "General", description: '', sectionId: null, questions: [] };
       }
       currentStep.questions.push(question);
     }
@@ -71,8 +72,8 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   async function fetchFormDetails() {
     try {
       const url = formCode
-        ? apiUrl(`/get_form_by_code.php?code=${formCode}`)
-        : apiUrl(`/get_form_details.php?id=${formId}`);
+        ? apiUrl(`/api/public/forms/${encodeURIComponent(formCode)}`)
+        : apiUrl(`/api/forms/${formId}`);
 
       const response = await fetch(url);
       const result = await response.json();
@@ -777,9 +778,18 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
           </div>
 
           {/* ── Step Counter ──────────────────────────────────────────────── */}
-          <p className="fd-step-counter">
-            Step {currentStep + 1} of {steps.length}
-          </p>
+          <div className="fd-current-step-heading">
+            <p className="fd-step-counter">
+              Step {currentStep + 1} of {steps.length}
+            </p>
+            {steps[currentStep]?.description && (
+              <div className="fd-step-note">
+                <p className="fd-step-description">
+                  {steps[currentStep].description}
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* ── Current Step Questions ────────────────────────────────────── */}
           {(() => {

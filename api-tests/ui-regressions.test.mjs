@@ -73,6 +73,31 @@ test('action buttons keep accessible names when labels are hidden responsively',
   assert.doesNotMatch(responsiveCss, /\.glass-button--(?:fill|share|qr|duplicate)\s+span/);
 });
 
+test('frontend read calls use Laravel-native lookup routes', () => {
+  const sources = [
+    readSrc('AdminFormList.jsx'),
+    readSrc('FormBuilder.jsx'),
+    readSrc('FormDisplay.jsx'),
+    readSrc('FormList.jsx'),
+    readSrc('FormViewer.jsx'),
+  ].join('\n');
+
+  assert.match(sources, /apiUrl\([`"']\/api\/categories/);
+  assert.match(sources, /apiUrl\([`"']\/api\/forms/);
+  assert.match(sources, /apiUrl\([`"']\/api\/public\/forms/);
+  assert.doesNotMatch(sources, /get_categories\.php|get_forms\.php|get_form_details\.php|get_form_by_code\.php/);
+});
+test('frontend response reads use Laravel-native response routes', () => {
+  const sources = [
+    readSrc('ResponseList.jsx'),
+    readSrc('ResponseViewer.jsx'),
+  ].join('\n');
+
+  assert.match(sources, /\/api\/forms\/\$\{formId\}\/responses/);
+  assert.match(sources, /\/api\/forms\/\$\{formId\}\/responses\/export/);
+  assert.match(sources, /\/api\/responses\/\$\{responseId\}/);
+  assert.doesNotMatch(sources, /get_responses\.php|get_response_details\.php|export_responses\.php/);
+});
 test('form viewer duplicates through create flow and opens the copy', () => {
   const viewer = readSrc('FormViewer.jsx');
   const layout = readSrc('AdminLayout.jsx');
@@ -100,7 +125,8 @@ test('audit log details summarize and expand multiple changes', () => {
 
   assert.match(source, /function AuditMetadataDetails/);
   assert.match(source, /expandedLogIds/);
-  assert.match(source, /Show details/);
+  assert.match(source, /Show more/);
+  assert.match(source, /Show less/);
   assert.match(source, /\$\{changes\.length\} changes/);
   assert.doesNotMatch(source, /hiddenChangeCount|al-change-preview/);
   assert.match(css, /\.al-change-list/);
@@ -172,6 +198,40 @@ test('public date/time inputs keep the native picker affordance', () => {
   assert.match(css, /\.fd-input\[type="date"\]::-webkit-calendar-picker-indicator,[\s\S]*\.fd-input\[type="datetime-local"\]::-webkit-calendar-picker-indicator,[\s\S]*\.fd-input\[type="time"\]::-webkit-calendar-picker-indicator\s*\{[\s\S]*opacity:\s*1;/);
   assert.match(css, /\.fd-input\[type="date"\],[\s\S]*color-scheme:\s*light;/);
 });
+test('public form renders section descriptions in continuous and step mode', () => {
+  const source = readSrc('FormDisplay.jsx');
+  const css = readSrc('styles/form-display.css');
+
+  assert.match(source, /description: question\.description \|\| ''/);
+  assert.match(source, /fd-current-step-heading/);
+  assert.match(source, /fd-step-note/);
+  assert.doesNotMatch(source, /className="fd-step-title"/);
+  assert.match(source, /fd-step-description/);
+  assert.match(source, /fd-section-description/);
+  assert.match(css, /\.fd-step-note[\s\S]*display:\s*inline-flex/);
+  assert.match(css, /\.fd-step-note[\s\S]*padding:\s*var\(--space-1\) var\(--space-3\)/);
+  assert.match(css, /\.fd-step-note[\s\S]*text-align:\s*left/);
+  assert.doesNotMatch(css, /\.fd-step-note[\s\S]*border-left/);
+  assert.match(css, /\.fd-step-description[\s\S]*font-style:\s*italic/);
+  assert.match(css, /\.fd-section-divider[\s\S]*text-align:\s*left/);
+  assert.match(css, /\.fd-section-description[\s\S]*font-style:\s*italic/);
+});
+
+test('response viewer renders section descriptions', () => {
+  const source = readSrc('ResponseViewer.jsx');
+  const css = readSrc('styles/responses.css');
+
+  assert.match(source, /answer\.description/);
+  assert.match(source, /formatQuestionType/);
+  assert.match(source, /rv-answer-value--empty/);
+  assert.match(source, /rv-section-block__desc/);
+  assert.match(css, /\.rv-section-block__desc[\s\S]*font-style:\s*italic/);
+  assert.match(css, /\.rv-answer-card__text[\s\S]*text-align:\s*left/);
+  assert.match(css, /\.rv-answer-card__type[\s\S]*margin-left:\s*auto/);
+  assert.match(css, /\.rv-answer-card__type[\s\S]*border-radius:\s*var\(--radius-pill\)/);
+  assert.match(css, /\.rv-answer-value--empty[\s\S]*background:\s*rgba\(255, 255, 255, 0\.12\)/);
+});
+
 test('public form loading state uses dark text on light surface', () => {
   const source = readSrc('FormDisplay.jsx');
   const css = readSrc('styles/form-display.css');

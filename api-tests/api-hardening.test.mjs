@@ -234,6 +234,11 @@ test('form update audit metadata uses readable owner and change details', () => 
   assertContains(source, /owner_username/, 'update_form.php');
   assertContains(source, /form_owner/, 'update_form.php');
   assertContains(source, /fb_update_audit_describe_changes\s*\(/, 'update_form.php');
+  assertContains(source, /Edited form title/, 'update_form.php');
+  assertContains(source, /Edited form description/, 'update_form.php');
+  assertContains(source, /Added section/, 'update_form.php');
+  assertContains(source, /Deleted section/, 'update_form.php');
+  assertContains(source, /Edited section/, 'update_form.php');
   assertContains(source, /Question\s+\{\$questionNumber\}/, 'update_form.php');
   assert.doesNotMatch(source, /owner_user_id|super_admin_action|question_count/);
 });
@@ -248,6 +253,31 @@ test('dev proxy forwards client IP headers for audit logging', () => {
   const source = readAppFile('vite.config.js');
 
   assertContains(source, /xfwd:\s*true/, 'vite.config.js');
+  assertContains(source, "loadEnv(mode, '.', '')", 'vite.config.js');
+  assertContains(source, /VITE_API_TARGET/, 'vite.config.js');
+  assertContains(source, /http:\/\/127\.0\.0\.1:8000/, 'vite.config.js');
+});
+test('production build calls Laravel same-origin endpoints', () => {
+  const source = readAppFile('src/apiBase.js');
+
+  assertContains(source, /import\.meta\.env\.PROD \? '' : '\/api'/, 'src/apiBase.js');
+  assertContains(source, /VITE_API_BASE/, 'src/apiBase.js');
+});
+
+test('vite production build targets Laravel public app assets', () => {
+  const source = readAppFile('vite.config.js');
+
+  assertContains(source, /base:\s*mode === 'production' \? '\/app\/' : '\/'/, 'vite.config.js');
+  assertContains(source, /outDir:\s*'\.\.\/form-builder-api\/laravel\/public\/app'/, 'vite.config.js');
+  assertContains(source, /emptyOutDir:\s*true/, 'vite.config.js');
+});
+
+test('login banner uses Vite base URL for Laravel-hosted builds', () => {
+  const source = readAppFile('src/LoginPage.jsx');
+
+  assertContains(source, /import\.meta\.env\.BASE_URL/, 'src/LoginPage.jsx');
+  assertContains(source, /src=\{agencyLogoUrl\}/, 'src/LoginPage.jsx');
+  assert.doesNotMatch(source, /src="\/EMB1-LOGO-WITH-NAME-BAGONG-PILIPINAS\.png"/);
 });
 
 test('user deletion protects super admin availability and owned forms', () => {
@@ -267,3 +297,6 @@ test('database connection sets the app timezone for generated timestamps', () =>
   assertContains(source, /SET time_zone/, 'db.php');
   assertContains(source, /\$pdo->quote\(\$timezone\)/, 'db.php');
 });
+
+
+

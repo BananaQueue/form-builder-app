@@ -34,7 +34,7 @@ function ResponseList({ formId, onBack, onViewResponse, isSuperAdmin = false }) 
 
   async function fetchResponses() {
     try {
-      const response = await fetch(apiUrl(`/get_responses.php?form_id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`), { credentials: 'include' })
+      const response = await fetch(apiUrl(`/api/forms/${formId}/responses${isSuperAdmin ? '?admin_override=1' : ''}`), { credentials: 'include' })
       const result   = await response.json()
 
       if (result.success) {
@@ -58,7 +58,7 @@ function ResponseList({ formId, onBack, onViewResponse, isSuperAdmin = false }) 
   // ── Export handler (unchanged) ─────────────────────────────────────────────
 
   function handleExport() {
-    const exportUrl = `${API_BASE}/export_responses.php?form_id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`
+    const exportUrl = `${API_BASE}/api/forms/${formId}/responses/export${isSuperAdmin ? '?admin_override=1' : ''}`
     window.open(exportUrl, '_blank')
   }
 

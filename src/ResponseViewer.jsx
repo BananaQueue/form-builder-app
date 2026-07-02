@@ -34,6 +34,12 @@ function ResponseViewer({ responseId, onBack, isSuperAdmin = false }) {
   const [error, setError]             = useState(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
+  function formatQuestionType(type) {
+    return String(type || '')
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+  }
+
   // ── Data fetching (unchanged) ──────────────────────────────────────────────
 
   useEffect(() => {
@@ -47,7 +53,7 @@ function ResponseViewer({ responseId, onBack, isSuperAdmin = false }) {
 
       try {
         const res = await fetch(
-          apiUrl(`/get_response_details.php?id=${responseId}${isSuperAdmin ? '&admin_override=1' : ''}`),
+          apiUrl(`/api/responses/${responseId}${isSuperAdmin ? '?admin_override=1' : ''}`),
           { credentials: 'include', signal: controller.signal }
         )
         const result = await res.json()
@@ -165,6 +171,11 @@ function ResponseViewer({ responseId, onBack, isSuperAdmin = false }) {
                 <span className="rv-section-block__title">
                   {answer.question_text}
                 </span>
+                {answer.description && (
+                  <span className="rv-section-block__desc">
+                    {answer.description}
+                  </span>
+                )}
               </div>
             )
           }
@@ -172,6 +183,7 @@ function ResponseViewer({ responseId, onBack, isSuperAdmin = false }) {
           // ── Regular answer card ──────────────────────────────────────────
           // Only real questions get a number — section blocks are skipped.
           questionCounter++
+          const hasAnswer = Boolean(answer.answer_text)
 
           return (
             <div key={answer.id} className="rv-answer-card">
@@ -184,18 +196,16 @@ function ResponseViewer({ responseId, onBack, isSuperAdmin = false }) {
                 <span className="rv-answer-card__text">
                   {answer.question_text}
                 </span>
-              </div>
-
-              {/* Question type label */}
-              <div className="rv-answer-card__type">
-                {answer.question_type}
+                <span className="rv-answer-card__type">
+                  {formatQuestionType(answer.question_type)}
+                </span>
               </div>
 
               {/* Answer value */}
-              <div className="rv-answer-value">
+              <div className={`rv-answer-value ${!hasAnswer ? 'rv-answer-value--empty' : ''}`}>
                 <span className="rv-answer-value__label">Answer</span>
                 <p className="rv-answer-value__text">
-                  {answer.answer_text
+                  {hasAnswer
                     ? answer.answer_text
                     : <em className="rv-answer-value__empty">No answer provided</em>
                   }

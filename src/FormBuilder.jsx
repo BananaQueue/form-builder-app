@@ -1127,7 +1127,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
 
   async function fetchCategories() {
     try {
-      const response = await fetch(apiUrl("/get_categories.php"));
+      const response = await fetch(apiUrl("/api/categories"));
       const result = await response.json();
       if (result.success) {
         setCategories(result.categories);
@@ -1149,7 +1149,7 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
 
     try {
       const response = await fetch(
-        apiUrl(`/get_form_details.php?id=${formId}${isSuperAdmin ? '&admin_override=1' : ''}`),
+        apiUrl(`/api/forms/${formId}${isSuperAdmin ? '?admin_override=1' : ''}`),
         { credentials: "include" },
       );
       const result = await response.json();

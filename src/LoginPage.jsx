@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { apiUrl, setCsrfToken } from './apiBase'
 import PasswordInput from './PasswordInput'
 
+const agencyLogoUrl = `${import.meta.env.BASE_URL}EMB1-LOGO-WITH-NAME-BAGONG-PILIPINAS.png`
+
 function LoginPage({ onLoginSuccess }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -53,7 +55,7 @@ function LoginPage({ onLoginSuccess }) {
 
       <div className="login-agency-banner">
         <img
-          src="/EMB1-LOGO-WITH-NAME-BAGONG-PILIPINAS.png"
+          src={agencyLogoUrl}
           alt="DENR Environmental Management Bureau Region I"
         />
       </div>

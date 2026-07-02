@@ -1,7 +1,7 @@
 // Central place to control API base path.
-// In dev, Vite proxies /api/* -> http://localhost/form-builder-api/*
-// In prod, you can set VITE_API_BASE to your server path (e.g. "/form-builder-api").
-export const API_BASE = import.meta.env.VITE_API_BASE ?? '/api';
+// In dev, Vite proxies /api/* -> Laravel. In production, the built app is
+// served by Laravel, so PHP-compatible endpoints live at the same origin root.
+export const API_BASE = import.meta.env.VITE_API_BASE ?? (import.meta.env.PROD ? '' : '/api');
 
 let csrfToken = null;
 

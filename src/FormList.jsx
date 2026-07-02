@@ -25,8 +25,8 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
 
     try {
       const url = scopedUserId
-        ? apiUrl(`/get_forms.php?user_id=${scopedUserId}${isSuperAdmin ? '&admin_override=1' : ''}`)
-        : apiUrl("/get_forms.php");
+        ? apiUrl(`/api/forms?user_id=${scopedUserId}${isSuperAdmin ? '&admin_override=1' : ''}`)
+        : apiUrl("/api/forms");
       const response = await fetch(url, {
         credentials: "include",
       });
@@ -51,7 +51,7 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
 
   async function fetchCategories() {
     try {
-      const res    = await fetch(apiUrl("/get_categories.php"));
+      const res    = await fetch(apiUrl("/api/categories"));
       const result = await res.json();
       if (result.success) setCategories(result.categories);
     } catch (err) {
