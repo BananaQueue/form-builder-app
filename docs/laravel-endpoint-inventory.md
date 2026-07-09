@@ -1,6 +1,6 @@
 # Laravel Endpoint Inventory
 
-Current status: Laravel serves the React build and handles the legacy PHP-shaped routes through `form-builder-api/laravel/routes/web.php`. Laravel-native aliases now exist for the first read groups, and the frontend uses `/api/...` routes for lookup/form reads plus response list/detail/export. Compatibility `.php` routes remain active for rollback, old hardening tests, and endpoint groups not migrated yet.
+Current status: Laravel serves the React build and handles the legacy PHP-shaped routes through `form-builder-api/laravel/routes/web.php`. Laravel-native aliases now exist for reads, response reads, and form writes; the frontend uses `/api/...` routes for all of these. Compatibility `.php` routes remain active for rollback, old hardening tests, and endpoint groups not migrated yet.
 
 ## Endpoint Groups
 
@@ -8,7 +8,7 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
 | --- | --- | --- | --- | --- |
 | Auth session | `check_session.php`, `login.php`, `logout.php` | `LegacyAuthController` | Yes | `GET /api/session`, `POST /api/login`, `POST /api/logout` |
 | Forms list/detail | Frontend now calls `GET /api/forms`, `GET /api/forms/{id}`, `GET /api/public/forms/{code}`, `GET /api/categories`; compatibility routes still exist as `get_forms.php`, `get_form_details.php`, `get_form_by_code.php`, `get_categories.php` | `LegacyLookupController` | Yes | Migrated frontend reads to native aliases |
-| Form writes | `save_form.php`, `update_form.php`, `delete_form.php` | `LegacyFormWriteController` | Yes | `POST /api/forms`, `PUT /api/forms/{id}`, `DELETE /api/forms/{id}` |
+| Form writes | Frontend now calls `POST /api/forms`, `PUT /api/forms/{id}`, `DELETE /api/forms/{id}`; compatibility routes still exist as `save_form.php`, `update_form.php`, `delete_form.php` (used by Playwright ownership-boundary tests and left live for rollback) | `LegacyFormWriteController` | Yes | Migrated frontend writes to native aliases |
 | Public submissions | `submit_response.php` | `LegacySubmissionController` | Yes | `POST /api/public/forms/{id}/responses` |
 | Responses | Frontend now calls `GET /api/forms/{id}/responses`, `GET /api/responses/{id}`, `GET /api/forms/{id}/responses/export`; compatibility routes still exist as `get_responses.php`, `get_response_details.php`, `export_responses.php` | `LegacyLookupController` | Yes | Migrated frontend response reads/export to native aliases |
 | Super admin forms | `get_all_forms.php` | `LegacyAdminFormController` | Yes | `GET /api/admin/forms` |
@@ -19,11 +19,11 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
 
 ## Current Dependency Hotspots
 
-- Frontend API calls are centralized through `src/apiBase.js`. Lookup/form reads and response reads/export now use `/api/...`; remaining write/admin/auth/banner/notification calls still use `.php` compatibility names.
+- Frontend API calls are centralized through `src/apiBase.js`. Lookup/form reads, response reads/export, and form writes (create/update/delete/duplicate) now use `/api/...`; remaining admin/auth/banner/notification calls still use `.php` compatibility names.
 - `api-tests/api-hardening.test.mjs` reads old PHP files directly with `readApiFile(...)`.
 - `api-tests/php-syntax.test.mjs` lints root `form-builder-api/*.php` files.
-- Some regression tests intentionally assert compatibility behavior, for example duplicate form still calling `save_form.php` until form writes are migrated.
-- Laravel feature tests already cover many compatibility routes in `form-builder-api/laravel/tests/Feature`.
+- `tests/ownership-boundaries.spec.js` intentionally exercises the compatibility `save_form.php`/`update_form.php`/`delete_form.php` routes directly via Playwright's `request` fixture; these must stay live until that test is converted too.
+- Laravel feature tests already cover many compatibility routes in `form-builder-api/laravel/tests/Feature`, plus the new native form-write routes (`SaveFormEndpointTest`, `UpdateFormEndpointTest`, `DeleteFormEndpointTest`).
 
 ## Recommended Migration Order
 
@@ -37,7 +37,7 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
    Done. Frontend now calls `/api/forms/{id}/responses`, `/api/responses/{id}`, and `/api/forms/{id}/responses/export`.
 
 4. **Move form writes carefully**
-   Next recommended implementation step. Convert `save_form.php`, `update_form.php`, and `delete_form.php` to native aliases such as `POST /api/forms`, `PUT /api/forms/{id}`, and `DELETE /api/forms/{id}` while keeping compatibility routes alive. This group is higher risk because it touches audit logs, duplicate behavior, permissions, sections/questions, and notifications.
+   Done. `save_form.php`, `update_form.php`, and `delete_form.php` are now aliased as `POST /api/forms`, `PUT /api/forms/{id}`, and `DELETE /api/forms/{id}` (id injected from the route segment into the same controller methods), and the frontend (`FormBuilder.jsx`, `FormViewer.jsx` duplicate, `AdminFormList.jsx`, `FormList.jsx`) calls the native routes. Compatibility routes remain live for `tests/ownership-boundaries.spec.js` and rollback.
 
 5. **Move public submissions**
    Convert `submit_response.php` to `POST /api/public/forms/{id}/responses`. This should happen after form reads are stable and before removing public compatibility routes.

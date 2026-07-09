@@ -394,11 +394,10 @@ function AdminFormList({
     if (!formPendingDelete) return;
 
     try {
-      const res = await fetch(apiUrl("/delete_form.php"), {
-        method: "POST",
+      const res = await fetch(apiUrl(`/api/forms/${formPendingDelete.id}`), {
+        method: "DELETE",
         headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
-          form_id: formPendingDelete.id,
           deletion_reason: deletionReason,
         }),
         credentials: "include",

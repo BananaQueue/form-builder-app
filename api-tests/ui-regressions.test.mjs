@@ -98,12 +98,26 @@ test('frontend response reads use Laravel-native response routes', () => {
   assert.match(sources, /\/api\/responses\/\$\{responseId\}/);
   assert.doesNotMatch(sources, /get_responses\.php|get_response_details\.php|export_responses\.php/);
 });
+test('frontend form write calls use Laravel-native routes', () => {
+  const sources = [
+    readSrc('AdminFormList.jsx'),
+    readSrc('FormBuilder.jsx'),
+    readSrc('FormList.jsx'),
+    readSrc('FormViewer.jsx'),
+  ].join('\n');
+
+  assert.match(sources, /apiUrl\(["']\/api\/forms["']\)/);
+  assert.match(sources, /apiUrl\(`\/api\/forms\/\$\{editFormId\}`\)/);
+  assert.match(sources, /apiUrl\(`\/api\/forms\/\$\{formPendingDelete\.id\}`\)/);
+  assert.match(sources, /apiUrl\(`\/api\/forms\/\$\{formId\}`\)/);
+  assert.doesNotMatch(sources, /save_form\.php|update_form\.php|delete_form\.php/);
+});
 test('form viewer duplicates through create flow and opens the copy', () => {
   const viewer = readSrc('FormViewer.jsx');
   const layout = readSrc('AdminLayout.jsx');
   const css = readSrc('styles/form-viewer.css');
 
-  assert.match(viewer, /apiUrl\(["']\/save_form\.php["']\)/);
+  assert.match(viewer, /apiUrl\(["']\/api\/forms["']\)/);
   assert.match(viewer, /buildDuplicatePayload/);
   assert.match(viewer, /onDuplicateComplete\?\.\(result\.form_id\)/);
   assert.match(layout, /onDuplicateComplete=\{handleViewForm\}/);

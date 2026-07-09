@@ -113,7 +113,7 @@ function FormViewer({
 
     setDuplicating(true);
     try {
-      const response = await fetch(apiUrl("/save_form.php"), {
+      const response = await fetch(apiUrl("/api/forms"), {
         method: "POST",
         credentials: "include",
         headers: csrfHeaders({ "Content-Type": "application/json" }),

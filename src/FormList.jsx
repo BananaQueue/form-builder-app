@@ -71,10 +71,9 @@ function FormList({ onViewForm, onViewResponses, onEditForm, showToast, showConf
       `Delete "${title}" permanently? This cannot be undone.`,
       async () => {
         try {
-          const res = await fetch(apiUrl("/delete_form.php"), {
-            method:  "POST",
+          const res = await fetch(apiUrl(`/api/forms/${formId}`), {
+            method:  "DELETE",
             headers: csrfHeaders({ "Content-Type": "application/json" }),
-            body:    JSON.stringify({ form_id: formId }),
             credentials: "include",
           });
 

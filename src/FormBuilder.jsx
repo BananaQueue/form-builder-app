@@ -1413,22 +1413,18 @@ function FormBuilder({ editFormId = null, onSaveComplete = null, showToast, isSu
       questions: normalizedQuestions,
     };
 
-    if (isEditMode && editFormId) {
-      formData.form_id = editFormId;
-    }
-
     // Allow backend Super Admin bypass when applicable
     if (isSuperAdmin) {
       formData.admin_override = 1;
     }
 
     try {
-      const endpoint = isEditMode
-        ? apiUrl("/update_form.php")
-        : apiUrl("/save_form.php");
+      const endpoint = isEditMode && editFormId
+        ? apiUrl(`/api/forms/${editFormId}`)
+        : apiUrl("/api/forms");
 
       const response = await fetch(endpoint, {
-        method: "POST",
+        method: isEditMode && editFormId ? "PUT" : "POST",
         headers: csrfHeaders({ "Content-Type": "application/json" }),
         credentials: "include",
         body: JSON.stringify(formData),
