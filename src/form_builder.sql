@@ -209,6 +209,7 @@ CREATE TABLE `responses` (
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
+  `email` varchar(191) DEFAULT NULL,
   `role` enum('user','super_admin') NOT NULL DEFAULT 'user',
   `password_hash` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -216,6 +217,32 @@ CREATE TABLE `users` (
 
 --
 -- No seed data for table `users`. Production-like records are intentionally excluded.
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `password_reset_codes`
+--
+
+CREATE TABLE `password_reset_codes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `requested_by_user_id` int(11) DEFAULT NULL,
+  `code_hash` varchar(255) NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `verified_at` timestamp NULL DEFAULT NULL,
+  `used_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `password_reset_codes_token_unique` (`token`),
+  KEY `idx_password_reset_codes_user_token` (`user_id`,`token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- No seed data for table `password_reset_codes`.
 --
 
 --
@@ -282,7 +309,8 @@ ALTER TABLE `responses`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`);
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- AUTO_INCREMENT for dumped tables

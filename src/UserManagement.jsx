@@ -20,12 +20,22 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
   const [addingUser, setAddingUser]     = useState(false)
 
   // ── Change password modal state ────────────────────────────────────────────
-  const [pwModal, setPwModal]       = useState(null) // { id, username }
+  const [pwModal, setPwModal]       = useState(null) // { id, username, resetToken? }
   const [newPw, setNewPw]           = useState('')
   const [savingPw, setSavingPw]     = useState(false)
-  const [pinModal, setPinModal]     = useState(null) // { id, username }
-  const [pinInput, setPinInput]     = useState('')
-  const [pinError, setPinError]     = useState('')
+
+  // ── Recovery email modal state ─────────────────────────────────────────────
+  const [emailModal, setEmailModal] = useState(null) // { id, username }
+  const [emailInput, setEmailInput] = useState('')
+  const [savingEmail, setSavingEmail] = useState(false)
+
+  // ── Email verification modal state ─────────────────────────────────────────
+  const [verifyModal, setVerifyModal] = useState(null) // { id, username, token, maskedEmail, expiresInMinutes }
+  const [codeInput, setCodeInput]   = useState('')
+  const [verifyError, setVerifyError] = useState('')
+  const [verifying, setVerifying]   = useState(false)
+  const [requestingCode, setRequestingCode] = useState(false)
+
   const location = useLocation()
 
   // Restore the drill-down user if we navigated back here from FormViewer
@@ -124,7 +134,11 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
         method: 'POST',
         credentials: 'include',
         headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ user_id: pwModal.id, new_password: newPw }),
+        body: JSON.stringify({
+          user_id: pwModal.id,
+          new_password: newPw,
+          ...(pwModal.resetToken ? { reset_token: pwModal.resetToken } : {}),
+        }),
       })
       const result = await res.json()
       if (result.success) {
@@ -141,28 +155,102 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
     }
   }
 
-  function handlePasswordAction(user) {
-    if (user.role === 'super_admin') {
-      setPinModal({ id: user.id, username: user.username })
-      setPinInput('')
-      setPinError('')
+  async function handlePasswordAction(user) {
+    if (user.role !== 'super_admin') {
+      setPwModal({ id: user.id, username: user.username })
+      setNewPw('')
       return
     }
 
-    setPwModal({ id: user.id, username: user.username })
-    setNewPw('')
+    if (!user.email) {
+      setEmailModal({ id: user.id, username: user.username })
+      setEmailInput('')
+      return
+    }
+
+    setRequestingCode(true)
+    try {
+      const res    = await fetch(apiUrl(`/users/${user.id}/password-reset-code`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+      })
+      const result = await res.json()
+      if (result.success) {
+        setVerifyModal({
+          id: user.id,
+          username: user.username,
+          token: result.token,
+          maskedEmail: result.masked_email,
+          expiresInMinutes: result.expires_in_minutes,
+        })
+        setCodeInput('')
+        setVerifyError('')
+        showToast(`Verification code sent to ${result.masked_email}.`, 'info')
+      } else if (result.missing_email) {
+        setEmailModal({ id: user.id, username: user.username })
+        setEmailInput('')
+      } else {
+        showToast(result.error || 'Could not send verification code.', 'error')
+      }
+    } catch {
+      showToast('Could not connect to server.', 'error')
+    } finally {
+      setRequestingCode(false)
+    }
   }
 
-  function handlePinSubmit(e) {
+  async function handleSaveEmail(e) {
     e.preventDefault()
-    if (pinInput !== '0000') {
-      setPinError('Incorrect PIN. Please enter the correct Super Admin PIN.')
-      return
+    if (!emailModal) return
+    setSavingEmail(true)
+    try {
+      const res    = await fetch(apiUrl(`/users/${emailModal.id}/email`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ email: emailInput.trim() }),
+      })
+      const result = await res.json()
+      if (result.success) {
+        showToast('Recovery email saved.', 'success')
+        setEmailModal(null)
+        fetchUsers()
+      } else {
+        showToast(result.error || 'Failed to save email.', 'error')
+      }
+    } catch {
+      showToast('Could not connect to server.', 'error')
+    } finally {
+      setSavingEmail(false)
     }
-    setPwModal({ id: pinModal.id, username: pinModal.username })
-    setNewPw('')
-    setPinModal(null)
-    setPinInput('')
+  }
+
+  async function handleVerifyCode(e) {
+    e.preventDefault()
+    if (!verifyModal) return
+    setVerifying(true)
+    setVerifyError('')
+    try {
+      const res    = await fetch(apiUrl(`/users/${verifyModal.id}/password-reset-code/verify`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ token: verifyModal.token, code: codeInput.trim() }),
+      })
+      const result = await res.json()
+      if (result.success) {
+        setPwModal({ id: verifyModal.id, username: verifyModal.username, resetToken: result.token })
+        setNewPw('')
+        setVerifyModal(null)
+      } else {
+        setVerifyError(result.error || 'Invalid or expired code.')
+      }
+    } catch {
+      setVerifyError('Could not connect to server.')
+    } finally {
+      setVerifying(false)
+    }
   }
 
   // ── Drill-down: view a user's forms ───────────────────────────────────────
@@ -282,8 +370,9 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
                         <button
                           className="um-action-btn um-action-btn--pw"
                           onClick={() => handlePasswordAction(user)}
+                          disabled={requestingCode}
                         >
-                          Change Password
+                          {requestingCode ? 'Sending…' : 'Change Password'}
                         </button>
                         {user.username !== currentUser && (
                           <button
@@ -339,40 +428,64 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
         </div>
       )}
 
-      {/* ── Super Admin PIN modal ──────────────────────────────────────────── */}
-      {pinModal && (
-        <div className="um-modal-overlay" onClick={() => setPinModal(null)}>
+      {/* ── Set recovery email modal ─────────────────────────────────────────── */}
+      {emailModal && (
+        <div className="um-modal-overlay" onClick={() => setEmailModal(null)}>
           <div className="um-modal" onClick={e => e.stopPropagation()}>
-            <h3 className="um-modal-title">Protected Super Admin Account</h3>
+            <h3 className="um-modal-title">Set Recovery Email</h3>
             <p className="um-modal-sub">
-              This is a protected Super Admin account. <br /> Enter the Super Admin PIN to confirm the request.
+              <strong>{emailModal.username}</strong> has no email on file yet. A verification
+              code must be sent here before this account's password can be changed.
             </p>
-            <form onSubmit={handlePinSubmit}>
+            <form onSubmit={handleSaveEmail}>
               <input
                 className="um-input"
-                type="password"
-                placeholder="Enter Super Admin PIN"
-                value={pinInput}
-                onChange={e => {
-                  setPinInput(e.target.value)
-                  setPinError('')
-                }}
+                type="email"
+                placeholder="name@agency.gov.ph"
+                value={emailInput}
+                onChange={e => setEmailInput(e.target.value)}
+                required
                 autoFocus
-                autoComplete="one-time-code"
               />
-              {pinError && <p className="um-modal-error">{pinError}</p>}
               <div className="um-modal-actions">
-                <button
-                  type="submit"
-                  className="um-add-btn"
-                >
-                  Confirm PIN
+                <button type="submit" disabled={savingEmail} className="um-add-btn">
+                  {savingEmail ? 'Saving…' : 'Save Email'}
                 </button>
-                <button
-                  type="button"
-                  className="um-cancel-btn"
-                  onClick={() => setPinModal(null)}
-                >
+                <button type="button" className="um-cancel-btn" onClick={() => setEmailModal(null)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Email verification modal ─────────────────────────────────────────── */}
+      {verifyModal && (
+        <div className="um-modal-overlay" onClick={() => setVerifyModal(null)}>
+          <div className="um-modal" onClick={e => e.stopPropagation()}>
+            <h3 className="um-modal-title">Check Your Email</h3>
+            <p className="um-modal-sub">
+              A 6-digit code was sent to <strong>{verifyModal.maskedEmail}</strong>. It
+              expires in {verifyModal.expiresInMinutes} minutes.
+            </p>
+            <form onSubmit={handleVerifyCode}>
+              <input
+                className="um-input"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="123456"
+                value={codeInput}
+                onChange={e => setCodeInput(e.target.value.replace(/\D/g, ''))}
+                autoFocus
+              />
+              {verifyError && <p className="um-modal-error">{verifyError}</p>}
+              <div className="um-modal-actions">
+                <button type="submit" disabled={verifying || codeInput.length !== 6} className="um-add-btn">
+                  {verifying ? 'Verifying…' : 'Verify Code'}
+                </button>
+                <button type="button" className="um-cancel-btn" onClick={() => setVerifyModal(null)}>
                   Cancel
                 </button>
               </div>

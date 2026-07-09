@@ -61,6 +61,22 @@ export async function getAuditLogs(request, params = {}) {
   return JSON.parse(body).logs;
 }
 
+export async function getLastResetCode(request) {
+  const response = await request.get('/api/test_last_reset_code.php', {
+    headers: {
+      'X-E2E-Reset-Token': process.env.E2E_RESET_TOKEN ?? 'local-e2e-reset',
+    },
+  });
+  const body = await response.text();
+
+  expect(
+    response.ok(),
+    `Reset code lookup should succeed in test database. Status ${response.status()}: ${body}`,
+  ).toBe(true);
+
+  return JSON.parse(body).code;
+}
+
 export async function getFormFromApi(page, formTitle) {
   return page.evaluate(async (title) => {
     const response = await fetch('/api/get_all_forms.php?per_page=10', {

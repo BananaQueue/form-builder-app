@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import {
   E2E_SUPER_ADMIN,
   getAuditLogs,
+  getLastResetCode,
   getUserFromApi,
   resetTestDatabase,
 } from './e2e-helpers';
@@ -113,7 +114,10 @@ test('user creation, password change, and deletion are audited', async ({ page, 
   expect(Number(deletedLogs[0].entity_id)).toBe(Number(createdUser.id));
 });
 
-test('super admin PIN opens the change password modal', async ({ page }) => {
+test('super admin password change requires email verification', async ({ page, request }) => {
+  const recoveryEmail = `${E2E_SUPER_ADMIN.username}@example.test`;
+  const newPassword = 'VerifiedPass123!';
+
   await loginAsSuperAdmin(page);
   await page.getByRole('button', { name: 'Users' }).click();
   await expect(page.getByRole('heading', { name: 'User Management' })).toBeVisible();
@@ -121,11 +125,33 @@ test('super admin PIN opens the change password modal', async ({ page }) => {
   const superAdminRow = rowForUser(page, E2E_SUPER_ADMIN.username);
   await superAdminRow.getByRole('button', { name: 'Change Password' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Protected Super Admin Account' })).toBeVisible();
-  await page.locator('input[placeholder="Enter Super Admin PIN"]').fill('0000');
-  await page.getByRole('button', { name: 'Confirm PIN' }).click();
+  // Freshly seeded accounts have no recovery email on file yet.
+  await expect(page.getByRole('heading', { name: 'Set Recovery Email' })).toBeVisible();
+  await page.locator('.um-modal input[type="email"]').fill(recoveryEmail);
+  await page.getByRole('button', { name: 'Save Email' }).click();
+  await expect(page.getByText('Recovery email saved.')).toBeVisible();
+
+  await rowForUser(page, E2E_SUPER_ADMIN.username).getByRole('button', { name: 'Change Password' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Check Your Email' })).toBeVisible();
+  await expect(page.locator('.um-modal')).toContainText(/e\*+@example\.test/);
+
+  const wrongCodeAttempt = page.locator('.um-modal input[type="text"]');
+  await wrongCodeAttempt.fill('000000');
+  await page.getByRole('button', { name: 'Verify Code' }).click();
+  await expect(page.locator('.um-modal-error')).toContainText('Invalid or expired code');
+
+  const code = await getLastResetCode(request);
+  await wrongCodeAttempt.fill(code);
+  await page.getByRole('button', { name: 'Verify Code' }).click();
 
   await expect(page.getByRole('heading', { name: 'Change Password' })).toBeVisible();
   await expect(page.locator('.um-modal')).toContainText(`Setting new password for ${E2E_SUPER_ADMIN.username}`);
-  await expect(page.locator('.um-modal input[placeholder="New password (min 12 chars)"]')).toBeVisible();
+  await page.locator('.um-modal input[placeholder="New password (min 12 chars)"]').fill(newPassword);
+  await page.getByRole('button', { name: 'Save Password' }).click();
+
+  await expect(page.getByText(`Password updated for "${E2E_SUPER_ADMIN.username}".`)).toBeVisible();
+
+  const passwordLogs = await getAuditLogs(request, { action: 'USER_PASSWORD_CHANGED' });
+  expect(passwordLogs.length).toBeGreaterThan(0);
 });
