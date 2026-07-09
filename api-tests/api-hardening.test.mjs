@@ -64,6 +64,8 @@ const superAdminEndpoints = [
   'get_all_forms.php',
   'get_audit_logs.php',
   'get_users.php',
+  'upload_banner.php',
+  'remove_banner.php',
 ];
 
 test('super-admin endpoints enforce the super_admin role server-side', () => {
@@ -141,7 +143,7 @@ test('initial super admin bootstrap is CLI-only and password-policy protected', 
 test('banner upload validates type, image content, size, and fixed destination', () => {
   const source = readApiFile('upload_banner.php');
 
-  assertContains(source, /fb_require_auth\s*\(/, 'upload_banner.php');
+  assertContains(source, /fb_require_super_admin\s*\(/, 'upload_banner.php');
   assertContains(source, /fb_require_csrf\s*\(/, 'upload_banner.php');
   assertContains(source, /2\s*\*\s*1024\s*\*\s*1024/, 'upload_banner.php');
   assertContains(source, /finfo_open\s*\(\s*FILEINFO_MIME_TYPE\s*\)/, 'upload_banner.php');
