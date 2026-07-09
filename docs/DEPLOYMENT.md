@@ -1,16 +1,16 @@
 # Deployment Guide
 
-This guide assumes a traditional PHP + MySQL/MariaDB hosting environment and a static frontend build.
+This guide assumes Laravel is the production host for both the compiled React app and the Form Builder API, backed by MySQL/MariaDB.
 
 ## Deployment Checklist
 
 - [ ] Use HTTPS.
-- [ ] Configure database credentials with environment variables or server-local config.
+- [ ] Configure Laravel `.env` with production database credentials and app settings.
 - [ ] Disable test guard endpoints.
-- [ ] Import schema and apply migrations.
-- [ ] Build frontend assets.
-- [ ] Configure API path.
-- [ ] Verify CORS allowed origins.
+- [ ] Import the schema and apply any pending migrations.
+- [ ] Install Laravel Composer dependencies.
+- [ ] Build frontend assets into Laravel `public/app`.
+- [ ] Verify same-origin API routing and allowed origins.
 - [ ] Create or verify the first Super Admin account using the CLI-only bootstrap script.
 - [ ] Run smoke tests.
 - [ ] Configure backups.
@@ -18,29 +18,34 @@ This guide assumes a traditional PHP + MySQL/MariaDB hosting environment and a s
 
 ## Backend Configuration
 
-The API reads database config from environment variables in `form-builder-api/db.php`:
+Configure Laravel in:
 
 ```text
-FB_DB_HOST
-FB_DB_NAME
-FB_DB_USER
-FB_DB_PASS
-FB_ALLOW_TEST_GUARD
+form-builder-api/laravel/.env
 ```
 
-For production:
+Important production values:
 
 ```text
-FB_ALLOW_TEST_GUARD=0
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-production-host.example
+APP_TIMEZONE=Asia/Singapore
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=form_builder
+DB_USERNAME=<production-user>
+DB_PASSWORD=<production-password>
+DB_TIMEZONE=+08:00
+SESSION_DRIVER=file
 ```
 
-Do not use the local fallback values for production. The defaults are intended for local development only.
+Do not commit production secrets. Generate and keep a stable Laravel `APP_KEY` for the deployed environment.
 
-## Local Override File
+## Legacy PHP Configuration
 
-`form-builder-api/db.local.php` can override database settings. This file should never be committed when it contains real credentials.
-
-Use `form-builder-api/db.local.example.php` as a template for local or E2E test setup.
+The older root PHP API still has `form-builder-api/db.php` and optional `db.local.php` support. Treat that path as legacy compatibility. Production deployments should run through Laravel unless you are intentionally rolling back to the older PHP file server.
 
 ## Database Setup
 
@@ -73,6 +78,7 @@ php bootstrap_super_admin.php
 ```
 
 The script is CLI-only, enforces the backend password policy, and aborts once any Super Admin exists. Do not place bootstrap credentials in committed files or shell history on shared systems.
+
 ## Frontend Build
 
 Install dependencies and build:
@@ -86,42 +92,40 @@ npm run build
 Build output:
 
 ```text
-form-builder-app/dist/
+form-builder-api/laravel/public/app/
 ```
 
-Deploy the contents of `dist/` to your web server's static site location.
+Deploy or keep this directory with the Laravel application. Laravel serves `public/app/index.html` for normal React routes.
 
 ## API Base Path
 
-The frontend API base defaults to:
+For production builds served by Laravel, the frontend defaults to same-origin root API calls:
 
 ```text
-/api
+VITE_API_BASE=
 ```
 
-Override with:
-
-```text
-VITE_API_BASE=/form-builder-api
-```
-
-Set this before running `npm run build` when production API routing differs from local dev.
+Only set `VITE_API_BASE` before `npm run build` if the production API is intentionally mounted somewhere other than the Laravel origin root. During local Vite development, `/api/*` proxies to the Laravel server configured by `VITE_API_TARGET`.
 
 ## Web Server Routing
 
-For the React app, route all non-file requests to `index.html`.
+Point the web server document root at:
 
-For the PHP API, make sure endpoint files in `form-builder-api` are reachable by the configured API base path.
+```text
+form-builder-api/laravel/public
+```
+
+Laravel handles the React shell, compatibility `.php` endpoint names, native `/api/...` routes, and static files under `public/app`.
 
 ## CORS
 
-CORS is centralized in `form-builder-api/cors_helper.php`. For production, set the allowed frontend origins with a comma-separated environment variable:
+Same-origin Laravel deployments should not need broad CORS allowances. If a separate frontend origin is introduced, configure the allowed production origins explicitly in Laravel or the compatibility layer:
 
 ```text
 FB_ALLOWED_ORIGINS=https://your-production-frontend.example
 ```
 
-If `FB_ALLOWED_ORIGINS` is not set, the API falls back to local development origins only.
+Avoid relying on local-development defaults in production.
 
 ## Test Endpoints
 
@@ -131,7 +135,7 @@ These endpoints exist for E2E tests:
 - `test_reset_database.php`
 - `test_audit_logs.php`
 
-They are guarded by `allow_test_guard`, but production should still block or remove access to them at the web server level.
+They are for local and E2E workflows only. Production should block or remove access to `test_*.php` at the web server level, and test guard configuration must remain disabled.
 
 ## Backup And Restore
 
@@ -148,5 +152,5 @@ Minimum production backup plan:
 - Keep the previous frontend build artifact.
 - Keep a pre-deployment database backup.
 - Record which migrations were applied.
+- Keep a copy of the previous Laravel release directory or deployment artifact.
 - Verify rollback in staging before relying on it in production.
-

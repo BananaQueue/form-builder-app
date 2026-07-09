@@ -338,11 +338,29 @@
 
 
 /* -- Public form page layout -------------------------------- */
+.public-form-page,
+.public-form-page__content,
+.public-form-card,
+.public-form-card__inner {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.public-form-page {
+  overflow-x: clip;
+}
+
+
 .public-main {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin: 0 auto;
   display: flex;
   flex: 1;
+  box-sizing: border-box;
 }
 
 @media (min-width: 900px) {

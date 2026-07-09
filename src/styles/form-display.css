@@ -13,13 +13,19 @@
 .fd-shell {
   padding: var(--space-8) var(--space-4) var(--space-16);
   max-width: 860px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   margin: 0 auto;
 }
 
 .fd-shell--mobile {
   padding: var(--space-5) var(--space-4);
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+  overflow-x: clip;
 }
 
 /* State screens */
@@ -75,6 +81,10 @@
 .fd-question-card {
   margin-bottom: var(--space-6);
   padding: var(--space-5) var(--space-5);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: rgba(108, 99, 255, 0.03);
   border-radius: var(--radius-lg);
   border: 1px solid rgba(108, 99, 255, 0.10);
@@ -107,6 +117,8 @@
   width: 100%;
   min-width: 0;        /* prevents flex/grid children from overflowing */
   max-width: 100%;     /* hard cap at parent width */
+  min-inline-size: 0;
+  max-inline-size: 100%;
   -webkit-appearance: none; /* removes default styling in Safari */
   padding: 10px var(--space-3);
   font-size: var(--text-base);
@@ -129,7 +141,11 @@
   .fd-input[type="time"] {
     width: 100%;
     max-width: 100%;
+    min-width: 0;
+    inline-size: 100%;
+    max-inline-size: 100%;
     display: block;
+    box-sizing: border-box;
   }
 }
 
@@ -140,6 +156,11 @@
   appearance: auto;
   color-scheme: light;
   padding-right: var(--space-3);
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
 }
 
 .fd-input[type="date"]::-webkit-calendar-picker-indicator,

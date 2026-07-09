@@ -1,6 +1,6 @@
 # Form Builder App
 
-React/Vite frontend for the Form Builder system. The Laravel backend in `../form-builder-api/laravel` is now the primary host for the compiled app and PHP-compatible API endpoints.
+React/Vite frontend for the Form Builder system. Laravel in `../form-builder-api/laravel` is the primary runtime: it serves the compiled React app from `public/app` and hosts the current PHP-compatible API routes.
 
 ## What This Application Does
 
@@ -24,7 +24,6 @@ form-builder-app/
   src/                React application source
   src/styles/         Page and component CSS
   tests/              Playwright end-to-end tests
-  dist/               Local Vite preview output, if used
 ```
 
 The Laravel backend lives beside this repository:
@@ -36,7 +35,8 @@ The Laravel backend lives beside this repository:
 ## Requirements
 
 - Node.js and npm
-- PHP 8.4+ for Laravel
+- PHP 8.4+ for local Laravel development
+- Composer dependencies installed in `../form-builder-api/laravel`
 - MariaDB/MySQL
 - Chrome for Playwright E2E tests
 
@@ -92,6 +92,9 @@ By default, Vite proxies `/api/*` to Laravel on `http://127.0.0.1:8000`. To poin
 ```text
 VITE_API_TARGET=http://127.0.0.1:8001
 ```
+
+Production builds use same-origin API calls because Laravel serves both the React shell and the backend routes.
+
 ## Scripts
 
 ```powershell
@@ -122,4 +125,3 @@ Before deploying to real users:
 - Configure HTTPS.
 - Configure backups and restore drills.
 - Run `npm run lint`, `npm run test:api`, and E2E tests against a dedicated test database.
-

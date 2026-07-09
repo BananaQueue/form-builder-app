@@ -5,7 +5,7 @@
 ### Daily
 
 - Confirm application is reachable.
-- Review PHP/web server error logs.
+- Review Laravel/PHP/web server error logs.
 - Confirm database backup completed.
 - Check disk space.
 
@@ -25,11 +25,12 @@
 
 ## Logs
 
-Current logging is mostly PHP `error_log` plus application audit logs in the database.
+Current logging is mostly Laravel/PHP logs plus application audit logs in the database.
 
 Recommended production logging:
 
-- PHP error logs
+- Laravel logs in `form-builder-api/laravel/storage/logs`
+- PHP runtime error logs
 - web server access/error logs
 - database slow query logs
 - audit logs
@@ -54,7 +55,7 @@ Suggested schedule:
 At least monthly:
 
 1. Restore latest backup to a non-production database.
-2. Point a staging API at the restored database.
+2. Point a staging Laravel app at the restored database.
 3. Log in as test admin.
 4. Verify form list, responses, users, and audit logs.
 
@@ -62,15 +63,14 @@ At least monthly:
 
 Minimum checks:
 
-- frontend HTTP 200
-- API health endpoint or `check_session.php`
+- Laravel app HTTP 200
+- `/_fb_laravel_health`
+- API session endpoint such as `/check_session.php`
 - database connectivity
 - disk space
 - backup success
 
-Recommended future addition:
-
-- add a dedicated `health.php` endpoint that checks API runtime and DB connectivity without exposing sensitive details.
+Recommended future addition: extend the Laravel health route to check DB connectivity without exposing sensitive details.
 
 ## Maintenance Windows
 
@@ -80,7 +80,7 @@ For schema changes:
 2. Back up database.
 3. Deploy backend changes.
 4. Apply migrations.
-5. Deploy frontend build.
+5. Build and deploy frontend assets into Laravel `public/app`.
 6. Run smoke tests.
 7. Monitor logs after release.
 
@@ -88,16 +88,16 @@ For schema changes:
 
 ### Frontend Loads But API Calls Fail
 
-- Confirm PHP server is running.
-- Confirm API base path is correct.
+- Confirm Laravel is running and serving the app origin.
+- Confirm API base path is correct. Production builds should usually use same-origin root endpoints.
 - Check browser network tab for CORS errors.
-- Check PHP error logs.
+- Check Laravel and PHP error logs.
 
 ### E2E Tests Fail With ECONNREFUSED
 
-- Start Apache/XAMPP.
-- Verify `http://localhost/form-builder-api` is reachable.
-- Confirm `form-builder-api/db.local.php` points to a test database.
+- Start the Laravel server configured by `VITE_API_TARGET`, usually `http://127.0.0.1:8001`.
+- Verify `http://127.0.0.1:8001/_fb_laravel_health` is reachable.
+- Confirm the Laravel testing environment points to a disposable test database.
 
 ### Users Cannot Stay Logged In
 
@@ -105,4 +105,3 @@ For schema changes:
 - Confirm session cookie settings.
 - Confirm browser is accepting cookies.
 - Confirm server time is correct.
-

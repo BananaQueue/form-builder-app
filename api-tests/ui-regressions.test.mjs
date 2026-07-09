@@ -241,3 +241,35 @@ test('public form loading state uses dark text on light surface', () => {
   assert.match(css, /\.fd-state-screen\s*\{[\s\S]*color:\s*var\(--text-primary\);/);
   assert.match(css, /\.fd-state-screen--loading \.form-list-loading,[\s\S]*\.fd-state-screen--loading \.afl-td-loading\s*\{[\s\S]*color:\s*var\(--text-primary\);/);
 });
+test('mobile toast is offset below iPhone browser chrome', () => {
+  const css = readSrc('styles/notifications.css');
+
+  assert.ok(css.includes('@media (max-width: 768px)'));
+  assert.ok(css.includes('top: calc(env(safe-area-inset-top, 0px) + 88px);'));
+  assert.ok(css.includes('width: calc(100% - 24px);'));
+});
+
+test('public form success state resets app scroll containers', () => {
+  const source = readSrc('FormDisplay.jsx');
+
+  assert.ok(source.includes('function scrollPublicFormToTop'));
+  assert.ok(source.includes('document.querySelector(".public-form-page")'));
+  assert.ok(source.includes('document.querySelector(".theme-scope")'));
+  assert.ok(source.includes('document.scrollingElement'));
+  assert.ok(source.includes('requestAnimationFrame(() => {'));
+  assert.ok(source.includes('scrollPublicFormToTop("auto");'));
+});
+
+test('public form mobile layout prevents horizontal overflow and page zoom skew', () => {
+  const formCss = readSrc('styles/form-display.css');
+  const listCss = readSrc('styles/form-list.css');
+  const responsiveCss = readSrc('styles/responsive.css');
+
+  assert.ok(formCss.includes('inline-size: 100%;'));
+  assert.ok(formCss.includes('max-inline-size: 100%;'));
+  assert.ok(formCss.includes('min-inline-size: 0;'));
+  assert.ok(formCss.includes('.fd-question-card'));
+  assert.ok(listCss.includes('.public-form-page__content'));
+  assert.ok(listCss.includes('overflow-x: clip;'));
+  assert.ok(responsiveCss.includes('touch-action: pan-y;'));
+});

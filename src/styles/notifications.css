@@ -58,6 +58,13 @@
   /* border: transparent as default, overridden by type variants below */
 }
 
+@media (max-width: 768px) {
+  .notif-toast {
+    top: calc(env(safe-area-inset-top, 0px) + 88px);
+    width: calc(100% - 24px);
+  }
+}
+
 /* -- Toast type variants ---------------------------------------------------- */
 /*
   Each type gets its own background and border color.

@@ -50,6 +50,20 @@ function buildSteps(questions) {
   return steps.map((step, idx) => ({ ...step, index: idx }));
 }
 
+function scrollPublicFormToTop(behavior = "smooth") {
+  const scrollOptions = { top: 0, left: 0, behavior };
+  const scrollTargets = [
+    document.querySelector(".public-form-page"),
+    document.querySelector(".theme-scope"),
+    document.scrollingElement,
+  ].filter(Boolean);
+
+  scrollTargets.forEach((target) => {
+    target.scrollTo?.(scrollOptions);
+  });
+  window.scrollTo(scrollOptions);
+}
+
 function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -96,7 +110,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   }
 
   function handleAnswerChange(questionId, value) {
-    setAnswers({ ...answers, [questionId]: value });
+    setAnswers((prevAnswers) => ({ ...prevAnswers, [questionId]: value }));
   }
 
   function parseDateRangeAnswer(value) {
@@ -226,14 +240,14 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
     }
     setCurrentStep(currentStep + 1);
     // Scroll to top of form so the next step starts at the top
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollPublicFormToTop("smooth");
   }
 
   // ── handleBack ───────────────────────────────────────────────────────────
   // Goes to the previous step. No validation needed going backwards.
   function handleBack() {
     setCurrentStep(currentStep - 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollPublicFormToTop("smooth");
   }
 
   // ── handleSubmit ─────────────────────────────────────────────────────────
@@ -305,7 +319,9 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
       if (result.success) {
         setSubmitted(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        requestAnimationFrame(() => {
+          scrollPublicFormToTop("auto");
+        });
       } else {
         showToast("Error submitting form: " + (result.error || "Unknown error"), "error");
       }
@@ -679,12 +695,14 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
             </label>
             <div className="fd-modal-btn-row">
               <button
+                type="button"
                 onClick={() => setShowPrivacyModal(false)}
                 className="fd-btn-cancel"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleConfirmSubmit}
                 disabled={!privacyAccepted || submitting}
                 className={`fd-btn-confirm ${

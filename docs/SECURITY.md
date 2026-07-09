@@ -2,7 +2,7 @@
 
 ## Security Model
 
-- PHP sessions authenticate users.
+- Laravel sessions authenticate users through compatibility controllers.
 - CSRF tokens protect authenticated mutating requests.
 - Regular users can manage their own forms.
 - Super Admins can manage all forms, users, settings, and audit logs.
@@ -22,13 +22,14 @@
 ## Production Security Checklist
 
 - [ ] Use HTTPS.
-- [ ] Set secure database credentials through environment variables.
+- [ ] Set secure Laravel `.env` database credentials.
 - [ ] Disable test guard endpoints.
-- [ ] Restrict API CORS to production frontend origins.
+- [ ] Restrict API CORS to production frontend origins if the app is not same-origin.
 - [ ] Confirm PHP error display is disabled.
 - [ ] Verify web server denies directory listing.
-- [ ] Protect `db.local.php` from web access.
-- [ ] Protect `rate_limits/` from web access.
+- [ ] Point the web root at `form-builder-api/laravel/public`, not the repository root.
+- [ ] Protect legacy config files such as `db.local.php` from web access if the legacy root PHP path remains deployed.
+- [ ] Protect `rate_limits/` from web access if the legacy root PHP path remains deployed.
 - [ ] Restrict write permissions on API folders.
 - [ ] Back up database and uploads.
 - [ ] Review audit logs regularly.
@@ -64,7 +65,7 @@ Recommended:
 
 ### CORS Configuration
 
-CORS origin handling is centralized in `form-builder-api/cors_helper.php`. Production should set `FB_ALLOWED_ORIGINS` to the exact frontend origin list and avoid relying on local-development defaults.
+Same-origin Laravel deployments should not need permissive CORS. If the frontend is hosted separately, set `FB_ALLOWED_ORIGINS` or equivalent Laravel CORS configuration to the exact production origin list and avoid relying on local-development defaults.
 
 ### Test Endpoints
 
@@ -103,4 +104,3 @@ If compromise is suspected:
 4. Export PHP/web server logs.
 5. Restore from known-good backup if data integrity is uncertain.
 6. Force password resets after containment.
-

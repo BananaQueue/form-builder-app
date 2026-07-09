@@ -1,10 +1,10 @@
-ï»¿/* ============================================================
+/* ============================================================
    12. RESPONSIVE
    ============================================================
 
    We handle three breakpoints:
    - Desktop: 768px and above
-   - Tablet: 480px â€“ 767px
+   - Tablet: 480px – 767px
    - Mobile: below 480px
 
    Media queries are read from top to bottom. When the screen
@@ -196,7 +196,7 @@
   .fb-shell { padding-top: var(--space-2); }
   .fb-paper { margin-bottom: var(--space-4); }
 
-  /* Condition/option panel rows â€” stack selects vertically */
+  /* Condition/option panel rows — stack selects vertically */
   .fb-condition-panel select,
   .fb-condition-panel input {
     width: 100%;
@@ -294,7 +294,7 @@
 
 }
 
-/* Narrow mobile â€” between tablet and very small */
+/* Narrow mobile — between tablet and very small */
 @media (max-width: 600px) {
 
   /* -- Form list controls: stack select + refresh vertically --- */
@@ -361,6 +361,7 @@
   html, body {
     width: 100%;
     overflow-x: hidden;
+    touch-action: pan-y;
   }
 
   /* Make main shells and papers constrain to viewport */
