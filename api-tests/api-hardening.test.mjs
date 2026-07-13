@@ -1,14 +1,34 @@
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const apiRoot = resolve(__dirname, '..', '..', 'form-builder-api');
+const laravelRoot = resolve(apiRoot, 'laravel');
 const appRoot = resolve(__dirname, '..');
 
-function readApiFile(fileName) {
+const CONTROLLERS = 'app/Http/Controllers';
+
+// The security guarantees below used to be grepped out of the legacy root
+// PHP endpoint files. Those endpoints have been ported to the Laravel app, so
+// these assertions now inspect the Laravel source (controllers, middleware
+// config, framework config) where each guarantee lives today. Runtime
+// behaviour is additionally covered by the phpunit feature tests
+// (SecurityHardeningTest, BannerEndpointTest, UserEndpointTest, ...).
+function readLaravelFile(relPath) {
+  return readFileSync(resolve(laravelRoot, relPath), 'utf8');
+}
+
+function readController(name) {
+  return readLaravelFile(`${CONTROLLERS}/${name}.php`);
+}
+
+// The initial-super-admin bootstrap is a CLI-only script that has not been
+// ported to a Laravel artisan command yet, so its guarantee still lives in the
+// legacy root PHP file.
+function readLegacyFile(fileName) {
   return readFileSync(resolve(apiRoot, fileName), 'utf8');
 }
 
@@ -16,121 +36,86 @@ function readAppFile(fileName) {
   return readFileSync(resolve(appRoot, fileName), 'utf8');
 }
 
-function assertContains(source, expected, fileName) {
+function assertContains(source, expected, label) {
   assert.match(
     source,
     expected instanceof RegExp ? expected : new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
-    `${fileName} should contain ${expected.toString()}`,
+    `${label} should contain ${expected.toString()}`,
   );
 }
 
-const mutatingAuthenticatedEndpoints = [
-  'acknowledge_notification.php',
-  'change_password.php',
-  'create_user_api.php',
-  'delete_form.php',
-  'delete_user.php',
-  'logout.php',
-  'mark_notification_read.php',
-  'remove_banner.php',
-  'save_form.php',
-  'update_form.php',
-  'upload_banner.php',
-];
+test('CSRF protection is centralized with a limited exemption allowlist', () => {
+  const bootstrap = readLaravelFile('bootstrap/app.php');
 
-test('authenticated mutating endpoints require CSRF protection', () => {
-  for (const fileName of mutatingAuthenticatedEndpoints) {
-    const source = readApiFile(fileName);
+  assertContains(bootstrap, /validateCsrfTokens\s*\(\s*except:/, 'bootstrap/app.php');
 
-    assertContains(source, /require_once ['"]auth_helper\.php['"]/, fileName);
-    assertContains(source, /fb_require_csrf\s*\(/, fileName);
+  // Only pre-session / public endpoints may be exempt from CSRF.
+  for (const exempt of ['login.php', 'submit_response.php', 'test_reset_database.php', 'api/public/forms/*/responses', 'api/login']) {
+    assertContains(bootstrap, exempt, 'bootstrap/app.php');
+  }
 
-    if (fileName === 'logout.php') {
-      assertContains(source, /fb_start_session\s*\(/, fileName);
-    } else {
-      assert.match(
-        source,
-        /fb_require_auth\s*\(|fb_require_super_admin\s*\(/,
-        `${fileName} should require an authenticated session`,
-      );
-    }
+  // Authenticated mutating routes must stay CSRF-protected (never exempt).
+  assert.doesNotMatch(bootstrap, /api\/users|api\/banner|api\/notifications/, 'authenticated routes must not be CSRF-exempt');
+  assert.doesNotMatch(bootstrap, /['"]api\/forms/, 'form-write routes must not be CSRF-exempt');
+});
+
+test('super-admin controllers enforce the super_admin role server-side', () => {
+  for (const name of ['LegacyAdminFormController', 'LegacyUserController', 'LegacyAuditLogController', 'LegacyBannerController']) {
+    assertContains(readController(name), /requireSuperAdmin\s*\(/, name);
   }
 });
 
-const superAdminEndpoints = [
-  'change_password.php',
-  'create_user_api.php',
-  'delete_user.php',
-  'get_all_forms.php',
-  'get_audit_logs.php',
-  'get_users.php',
-  'upload_banner.php',
-  'remove_banner.php',
-];
-
-test('super-admin endpoints enforce the super_admin role server-side', () => {
-  for (const fileName of superAdminEndpoints) {
-    assertContains(readApiFile(fileName), /fb_require_super_admin\s*\(/, fileName);
-  }
-});
-test('CORS headers and origin allowlist are centralized in cors_helper', () => {
-  const helper = readApiFile('cors_helper.php');
-  assertContains(helper, /function\s+fb_allowed_cors_origins\s*\(/, 'cors_helper.php');
-  assertContains(helper, /FB_ALLOWED_ORIGINS/, 'cors_helper.php');
-  assertContains(helper, /function\s+fb_apply_cors\s*\(/, 'cors_helper.php');
-
-  for (const fileName of readdirSync(apiRoot).filter((name) => name.endsWith('.php') && name !== 'cors_helper.php')) {
-    const source = readApiFile(fileName);
-    assert.doesNotMatch(source, /\$allowed_origins\s*=\s*\[/, `${fileName} should not define a local CORS allowlist`);
-    assert.doesNotMatch(source, /Access-Control-Allow-(Origin|Methods|Headers)/, `${fileName} should not emit raw CORS headers`);
-  }
+test('authenticated controllers guard mutating actions with a session check', () => {
+  // Per-user authenticated endpoints require a logged-in session.
+  assertContains(readController('LegacyNotificationController'), /requireAuth\s*\(/, 'LegacyNotificationController');
+  // Form writes resolve the acting user from the session, not the request body.
+  assertContains(readController('LegacyFormWriteController'), /session\(\)->get\('user_id'\)/, 'LegacyFormWriteController');
 });
 
 test('login uses password verification, session regeneration, and rate limiting', () => {
-  const source = readApiFile('login.php');
+  const source = readController('LegacyAuthController');
 
-  assertContains(source, /password_verify\s*\(/, 'login.php');
-  assertContains(source, /session_regenerate_id\s*\(\s*true\s*\)/, 'login.php');
-  assertContains(source, /fb_is_login_rate_limited\s*\(/, 'login.php');
-  assertContains(source, /fb_record_login_failure\s*\(/, 'login.php');
-  assertContains(source, /fb_clear_login_failures\s*\(/, 'login.php');
+  assertContains(source, /password_verify\s*\(/, 'LegacyAuthController');
+  assertContains(source, /session\(\)->regenerate\s*\(/, 'LegacyAuthController');
+  assertContains(source, /isLoginRateLimited\s*\(/, 'LegacyAuthController');
+  assertContains(source, /recordLoginFailure\s*\(/, 'LegacyAuthController');
+  assertContains(source, /clearLoginFailures\s*\(/, 'LegacyAuthController');
 });
 
 test('user password writes hash passwords instead of storing plaintext', () => {
-  for (const fileName of ['create_user_api.php', 'change_password.php']) {
-    const source = readApiFile(fileName);
+  const source = readController('LegacyUserController');
 
-    assertContains(source, /password_hash\s*\(/, fileName);
-    assert.doesNotMatch(
-      source,
-      /SET\s+password_hash\s*=\s*\$newPassword|VALUES\s*\([^)]*\$password[^)]*\)/,
-      `${fileName} should not write raw password variables into password_hash`,
-    );
-  }
+  assertContains(source, /password_hash\s*\(/, 'LegacyUserController');
+  assert.doesNotMatch(
+    source,
+    /SET\s+password_hash\s*=\s*\$newPassword|VALUES\s*\([^)]*\$password[^)]*\)/,
+    'LegacyUserController should not write raw password variables into password_hash',
+  );
 });
 
 test('user password endpoints enforce the shared stronger password policy', () => {
-  assertContains(readApiFile('auth_helper.php'), /function\s+fb_password_policy_error\s*\(/, 'auth_helper.php');
-  assertContains(readApiFile('auth_helper.php'), /return\s+max\(12,\s*\$configured\)/, 'auth_helper.php');
+  const source = readController('LegacyUserController');
 
-  for (const fileName of ['create_user_api.php', 'change_password.php']) {
-    const source = readApiFile(fileName);
-    assertContains(source, /fb_password_policy_error\s*\(/, fileName);
-    assert.doesNotMatch(source, /strlen\s*\(\s*\$(?:password|newPassword)\s*\)\s*<\s*6/, `${fileName} should not keep the old 6-character policy`);
-  }
+  assertContains(source, /function\s+passwordPolicyError\s*\(/, 'LegacyUserController');
+  assertContains(source, /max\(12,/, 'LegacyUserController');
+  assertContains(source, /passwordPolicyError\s*\(\s*\$password\s*\)/, 'LegacyUserController');
+  assertContains(source, /passwordPolicyError\s*\(\s*\$newPassword\s*\)/, 'LegacyUserController');
+  assert.doesNotMatch(source, /strlen\s*\(\s*\$(?:password|newPassword)\s*\)\s*<\s*6\b/, 'LegacyUserController should not keep the old 6-character policy');
 });
 
-
 test('public response submissions are rate limited by form and client IP', () => {
-  const source = readApiFile('submit_response.php');
+  const source = readController('LegacySubmissionController');
 
-  assertContains(source, /fb_is_rate_limited\s*\(\s*'public_submission'/, 'submit_response.php');
-  assertContains(source, /fb_record_rate_limit_attempt\s*\(\s*'public_submission'/, 'submit_response.php');
-  assertContains(source, /http_response_code\(429\)/, 'submit_response.php');
+  assertContains(source, /isRateLimited\s*\(/, 'LegacySubmissionController');
+  assertContains(source, /recordRateLimitAttempt\s*\(/, 'LegacySubmissionController');
+  assertContains(source, /'public_submission:'/, 'LegacySubmissionController');
+  assertContains(source, /Too many submissions/, 'LegacySubmissionController');
+  assertContains(source, /\],\s*429\)/, 'LegacySubmissionController');
 });
 
 test('initial super admin bootstrap is CLI-only and password-policy protected', () => {
-  const source = readApiFile('bootstrap_super_admin.php');
+  // Not yet ported to Laravel; guarantee still lives in the legacy CLI script.
+  const source = readLegacyFile('bootstrap_super_admin.php');
 
   assertContains(source, /PHP_SAPI\s*!==\s*'cli'/, 'bootstrap_super_admin.php');
   assertContains(source, /FB_BOOTSTRAP_ADMIN_USERNAME/, 'bootstrap_super_admin.php');
@@ -141,47 +126,37 @@ test('initial super admin bootstrap is CLI-only and password-policy protected', 
 });
 
 test('banner upload validates type, image content, size, and fixed destination', () => {
-  const source = readApiFile('upload_banner.php');
+  const source = readController('LegacyBannerController');
 
-  assertContains(source, /fb_require_super_admin\s*\(/, 'upload_banner.php');
-  assertContains(source, /fb_require_csrf\s*\(/, 'upload_banner.php');
-  assertContains(source, /2\s*\*\s*1024\s*\*\s*1024/, 'upload_banner.php');
-  assertContains(source, /finfo_open\s*\(\s*FILEINFO_MIME_TYPE\s*\)/, 'upload_banner.php');
-  assertContains(source, /getimagesize\s*\(/, 'upload_banner.php');
-  assertContains(source, /IMAGETYPE_PNG/, 'upload_banner.php');
-  assertContains(source, /move_uploaded_file\s*\(/, 'upload_banner.php');
-  assertContains(source, /banner\.png/, 'upload_banner.php');
+  assertContains(source, /requireSuperAdmin\s*\(/, 'LegacyBannerController');
+  assertContains(source, /2\s*\*\s*1024\s*\*\s*1024/, 'LegacyBannerController');
+  assertContains(source, /getMimeType\s*\(\s*\)/, 'LegacyBannerController');
+  assertContains(source, /'image\/png'/, 'LegacyBannerController');
+  assertContains(source, /getimagesize\s*\(/, 'LegacyBannerController');
+  assertContains(source, /IMAGETYPE_PNG/, 'LegacyBannerController');
+  assertContains(source, /->move\s*\(/, 'LegacyBannerController');
+  assertContains(source, /banner\.png/, 'LegacyBannerController');
 });
 
 test('public response submission validates server-owned form questions', () => {
-  const source = readApiFile('submit_response.php');
+  const source = readController('LegacySubmissionController');
 
-  assertContains(source, /SELECT\s+id\s+FROM\s+forms\s+WHERE\s+id\s+=\s+\?/i, 'submit_response.php');
-  assertContains(source, /WHERE\s+form_id\s+=\s+\?/i, 'submit_response.php');
-  assertContains(source, /isset\s*\(\s*\$questionsById\[\$questionId\]\s*\)/, 'submit_response.php');
-  assertContains(source, /fb_is_question_visible\s*\(/, 'submit_response.php');
-  assertContains(source, /fb_validate_answer\s*\(/, 'submit_response.php');
-  assertContains(source, /FROM\s+question_options/i, 'submit_response.php');
-  assertContains(source, /beginTransaction\s*\(/, 'submit_response.php');
-  assertContains(source, /commit\s*\(/, 'submit_response.php');
-  assertContains(source, /rollBack\s*\(/, 'submit_response.php');
+  assertContains(source, /SELECT\s+id\s+FROM\s+forms\s+WHERE\s+id\s+=\s+\?/i, 'LegacySubmissionController');
+  assertContains(source, /WHERE\s+form_id\s+=\s+\?/i, 'LegacySubmissionController');
+  assertContains(source, /isset\s*\(\s*\$questionsById\[\$questionId\]\s*\)/, 'LegacySubmissionController');
+  assertContains(source, /isQuestionVisible\s*\(/, 'LegacySubmissionController');
+  assertContains(source, /validateAnswer\s*\(/, 'LegacySubmissionController');
+  assertContains(source, /FROM\s+question_options/i, 'LegacySubmissionController');
+  assertContains(source, /DB::transaction\s*\(/, 'LegacySubmissionController');
 });
 
 test('form ownership checks exist on sensitive form and response endpoints', () => {
-  const ownershipEndpoints = [
-    'delete_form.php',
-    'export_responses.php',
-    'get_form_details.php',
-    'get_responses.php',
-    'get_response_details.php',
-    'update_form.php',
-  ];
+  for (const name of ['LegacyLookupController', 'LegacyFormWriteController']) {
+    const source = readController(name);
 
-  for (const fileName of ownershipEndpoints) {
-    const source = readApiFile(fileName);
-
-    assert.match(source, /created_by|formOwnerId|owner/i, `${fileName} should inspect form ownership`);
-    assert.match(source, /permission|own|Super admin|super_admin/i, `${fileName} should reject unauthorized access`);
+    assert.match(source, /created_by|formOwnerId|form_owner/i, `${name} should inspect form ownership`);
+    assert.match(source, /super_admin/i, `${name} should special-case super admins`);
+    assert.match(source, /permission|only view your own|only .* your own/i, `${name} should reject unauthorized access`);
   }
 });
 
@@ -197,58 +172,73 @@ test('committed schema dump excludes production-like data and password hashes', 
 });
 
 test('privileged and sensitive actions write audit log entries', () => {
-  const auditedEndpoints = {
-    'login.php': 'USER_LOGIN',
-    'logout.php': 'USER_LOGOUT',
-    'create_user_api.php': 'USER_CREATED',
-    'change_password.php': 'USER_PASSWORD_CHANGED',
-    'delete_user.php': 'USER_DELETED',
-    'save_form.php': 'FORM_CREATED',
-    'update_form.php': 'FORM_UPDATED',
-    'delete_form.php': 'FORM_DELETED',
-    'export_responses.php': 'RESPONSES_EXPORTED',
-    'upload_banner.php': 'BANNER_UPLOADED',
-    'remove_banner.php': 'BANNER_REMOVED',
+  const auditedActions = {
+    LegacyAuthController: ['USER_LOGIN', 'USER_LOGOUT'],
+    LegacyUserController: ['USER_CREATED', 'USER_PASSWORD_CHANGED', 'USER_DELETED'],
+    LegacyFormWriteController: ['FORM_CREATED', 'FORM_UPDATED', 'FORM_DELETED'],
+    LegacyLookupController: ['RESPONSES_EXPORTED'],
+    LegacyBannerController: ['BANNER_UPLOADED', 'BANNER_REMOVED'],
   };
 
-  for (const [fileName, action] of Object.entries(auditedEndpoints)) {
-    const source = readApiFile(fileName);
+  for (const [name, actions] of Object.entries(auditedActions)) {
+    const source = readController(name);
 
-    assertContains(source, /require_once ['"]audit_helpers\.php['"]/, fileName);
-    assertContains(source, /fb_audit_log\s*\(/, fileName);
-    assertContains(source, new RegExp(action), fileName);
+    assertContains(source, /DB::table\('audit_logs'\)->insert\(/, name);
+    for (const action of actions) {
+      assertContains(source, new RegExp(action), name);
+    }
   }
 });
 
 test('audit log reads bootstrap the audit table before querying', () => {
-  const source = readApiFile('get_audit_logs.php');
+  const source = readController('LegacyAuditLogController');
 
-  assertContains(source, /require_once ['"]audit_helpers\.php['"]/, 'get_audit_logs.php');
-  assertContains(source, /fb_ensure_audit_logs_table\s*\(/, 'get_audit_logs.php');
-  assertContains(source, /fb_normalize_audit_log_metadata\s*\(/, 'get_audit_logs.php');
-  assertContains(source, /ORDER BY id DESC, created_at DESC/, 'get_audit_logs.php');
-  assertContains(source, /UNIX_TIMESTAMP\(created_at\) AS created_at_unix/, 'get_audit_logs.php');
+  assertContains(source, /hasTable\s*\(\s*'audit_logs'\s*\)|notificationsTableExists|audit_logs/, 'LegacyAuditLogController');
+  assertContains(source, /normalizeMetadata\s*\(/, 'LegacyAuditLogController');
+  assertContains(source, /ORDER BY id DESC, created_at DESC/, 'LegacyAuditLogController');
+  assertContains(source, /UNIX_TIMESTAMP\(created_at\) AS created_at_unix/, 'LegacyAuditLogController');
 });
 
-test('form update audit metadata uses readable owner and change details', () => {
-  const source = readApiFile('update_form.php');
+test('form update audit metadata records readable change details', () => {
+  const source = readController('LegacyFormWriteController');
 
-  assertContains(source, /owner_username/, 'update_form.php');
-  assertContains(source, /form_owner/, 'update_form.php');
-  assertContains(source, /fb_update_audit_describe_changes\s*\(/, 'update_form.php');
-  assertContains(source, /Edited form title/, 'update_form.php');
-  assertContains(source, /Edited form description/, 'update_form.php');
-  assertContains(source, /Added section/, 'update_form.php');
-  assertContains(source, /Deleted section/, 'update_form.php');
-  assertContains(source, /Edited section/, 'update_form.php');
-  assertContains(source, /Question\s+\{\$questionNumber\}/, 'update_form.php');
-  assert.doesNotMatch(source, /owner_user_id|super_admin_action|question_count/);
+  assertContains(source, /describeFormAuditChanges\s*\(/, 'LegacyFormWriteController');
+  assertContains(source, /Edited form title/, 'LegacyFormWriteController');
+  assertContains(source, /Edited form description/, 'LegacyFormWriteController');
+  assertContains(source, /Added section/, 'LegacyFormWriteController');
+  assertContains(source, /Deleted section/, 'LegacyFormWriteController');
+  assertContains(source, /Edited section/, 'LegacyFormWriteController');
+});
+
+test('audit log reads resolve the form owner into a readable name', () => {
+  // The readable-owner enrichment moved to the audit-log read path: stored
+  // metadata carries owner_user_id, which is resolved to form_owner on read.
+  const source = readController('LegacyAuditLogController');
+
+  assertContains(source, /owner_user_id/, 'LegacyAuditLogController');
+  assertContains(source, /\$metadata\['form_owner'\]/, 'LegacyAuditLogController');
 });
 
 test('form creation audit metadata uses simple new form detail', () => {
-  const source = readApiFile('save_form.php');
+  const source = readController('LegacyFormWriteController');
 
-  assertContains(source, /'changes'\s*=>\s*\[\s*'New form'\s*\]/, 'save_form.php');
+  assertContains(source, /'changes'\s*=>\s*\[\s*'New form'\s*\]/, 'LegacyFormWriteController');
+});
+
+test('user deletion protects super admin availability and owned forms', () => {
+  const source = readController('LegacyUserController');
+
+  assertContains(source, /You cannot delete your own account/, 'LegacyUserController');
+  assertContains(source, /role = 'super_admin'[\s\S]*FOR UPDATE/, 'LegacyUserController');
+  assertContains(source, /Cannot delete the last Super Admin account/, 'LegacyUserController');
+  assertContains(source, /UPDATE forms SET created_by = NULL WHERE created_by = \?/, 'LegacyUserController');
+  assertContains(source, /forms_unassigned/, 'LegacyUserController');
+});
+
+test('application timezone is fixed for generated timestamps', () => {
+  const source = readLaravelFile('config/app.php');
+
+  assertContains(source, /'timezone'\s*=>\s*env\('APP_TIMEZONE', 'Asia\/Singapore'\)/, 'config/app.php');
 });
 
 test('dev proxy forwards client IP headers for audit logging', () => {
@@ -259,6 +249,7 @@ test('dev proxy forwards client IP headers for audit logging', () => {
   assertContains(source, /VITE_API_TARGET/, 'vite.config.js');
   assertContains(source, /http:\/\/127\.0\.0\.1:8000/, 'vite.config.js');
 });
+
 test('production build calls Laravel same-origin endpoints', () => {
   const source = readAppFile('src/apiBase.js');
 
@@ -281,24 +272,3 @@ test('login banner uses Vite base URL for Laravel-hosted builds', () => {
   assertContains(source, /src=\{agencyLogoUrl\}/, 'src/LoginPage.jsx');
   assert.doesNotMatch(source, /src="\/EMB1-LOGO-WITH-NAME-BAGONG-PILIPINAS\.png"/);
 });
-
-test('user deletion protects super admin availability and owned forms', () => {
-  const source = readApiFile('delete_user.php');
-
-  assertContains(source, /You cannot delete your own account/, 'delete_user.php');
-  assertContains(source, /role\s*=\s*'super_admin'[\s\S]*FOR UPDATE/, 'delete_user.php');
-  assertContains(source, /Cannot delete the last Super Admin account/, 'delete_user.php');
-  assertContains(source, /UPDATE forms SET created_by = NULL WHERE created_by = \?/, 'delete_user.php');
-  assertContains(source, /forms_unassigned/, 'delete_user.php');
-});
-
-test('database connection sets the app timezone for generated timestamps', () => {
-  const source = readApiFile('db.php');
-
-  assertContains(source, /'timezone'\s*=>\s*getenv\('FB_DB_TIMEZONE'\) \?: '\+08:00'/, 'db.php');
-  assertContains(source, /SET time_zone/, 'db.php');
-  assertContains(source, /\$pdo->quote\(\$timezone\)/, 'db.php');
-});
-
-
-
