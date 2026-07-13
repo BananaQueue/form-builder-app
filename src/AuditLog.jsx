@@ -120,7 +120,7 @@ function AuditLog({ showToast }) {
     async function fetchAuditLogs() {
       setLoading(true)
       try {
-        const response = await fetch(apiUrl(`/get_audit_logs.php?${queryString}`), {
+        const response = await fetch(apiUrl(`/api/admin/audit-logs?${queryString}`), {
           credentials: 'include',
         })
         const result = await response.json()

@@ -143,6 +143,12 @@ test('user management uses Laravel-native user routes', () => {
   assert.match(adminForms, /apiUrl\(["']\/api\/users["']\)/);
   assert.doesNotMatch(users + adminForms, /get_users\.php|create_user_api\.php|delete_user\.php|change_password\.php/);
 });
+test('audit log uses the Laravel-native admin audit-logs route', () => {
+  const source = readSrc('AuditLog.jsx');
+
+  assert.match(source, /apiUrl\(`\/api\/admin\/audit-logs\?\$\{queryString\}`\)/);
+  assert.doesNotMatch(source, /get_audit_logs\.php/);
+});
 test('form viewer duplicates through create flow and opens the copy', () => {
   const viewer = readSrc('FormViewer.jsx');
   const layout = readSrc('AdminLayout.jsx');
