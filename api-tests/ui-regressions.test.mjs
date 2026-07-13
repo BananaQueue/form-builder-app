@@ -149,6 +149,16 @@ test('audit log uses the Laravel-native admin audit-logs route', () => {
   assert.match(source, /apiUrl\(`\/api\/admin\/audit-logs\?\$\{queryString\}`\)/);
   assert.doesNotMatch(source, /get_audit_logs\.php/);
 });
+test('notifications use Laravel-native notification routes', () => {
+  const center = readSrc('NotificationCenter.jsx');
+  const gate = readSrc('NotificationGate.jsx');
+
+  assert.match(center, /apiUrl\(`\/api\/notifications\$\{query\}`\)/);
+  assert.match(center, /apiUrl\(`\/api\/notifications\/\$\{notificationId\}\/read`\)/);
+  assert.match(gate, /apiUrl\(["']\/api\/notifications\/pending["']\)/);
+  assert.match(gate, /apiUrl\(`\/api\/notifications\/\$\{current\.id\}\/acknowledge`\)/);
+  assert.doesNotMatch(center + gate, /get_notifications\.php|get_pending_notifications\.php|acknowledge_notification\.php|mark_notification_read\.php/);
+});
 test('form viewer duplicates through create flow and opens the copy', () => {
   const viewer = readSrc('FormViewer.jsx');
   const layout = readSrc('AdminLayout.jsx');

@@ -18,7 +18,7 @@ export default function NotificationGate({ showToast, onComplete }) {
   useEffect(() => {
     async function loadPending() {
       try {
-        const res = await fetch(apiUrl("/get_pending_notifications.php"), {
+        const res = await fetch(apiUrl("/api/notifications/pending"), {
           credentials: "include",
         });
         const data = await res.json();
@@ -55,11 +55,11 @@ export default function NotificationGate({ showToast, onComplete }) {
     setAcknowledging(true);
 
     try {
-      const res = await fetch(apiUrl("/acknowledge_notification.php"), {
+      const res = await fetch(apiUrl(`/api/notifications/${current.id}/acknowledge`), {
         method: "POST",
         credentials: "include",
         headers: csrfHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ notification_id: current.id }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (!data.success) {

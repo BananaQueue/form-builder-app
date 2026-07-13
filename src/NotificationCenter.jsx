@@ -25,7 +25,7 @@ export default function NotificationCenter({ showToast }) {
         activeFilter === "all"
           ? ""
           : `?type=${encodeURIComponent(activeFilter)}`;
-      const res = await fetch(apiUrl(`/get_notifications.php${query}`), {
+      const res = await fetch(apiUrl(`/api/notifications${query}`), {
         credentials: "include",
       });
       const data = await res.json();
@@ -49,11 +49,11 @@ export default function NotificationCenter({ showToast }) {
 
   async function markRead(notificationId) {
     try {
-      const res = await fetch(apiUrl("/mark_notification_read.php"), {
+      const res = await fetch(apiUrl(`/api/notifications/${notificationId}/read`), {
         method: "POST",
         credentials: "include",
         headers: csrfHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ notification_id: notificationId }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (data.success) {
