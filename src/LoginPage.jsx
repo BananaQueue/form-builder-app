@@ -24,7 +24,7 @@ function LoginPage({ onLoginSuccess }) {
     setLoading(true)
 
     try {
-      const response = await fetch(apiUrl('/login.php'), {
+      const response = await fetch(apiUrl('/api/login'), {
         method:      'POST',
         headers:     { 'Content-Type': 'application/json' },
         credentials: 'include',

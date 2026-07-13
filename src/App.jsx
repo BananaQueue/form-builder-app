@@ -109,7 +109,7 @@ function App() {
 
   // ── Session check (unchanged) ─────────────────────────────────────────
   useEffect(() => {
-    fetch(apiUrl('/check_session.php'), { credentials: 'include' })
+    fetch(apiUrl('/api/session'), { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         setCsrfToken(data.csrf_token)
@@ -174,7 +174,7 @@ function App() {
     setAuthTransition('signingOut')
     logoutTimerRef.current = window.setTimeout(async () => {
       try {
-        await fetch(apiUrl('/logout.php'), {
+        await fetch(apiUrl('/api/logout'), {
           method: 'POST',
           headers: csrfHeaders(),
           credentials: 'include',

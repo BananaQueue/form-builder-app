@@ -6,7 +6,7 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
 
 | Area | Frontend / asset usage | Laravel route/controller | Legacy PHP file still present | Suggested native route |
 | --- | --- | --- | --- | --- |
-| Auth session | `check_session.php`, `login.php`, `logout.php` | `LegacyAuthController` | Yes | `GET /api/session`, `POST /api/login`, `POST /api/logout` |
+| Auth session | Frontend now calls `GET /api/session`, `POST /api/login`, `POST /api/logout`; compatibility routes still exist as `check_session.php`, `login.php`, `logout.php` | `LegacyAuthController` | Yes | Migrated frontend auth to native aliases |
 | Forms list/detail | Frontend now calls `GET /api/forms`, `GET /api/forms/{id}`, `GET /api/public/forms/{code}`, `GET /api/categories`; compatibility routes still exist as `get_forms.php`, `get_form_details.php`, `get_form_by_code.php`, `get_categories.php` | `LegacyLookupController` | Yes | Migrated frontend reads to native aliases |
 | Form writes | Frontend now calls `POST /api/forms`, `PUT /api/forms/{id}`, `DELETE /api/forms/{id}`; compatibility routes still exist as `save_form.php`, `update_form.php`, `delete_form.php` (used by Playwright ownership-boundary tests and left live for rollback) | `LegacyFormWriteController` | Yes | Migrated frontend writes to native aliases |
 | Public submissions | Frontend now calls `POST /api/public/forms/{id}/responses`; compatibility route still exists as `submit_response.php` | `LegacySubmissionController` | Yes | Migrated frontend submission to native alias |
@@ -19,7 +19,7 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
 
 ## Current Dependency Hotspots
 
-- Frontend API calls are centralized through `src/apiBase.js`. Lookup/form reads, response reads/export, and form writes (create/update/delete/duplicate) now use `/api/...`; remaining admin/auth/banner/notification calls still use `.php` compatibility names.
+- Frontend API calls are centralized through `src/apiBase.js`. Lookup/form reads, response reads/export, form writes (create/update/delete/duplicate), public submission, and auth session (login/logout/session) now use `/api/...`; remaining admin/user/banner/notification calls still use `.php` compatibility names.
 - `api-tests/api-hardening.test.mjs` reads old PHP files directly with `readApiFile(...)`.
 - `api-tests/php-syntax.test.mjs` lints root `form-builder-api/*.php` files.
 - `tests/ownership-boundaries.spec.js` intentionally exercises the compatibility `save_form.php`/`update_form.php`/`delete_form.php` routes directly via Playwright's `request` fixture; these must stay live until that test is converted too.
@@ -42,13 +42,16 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
 5. **Move public submissions**
    Done. `submit_response.php` is now aliased as `POST /api/public/forms/{id}/responses` (route `{id}` injected into the JSON payload as `form_id`, exempted from CSRF like the compatibility route since public respondents have no session). `FormDisplay.jsx` calls the native route. Compatibility route remains for rollback.
 
-6. **Move admin/user/banner/notification routes**
+6. **Move auth session**
+   Done. `check_session.php`, `login.php`, and `logout.php` are now aliased as `GET /api/session`, `POST /api/login`, and `POST /api/logout` (same `LegacyAuthController` methods; `api/login` added to the CSRF exemption list like `login.php` since login precedes any token). `App.jsx` (session check + logout) and `LoginPage.jsx` (login) call the native routes. Compatibility routes remain live for the `loginViaApi` e2e helper and rollback.
+
+7. **Move admin/user/banner/notification routes**
    Convert these one group at a time because they carry CSRF, permission, upload, and notification side effects.
 
-7. **Replace old PHP hardening tests**
+8. **Replace old PHP hardening tests**
    Convert tests that inspect root PHP files into Laravel feature tests or Laravel source assertions. This is required before removing root PHP files.
 
-8. **Retire root PHP endpoints**
+9. **Retire root PHP endpoints**
    Once every frontend call and test targets Laravel-native routes, remove or archive the old PHP endpoint files.
 
 ## Verification Snapshot

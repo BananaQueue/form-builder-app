@@ -118,6 +118,15 @@ test('public form submission uses the Laravel-native submission route', () => {
   assert.match(source, /apiUrl\(`\/api\/public\/forms\/\$\{form\.id\}\/responses`\)/);
   assert.doesNotMatch(source, /submit_response\.php/);
 });
+test('frontend auth calls use Laravel-native session routes', () => {
+  const app = readSrc('App.jsx');
+  const login = readSrc('LoginPage.jsx');
+
+  assert.match(app, /apiUrl\(['"]\/api\/session['"]\)/);
+  assert.match(app, /apiUrl\(['"]\/api\/logout['"]\)/);
+  assert.match(login, /apiUrl\(['"]\/api\/login['"]\)/);
+  assert.doesNotMatch(app + login, /check_session\.php|login\.php|logout\.php/);
+});
 test('form viewer duplicates through create flow and opens the copy', () => {
   const viewer = readSrc('FormViewer.jsx');
   const layout = readSrc('AdminLayout.jsx');
