@@ -5,8 +5,8 @@ test('E2E tests are connected to the dedicated test database', async ({ request 
 
   expect(response.ok(), [
     'Playwright E2E must be pointed at a dedicated test database.',
-    'Copy form-builder-api/db.local.example.php to form-builder-api/db.local.php',
-    'and set dbname to form_builder_test before running database-backed tests.',
+    'Copy form-builder-api/laravel/.env.testing.example to .env.testing',
+    'and set DB_DATABASE=form_builder_test before running database-backed tests.',
   ].join(' ')).toBe(true);
 
   const body = await response.json();

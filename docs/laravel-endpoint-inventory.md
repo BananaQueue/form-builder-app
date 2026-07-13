@@ -58,18 +58,21 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
    One exception: `initial super admin bootstrap is CLI-only` still inspects the legacy `bootstrap_super_admin.php`, because that CLI capability has **not** been ported to a Laravel artisan command. `php-syntax.test.mjs` still lints the surviving root `.php` files.
 
 9. **Retire root PHP endpoints**
-   Once every frontend call and test targets Laravel-native routes, remove or archive the old PHP endpoint files. Blocker to resolve first: `bootstrap_super_admin.php` (seed the initial super admin) has no Laravel equivalent yet -- port it to an artisan command (e.g. `php artisan fb:bootstrap-super-admin`) before deleting it. `db.php` and the `.php` helper files (`auth_helper.php`, `audit_helpers.php`, `cors_helper.php`, rate-limit helpers) are only used by the legacy endpoints/bootstrap, so they can go once those are gone. The compatibility `.php` routes in `web.php` and the e2e helpers/`tests/ownership-boundaries.spec.js` that still call them directly must be converted or removed in the same step.
+   Done (root files). All 41 tracked root `form-builder-api/*.php` files -- the original XAMPP endpoints, their shared helpers (`auth_helper.php`, `audit_helpers.php`, `cors_helper.php`, `db.php`, `*_helpers.php`), the one-off migration scripts (`generate_form_code.php`, `add_codes_to_existing_forms.php`), the `test_*.php` scripts, `db.local.example.php`, and the now-ported `bootstrap_super_admin.php` -- have been deleted. Nothing running referenced them: the Laravel app is self-contained (it never `require`s a root file), the frontend calls native `/api/...` routes, and the e2e suite goes through Laravel. The `php-syntax.test.mjs` node test (which linted those root files) was removed, and `database-guard.spec.js`'s setup guidance now points at `laravel/.env.testing` instead of the retired `db.local.example.php`. The untracked local `db.local.php` (a developer's legacy DB credentials) is left on disk for the owner to remove.
+
+   Deliberately kept: the `.php`-named **compatibility routes** in `laravel/routes/web.php` are Laravel routes (not XAMPP PHP), still aliasing the `LegacyXController` classes. They remain for rollback and are still exercised directly by the e2e helpers (`loginViaApi`, `getFormFromApi`, `getUserFromApi`) and `tests/ownership-boundaries.spec.js`. Removing those routes (and converting those e2e call sites to native `/api/...`) is an optional future cleanup; it is not required for the Definition of Done, which is satisfied now: the app runs on Laravel + MySQL with no XAMPP Apache serving PHP.
 
 ## Verification Snapshot
 
-Latest checks after migrating lookup and response reads:
+Latest checks after retiring the root PHP files (all endpoint groups migrated):
 
-- `php artisan test`: 78 passed
-- `npm run test:api`: 44 passed
+- `php artisan test`: 119 passed (self-contained Laravel app -- unaffected by deleting the root `.php` files)
+- `npm run test:api`: 55 passed (the `api-hardening` suite now inspects Laravel source; `php-syntax` node test removed)
 - `npm run lint`: 0 errors, 8 existing hook dependency warnings
 - `npm run build`: passed
-- Built JS includes `/api/categories`, `/api/forms`, `/api/public/forms`, and `/api/responses`
-- Built JS does not include migrated legacy endpoint names: `get_categories.php`, `get_forms.php`, `get_form_details.php`, `get_form_by_code.php`, `get_responses.php`, `get_response_details.php`, `export_responses.php`
+- e2e: `ownership-boundaries` (exercises the kept compatibility routes) and `database-guard` pass
+- Built JS calls only native `/api/...` routes; no legacy `.php` endpoint names remain in the frontend
+- No `form-builder-api/*.php` root files remain (Laravel app + `fb:bootstrap-super-admin` artisan command own all backend behavior)
 
 ## Definition of Done
 
