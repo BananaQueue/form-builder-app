@@ -6,8 +6,10 @@ import {
   resetTestDatabase,
 } from './e2e-helpers';
 
+// Request paths are doubled (/api/api/...): the vite dev proxy strips the
+// leading /api, leaving the Laravel-native /api/... route.
 async function createFormViaApi(request, csrfToken, title) {
-  const response = await request.post('/api/save_form.php', {
+  const response = await request.post('/api/api/forms', {
     headers: {
       'X-CSRF-Token': csrfToken,
     },
@@ -68,24 +70,23 @@ test('regular users cannot access another regular user form through protected AP
   const protectedChecks = [
     {
       label: 'form details',
-      response: await request.get(`/api/get_form_details.php?id=${formId}`),
+      response: await request.get(`/api/api/forms/${formId}`),
     },
     {
       label: 'responses list',
-      response: await request.get(`/api/get_responses.php?form_id=${formId}`),
+      response: await request.get(`/api/api/forms/${formId}/responses`),
     },
     {
       label: 'response export',
-      response: await request.get(`/api/export_responses.php?form_id=${formId}`),
+      response: await request.get(`/api/api/forms/${formId}/responses/export`),
     },
     {
       label: 'form update',
-      response: await request.post('/api/update_form.php', {
+      response: await request.put(`/api/api/forms/${formId}`, {
         headers: {
           'X-CSRF-Token': otherLogin.csrf_token,
         },
         data: {
-          form_id: formId,
           title: 'Unauthorized update attempt',
           description: 'This must be rejected.',
           category_id: 1,
@@ -95,12 +96,9 @@ test('regular users cannot access another regular user form through protected AP
     },
     {
       label: 'form delete',
-      response: await request.post('/api/delete_form.php', {
+      response: await request.delete(`/api/api/forms/${formId}`, {
         headers: {
           'X-CSRF-Token': otherLogin.csrf_token,
-        },
-        data: {
-          form_id: formId,
         },
       }),
     },

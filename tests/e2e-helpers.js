@@ -30,8 +30,12 @@ export async function resetTestDatabase(request) {
   ).toBe(true);
 }
 
+// Note: request paths below are doubled (/api/api/...). The vite dev proxy
+// strips the leading /api, leaving the Laravel-native /api/... route
+// (e.g. /api/api/login -> /api/login), mirroring how the app's apiUrl()
+// builds URLs in dev.
 export async function loginViaApi(request, username, password) {
-  const response = await request.post('/api/login.php', {
+  const response = await request.post('/api/api/login', {
     data: { username, password },
   });
   const body = await response.text();
@@ -79,7 +83,7 @@ export async function getLastResetCode(request) {
 
 export async function getFormFromApi(page, formTitle) {
   return page.evaluate(async (title) => {
-    const response = await fetch('/api/get_all_forms.php?per_page=10', {
+    const response = await fetch('/api/api/admin/forms?per_page=10', {
       credentials: 'include',
     });
     const result = await response.json();
@@ -89,7 +93,7 @@ export async function getFormFromApi(page, formTitle) {
 
 export async function getUserFromApi(page, username) {
   return page.evaluate(async (targetUsername) => {
-    const response = await fetch('/api/get_users.php', {
+    const response = await fetch('/api/api/users', {
       credentials: 'include',
     });
     const result = await response.json();
