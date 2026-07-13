@@ -52,7 +52,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
   async function fetchUsers() {
     setLoading(true)
     try {
-      const res    = await fetch(apiUrl('/get_users.php'), { credentials: 'include' })
+      const res    = await fetch(apiUrl('/api/users'), { credentials: 'include' })
       const result = await res.json()
       if (result.success) setUsers(result.users)
       else showToast(result.error || 'Failed to load users.', 'error')
@@ -71,7 +71,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
     }
     setAddingUser(true)
     try {
-      const res    = await fetch(apiUrl('/create_user_api.php'), {
+      const res    = await fetch(apiUrl('/api/users'), {
         method: 'POST',
         credentials: 'include',
         headers: csrfHeaders({ 'Content-Type': 'application/json' }),
@@ -105,11 +105,11 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
       `Delete ${roleLabel} "${user.username}"? Their forms will remain in the database unassigned.`,
       async () => {
         try {
-          const res    = await fetch(apiUrl('/delete_user.php'), {
-            method: 'POST',
+          const res    = await fetch(apiUrl(`/api/users/${user.id}`), {
+            method: 'DELETE',
             credentials: 'include',
             headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-            body: JSON.stringify({ user_id: user.id }),
+            body: JSON.stringify({}),
           })
           const result = await res.json()
           if (result.success) {
@@ -130,12 +130,11 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
     if (!newPw.trim()) return
     setSavingPw(true)
     try {
-      const res    = await fetch(apiUrl('/change_password.php'), {
-        method: 'POST',
+      const res    = await fetch(apiUrl(`/api/users/${pwModal.id}/password`), {
+        method: 'PATCH',
         credentials: 'include',
         headers: csrfHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
-          user_id: pwModal.id,
           new_password: newPw,
           ...(pwModal.resetToken ? { reset_token: pwModal.resetToken } : {}),
         }),

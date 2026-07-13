@@ -133,6 +133,16 @@ test('admin forms list uses the Laravel-native admin route', () => {
   assert.match(source, /apiUrl\(`\/api\/admin\/forms\?\$\{params\}`\)/);
   assert.doesNotMatch(source, /get_all_forms\.php/);
 });
+test('user management uses Laravel-native user routes', () => {
+  const users = readSrc('UserManagement.jsx');
+  const adminForms = readSrc('AdminFormList.jsx');
+
+  assert.match(users, /apiUrl\(['"]\/api\/users['"]\)/);
+  assert.match(users, /apiUrl\(`\/api\/users\/\$\{user\.id\}`\)/);
+  assert.match(users, /apiUrl\(`\/api\/users\/\$\{pwModal\.id\}\/password`\)/);
+  assert.match(adminForms, /apiUrl\(["']\/api\/users["']\)/);
+  assert.doesNotMatch(users + adminForms, /get_users\.php|create_user_api\.php|delete_user\.php|change_password\.php/);
+});
 test('form viewer duplicates through create flow and opens the copy', () => {
   const viewer = readSrc('FormViewer.jsx');
   const layout = readSrc('AdminLayout.jsx');

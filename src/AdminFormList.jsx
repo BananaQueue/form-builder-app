@@ -372,7 +372,7 @@ function AdminFormList({
       try {
         const [catRes, userRes] = await Promise.all([
           fetch(apiUrl("/api/categories"), { credentials: "include" }),
-          fetch(apiUrl("/get_users.php"), { credentials: "include" }),
+          fetch(apiUrl("/api/users"), { credentials: "include" }),
         ]);
         const catData = await catRes.json();
         const userData = await userRes.json();
