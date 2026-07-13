@@ -25,13 +25,6 @@ function readController(name) {
   return readLaravelFile(`${CONTROLLERS}/${name}.php`);
 }
 
-// The initial-super-admin bootstrap is a CLI-only script that has not been
-// ported to a Laravel artisan command yet, so its guarantee still lives in the
-// legacy root PHP file.
-function readLegacyFile(fileName) {
-  return readFileSync(resolve(apiRoot, fileName), 'utf8');
-}
-
 function readAppFile(fileName) {
   return readFileSync(resolve(appRoot, fileName), 'utf8');
 }
@@ -114,15 +107,18 @@ test('public response submissions are rate limited by form and client IP', () =>
 });
 
 test('initial super admin bootstrap is CLI-only and password-policy protected', () => {
-  // Not yet ported to Laravel; guarantee still lives in the legacy CLI script.
-  const source = readLegacyFile('bootstrap_super_admin.php');
+  // Ported from the legacy CLI script to an artisan command, which is
+  // inherently CLI-only (never routed over HTTP).
+  const source = readLaravelFile('app/Console/Commands/BootstrapSuperAdmin.php');
 
-  assertContains(source, /PHP_SAPI\s*!==\s*'cli'/, 'bootstrap_super_admin.php');
-  assertContains(source, /FB_BOOTSTRAP_ADMIN_USERNAME/, 'bootstrap_super_admin.php');
-  assertContains(source, /FB_BOOTSTRAP_ADMIN_PASSWORD/, 'bootstrap_super_admin.php');
-  assertContains(source, /fb_password_policy_error\s*\(/, 'bootstrap_super_admin.php');
-  assertContains(source, /role\s*=\s*'super_admin'/, 'bootstrap_super_admin.php');
-  assertContains(source, /A Super Admin already exists/, 'bootstrap_super_admin.php');
+  assertContains(source, /extends\s+Command/, 'BootstrapSuperAdmin.php');
+  assertContains(source, /fb:bootstrap-super-admin/, 'BootstrapSuperAdmin.php');
+  assertContains(source, /FB_BOOTSTRAP_ADMIN_USERNAME/, 'BootstrapSuperAdmin.php');
+  assertContains(source, /FB_BOOTSTRAP_ADMIN_PASSWORD/, 'BootstrapSuperAdmin.php');
+  assertContains(source, /function\s+passwordPolicyError\s*\(/, 'BootstrapSuperAdmin.php');
+  assertContains(source, /max\(12,/, 'BootstrapSuperAdmin.php');
+  assertContains(source, /role = 'super_admin'/, 'BootstrapSuperAdmin.php');
+  assertContains(source, /A Super Admin already exists/, 'BootstrapSuperAdmin.php');
 });
 
 test('banner upload validates type, image content, size, and fixed destination', () => {
