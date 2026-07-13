@@ -14,7 +14,7 @@
 
 
 /* +----------------------------------------------------------+
-   ¦  RESPONSE LIST  (.rl-*)                                  ¦
+   ï¿½  RESPONSE LIST  (.rl-*)                                  ï¿½
    +----------------------------------------------------------+ */
 
 /* -- Shell ------------------------------------------------------------------ */
@@ -53,8 +53,8 @@
 
 /* -- Export button ---------------------------------------------------------- */
 /*
-  The export button is a standalone styled button — not a glass-button
-  variant — because its appearance changes significantly between
+  The export button is a standalone styled button ï¿½ not a glass-button
+  variant ï¿½ because its appearance changes significantly between
   enabled and disabled states. Making it a separate class is cleaner
   than stacking modifiers on glass-button.
 
@@ -94,7 +94,7 @@
 
 /*
   Disabled state modifier.
-  We use opacity + cursor instead of changing the background color —
+  We use opacity + cursor instead of changing the background color ï¿½
   this approach keeps the button's identity (it's still the export button)
   while clearly communicating it's unavailable.
 
@@ -191,7 +191,7 @@
 }
 
 /*
-  "View Details" button — a compact accent-colored button.
+  "View Details" button ï¿½ a compact accent-colored button.
   flex-shrink: 0 prevents it from compressing when the row is narrow.
 */
 .rl-view-btn {
@@ -223,7 +223,7 @@
 /*
   ?? (empty mailbox) is used instead of the generic ?? clipboard
   because this state specifically means "no one has submitted anything yet"
-  — the mailbox without mail is more precise to that meaning.
+  ï¿½ the mailbox without mail is more precise to that meaning.
 
   Choosing the right emoji matters for these designed empty states:
   it's the first thing the eye hits before reading the text.
@@ -279,7 +279,7 @@
 
 
 /* +----------------------------------------------------------+
-   ¦  RESPONSE VIEWER  (.rv-*)                                ¦
+   ï¿½  RESPONSE VIEWER  (.rv-*)                                ï¿½
    +----------------------------------------------------------+ */
 
 /* -- Shell ------------------------------------------------------------------ */
@@ -322,7 +322,7 @@
 
 /*
   The header meta row shows form title and submission date side by side.
-  Same pattern as the form card meta row from Phase 3 — flex row with
+  Same pattern as the form card meta row from Phase 3 ï¿½ flex row with
   a divider character between items.
 */
 .rv-header__meta {
@@ -371,7 +371,7 @@
 /* -- Section block ---------------------------------------------------------- */
 /*
   Section blocks in the response viewer act as visual dividers between
-  groups of answers. They don't contain answer data — just the section title.
+  groups of answers. They don't contain answer data ï¿½ just the section title.
 
   We use the same left-border-accent pattern as .fv-section-block and
   .fb-section-card for visual consistency across the app.
@@ -481,7 +481,7 @@
 /*
   The answer box sits below the question and type label.
   It uses a white/paper background to visually distinguish it from
-  the card itself — creating a "content inside a container" feel.
+  the card itself ï¿½ creating a "content inside a container" feel.
 
   This is the same layering principle used in IDE editors where
   the code area has a different background than the surrounding UI.
@@ -556,8 +556,12 @@
 
   .rl-response-row {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: var(--space-3);
+  }
+
+  .rl-response-row__info {
+    text-align: center;
   }
 
   .rl-view-btn {
@@ -584,8 +588,8 @@
 
   .rv-header__divider {
     display: none;
-    /* On mobile the stacked layout makes the · separator
-       look like a bullet point — hiding it is cleaner */
+    /* On mobile the stacked layout makes the ï¿½ separator
+       look like a bullet point ï¿½ hiding it is cleaner */
   }
 }
 

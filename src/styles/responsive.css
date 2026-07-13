@@ -4,7 +4,7 @@
 
    We handle three breakpoints:
    - Desktop: 768px and above
-   - Tablet: 480px – 767px
+   - Tablet: 480px ï¿½ 767px
    - Mobile: below 480px
 
    Media queries are read from top to bottom. When the screen
@@ -196,7 +196,7 @@
   .fb-shell { padding-top: var(--space-2); }
   .fb-paper { margin-bottom: var(--space-4); }
 
-  /* Condition/option panel rows — stack selects vertically */
+  /* Condition/option panel rows ï¿½ stack selects vertically */
   .fb-condition-panel select,
   .fb-condition-panel input {
     width: 100%;
@@ -214,8 +214,10 @@
   .rl-shell { padding: var(--space-4) var(--space-3) var(--space-8); }
   .rl-action-bar { flex-wrap: wrap; gap: var(--space-2); }
   .rl-action-bar .glass-button { flex: 1; justify-content: center; }
-  .rl-response-row { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
-  .rl-response-row .glass-button { width: 100%; justify-content: center; }
+  .rl-response-row { flex-direction: column; align-items: stretch; gap: var(--space-2); }
+  .rl-response-row__info { text-align: center; }
+  .rl-response-row .glass-button,
+  .rl-response-row .rl-view-btn { width: 100%; justify-content: center; text-align: center; }
 
   /* -- Response Viewer ------------------------------------------ */
   .rv-shell { padding: var(--space-4) var(--space-3) var(--space-8); }
@@ -294,7 +296,7 @@
 
 }
 
-/* Narrow mobile — between tablet and very small */
+/* Narrow mobile ï¿½ between tablet and very small */
 @media (max-width: 600px) {
 
   /* -- Form list controls: stack select + refresh vertically --- */
