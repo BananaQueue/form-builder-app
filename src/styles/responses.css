@@ -554,20 +554,10 @@
 */
 @media (max-width: 520px) {
 
+  /* The <=767px rule already wraps the button full-width and keeps the info
+     left-aligned; here just widen the gap between the two lines. */
   .rl-response-row {
-    flex-direction: column;
-    align-items: stretch;
     gap: var(--space-3);
-  }
-
-  .rl-response-row__info {
-    text-align: center;
-  }
-
-  .rl-view-btn {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
   }
 
   .rl-action-bar {

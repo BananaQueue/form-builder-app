@@ -214,10 +214,11 @@
   .rl-shell { padding: var(--space-4) var(--space-3) var(--space-8); }
   .rl-action-bar { flex-wrap: wrap; gap: var(--space-2); }
   .rl-action-bar .glass-button { flex: 1; justify-content: center; }
-  .rl-response-row { flex-direction: column; align-items: stretch; gap: var(--space-2); }
-  .rl-response-row__info { text-align: center; }
+  /* Keep the info (number + date) left-aligned as in the wider layout, and
+     wrap only the "View Details" button onto its own full-width line below. */
+  .rl-response-row { flex-wrap: wrap; gap: var(--space-2); }
   .rl-response-row .glass-button,
-  .rl-response-row .rl-view-btn { width: 100%; justify-content: center; text-align: center; }
+  .rl-response-row .rl-view-btn { flex-basis: 100%; justify-content: center; text-align: center; }
 
   /* -- Response Viewer ------------------------------------------ */
   .rv-shell { padding: var(--space-4) var(--space-3) var(--space-8); }
