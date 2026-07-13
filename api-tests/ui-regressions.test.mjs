@@ -159,6 +159,15 @@ test('notifications use Laravel-native notification routes', () => {
   assert.match(gate, /apiUrl\(`\/api\/notifications\/\$\{current\.id\}\/acknowledge`\)/);
   assert.doesNotMatch(center + gate, /get_notifications\.php|get_pending_notifications\.php|acknowledge_notification\.php|mark_notification_read\.php/);
 });
+test('banner settings use the Laravel-native banner route', () => {
+  const source = readSrc('BannerSettings.jsx');
+
+  assert.match(source, /apiUrl\(['"]\/api\/banner['"]\)/);
+  assert.doesNotMatch(source, /upload_banner\.php|remove_banner\.php/);
+  // The banner image itself is a static asset served from the public dir; it
+  // is not a .php endpoint, so it stays on /uploads/banner.png.
+  assert.match(source, /apiUrl\(['"]\/uploads\/banner\.png['"]\)/);
+});
 test('form viewer duplicates through create flow and opens the copy', () => {
   const viewer = readSrc('FormViewer.jsx');
   const layout = readSrc('AdminLayout.jsx');

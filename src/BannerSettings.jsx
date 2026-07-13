@@ -98,7 +98,7 @@ function BannerSettings({ showToast }) {
     try {
       const formData = new FormData()
       formData.append('banner', file)
-      const response = await fetch(apiUrl('/upload_banner.php'), {
+      const response = await fetch(apiUrl('/api/banner'), {
         method: 'POST',
         headers: csrfHeaders(),
         credentials: 'include',
@@ -127,8 +127,8 @@ function BannerSettings({ showToast }) {
   async function handleRemove() {
     setRemoving(true)
     try {
-      const response = await fetch(apiUrl('/remove_banner.php'), {
-        method: 'POST',
+      const response = await fetch(apiUrl('/api/banner'), {
+        method: 'DELETE',
         headers: csrfHeaders(),
         credentials: 'include',
       })
