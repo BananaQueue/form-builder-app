@@ -127,6 +127,12 @@ test('frontend auth calls use Laravel-native session routes', () => {
   assert.match(login, /apiUrl\(['"]\/api\/login['"]\)/);
   assert.doesNotMatch(app + login, /check_session\.php|login\.php|logout\.php/);
 });
+test('admin forms list uses the Laravel-native admin route', () => {
+  const source = readSrc('AdminFormList.jsx');
+
+  assert.match(source, /apiUrl\(`\/api\/admin\/forms\?\$\{params\}`\)/);
+  assert.doesNotMatch(source, /get_all_forms\.php/);
+});
 test('form viewer duplicates through create flow and opens the copy', () => {
   const viewer = readSrc('FormViewer.jsx');
   const layout = readSrc('AdminLayout.jsx');

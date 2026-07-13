@@ -329,7 +329,7 @@ function AdminFormList({
       if (categoryId > 0) params.set("category_id", categoryId);
       if (ownerId > 0) params.set("owner_id", ownerId);
 
-      const res = await fetch(apiUrl(`/get_all_forms.php?${params}`), {
+      const res = await fetch(apiUrl(`/api/admin/forms?${params}`), {
         credentials: "include",
       });
 

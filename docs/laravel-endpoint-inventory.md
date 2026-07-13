@@ -11,7 +11,7 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
 | Form writes | Frontend now calls `POST /api/forms`, `PUT /api/forms/{id}`, `DELETE /api/forms/{id}`; compatibility routes still exist as `save_form.php`, `update_form.php`, `delete_form.php` (used by Playwright ownership-boundary tests and left live for rollback) | `LegacyFormWriteController` | Yes | Migrated frontend writes to native aliases |
 | Public submissions | Frontend now calls `POST /api/public/forms/{id}/responses`; compatibility route still exists as `submit_response.php` | `LegacySubmissionController` | Yes | Migrated frontend submission to native alias |
 | Responses | Frontend now calls `GET /api/forms/{id}/responses`, `GET /api/responses/{id}`, `GET /api/forms/{id}/responses/export`; compatibility routes still exist as `get_responses.php`, `get_response_details.php`, `export_responses.php` | `LegacyLookupController` | Yes | Migrated frontend response reads/export to native aliases |
-| Super admin forms | `get_all_forms.php` | `LegacyAdminFormController` | Yes | `GET /api/admin/forms` |
+| Super admin forms | Frontend now calls `GET /api/admin/forms`; compatibility route still exists as `get_all_forms.php` | `LegacyAdminFormController` | Yes | Migrated frontend admin list to native alias |
 | Users | `get_users.php`, `create_user_api.php`, `delete_user.php`, `change_password.php` | `LegacyUserController` | Yes | `GET /api/users`, `POST /api/users`, `DELETE /api/users/{id}`, `PATCH /api/users/{id}/password` |
 | Audit logs | `get_audit_logs.php` | `LegacyAuditLogController` | Yes | `GET /api/admin/audit-logs` |
 | Notifications | `get_notifications.php`, `get_pending_notifications.php`, `acknowledge_notification.php`, `mark_notification_read.php` | `LegacyNotificationController` | Yes | `GET /api/notifications`, `GET /api/notifications/pending`, `POST /api/notifications/{id}/acknowledge`, `POST /api/notifications/{id}/read` |
@@ -19,7 +19,7 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
 
 ## Current Dependency Hotspots
 
-- Frontend API calls are centralized through `src/apiBase.js`. Lookup/form reads, response reads/export, form writes (create/update/delete/duplicate), public submission, and auth session (login/logout/session) now use `/api/...`; remaining admin/user/banner/notification calls still use `.php` compatibility names.
+- Frontend API calls are centralized through `src/apiBase.js`. Lookup/form reads, response reads/export, form writes (create/update/delete/duplicate), public submission, auth session (login/logout/session), and the super-admin forms list now use `/api/...`; remaining user/banner/notification/audit-log calls still use `.php` compatibility names.
 - `api-tests/api-hardening.test.mjs` reads old PHP files directly with `readApiFile(...)`.
 - `api-tests/php-syntax.test.mjs` lints root `form-builder-api/*.php` files.
 - `tests/ownership-boundaries.spec.js` intentionally exercises the compatibility `save_form.php`/`update_form.php`/`delete_form.php` routes directly via Playwright's `request` fixture; these must stay live until that test is converted too.
@@ -47,6 +47,7 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
 
 7. **Move admin/user/banner/notification routes**
    Convert these one group at a time because they carry CSRF, permission, upload, and notification side effects.
+   Super admin forms done: `get_all_forms.php` is now aliased as `GET /api/admin/forms` (same `LegacyAdminFormController::allForms`; a query-string read, so no path-id injection). `AdminFormList.jsx` calls the native route. Compatibility route remains live for rollback and the `api-hardening` PHP-file inspection test. Users, audit logs, notifications, and banner remain.
 
 8. **Replace old PHP hardening tests**
    Convert tests that inspect root PHP files into Laravel feature tests or Laravel source assertions. This is required before removing root PHP files.
