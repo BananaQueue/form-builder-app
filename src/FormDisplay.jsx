@@ -299,7 +299,6 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
     setSubmitting(true);
 
     const submissionData = {
-      form_id: form.id,
       answers: form.questions.map((q) => ({
         question_id: q.id,
         question_text: q.question_text,
@@ -309,7 +308,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
     };
 
     try {
-      const response = await fetch(apiUrl("/submit_response.php"), {
+      const response = await fetch(apiUrl(`/api/public/forms/${form.id}/responses`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submissionData),

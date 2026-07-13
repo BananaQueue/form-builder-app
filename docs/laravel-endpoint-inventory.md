@@ -9,7 +9,7 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
 | Auth session | `check_session.php`, `login.php`, `logout.php` | `LegacyAuthController` | Yes | `GET /api/session`, `POST /api/login`, `POST /api/logout` |
 | Forms list/detail | Frontend now calls `GET /api/forms`, `GET /api/forms/{id}`, `GET /api/public/forms/{code}`, `GET /api/categories`; compatibility routes still exist as `get_forms.php`, `get_form_details.php`, `get_form_by_code.php`, `get_categories.php` | `LegacyLookupController` | Yes | Migrated frontend reads to native aliases |
 | Form writes | Frontend now calls `POST /api/forms`, `PUT /api/forms/{id}`, `DELETE /api/forms/{id}`; compatibility routes still exist as `save_form.php`, `update_form.php`, `delete_form.php` (used by Playwright ownership-boundary tests and left live for rollback) | `LegacyFormWriteController` | Yes | Migrated frontend writes to native aliases |
-| Public submissions | `submit_response.php` | `LegacySubmissionController` | Yes | `POST /api/public/forms/{id}/responses` |
+| Public submissions | Frontend now calls `POST /api/public/forms/{id}/responses`; compatibility route still exists as `submit_response.php` | `LegacySubmissionController` | Yes | Migrated frontend submission to native alias |
 | Responses | Frontend now calls `GET /api/forms/{id}/responses`, `GET /api/responses/{id}`, `GET /api/forms/{id}/responses/export`; compatibility routes still exist as `get_responses.php`, `get_response_details.php`, `export_responses.php` | `LegacyLookupController` | Yes | Migrated frontend response reads/export to native aliases |
 | Super admin forms | `get_all_forms.php` | `LegacyAdminFormController` | Yes | `GET /api/admin/forms` |
 | Users | `get_users.php`, `create_user_api.php`, `delete_user.php`, `change_password.php` | `LegacyUserController` | Yes | `GET /api/users`, `POST /api/users`, `DELETE /api/users/{id}`, `PATCH /api/users/{id}/password` |
@@ -40,7 +40,7 @@ Current status: Laravel serves the React build and handles the legacy PHP-shaped
    Done. `save_form.php`, `update_form.php`, and `delete_form.php` are now aliased as `POST /api/forms`, `PUT /api/forms/{id}`, and `DELETE /api/forms/{id}` (id injected from the route segment into the same controller methods), and the frontend (`FormBuilder.jsx`, `FormViewer.jsx` duplicate, `AdminFormList.jsx`, `FormList.jsx`) calls the native routes. Compatibility routes remain live for `tests/ownership-boundaries.spec.js` and rollback.
 
 5. **Move public submissions**
-   Convert `submit_response.php` to `POST /api/public/forms/{id}/responses`. This should happen after form reads are stable and before removing public compatibility routes.
+   Done. `submit_response.php` is now aliased as `POST /api/public/forms/{id}/responses` (route `{id}` injected into the JSON payload as `form_id`, exempted from CSRF like the compatibility route since public respondents have no session). `FormDisplay.jsx` calls the native route. Compatibility route remains for rollback.
 
 6. **Move admin/user/banner/notification routes**
    Convert these one group at a time because they carry CSRF, permission, upload, and notification side effects.

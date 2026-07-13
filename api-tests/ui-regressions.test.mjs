@@ -112,6 +112,12 @@ test('frontend form write calls use Laravel-native routes', () => {
   assert.match(sources, /apiUrl\(`\/api\/forms\/\$\{formId\}`\)/);
   assert.doesNotMatch(sources, /save_form\.php|update_form\.php|delete_form\.php/);
 });
+test('public form submission uses the Laravel-native submission route', () => {
+  const source = readSrc('FormDisplay.jsx');
+
+  assert.match(source, /apiUrl\(`\/api\/public\/forms\/\$\{form\.id\}\/responses`\)/);
+  assert.doesNotMatch(source, /submit_response\.php/);
+});
 test('form viewer duplicates through create flow and opens the copy', () => {
   const viewer = readSrc('FormViewer.jsx');
   const layout = readSrc('AdminLayout.jsx');
