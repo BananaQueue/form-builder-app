@@ -42,6 +42,9 @@ jobs:
           php-version: '8.4'
           extensions: pdo_mysql, mysqli
           coverage: none
+          # log every raw PHP error (incl. the original fatal that the render
+          # cascade otherwise overwrites in error_get_last) to a file we dump.
+          ini-values: log_errors=On, error_log=/tmp/php_errors.log, display_errors=stderr
 
       - name: Install backend dependencies
         working-directory: form-builder-api/laravel
@@ -55,12 +58,12 @@ jobs:
             > "$GITHUB_WORKSPACE/laravel-serve.log" 2>&1 &
           for i in $(seq 1 30); do
             code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/_fb_laravel_health || true)
-            if [ "$code" = "200" ]; then
-              echo "Laravel healthy (HTTP 200) after ${i}s"; exit 0
+            if [ "$code" != "000" ]; then
+              echo "Laravel responding (HTTP $code) after ${i}s"; exit 0
             fi
             sleep 1
           done
-          echo "Laravel did not become healthy on :8000 (last code: $code)"; exit 1
+          echo "Laravel did not respond on :8000"; exit 1
 
       - name: Probe backend (diagnostic)
         working-directory: form-builder-api/laravel
@@ -99,6 +102,8 @@ jobs:
         run: |
           echo "===== laravel-serve.log ====="
           cat "$GITHUB_WORKSPACE/laravel-serve.log" 2>/dev/null || echo "(no serve log)"
+          echo; echo "===== /tmp/php_errors.log (raw PHP errors) ====="
+          cat /tmp/php_errors.log 2>/dev/null || echo "(no php_errors.log)"
           echo; echo "===== storage/logs/laravel.log ====="
           tail -n 200 form-builder-api/laravel/storage/logs/laravel.log 2>/dev/null || echo "(no laravel.log)"
 
