@@ -105,6 +105,12 @@ export async function openRowActionMenu(page, row) {
   const menuButton = row.locator('.afl-dot-btn');
   const dropdown = page.locator('.afl-dropdown');
 
+  // The menu closes on scroll (AdminFormList). If Playwright had to auto-scroll
+  // to reach a dropdown item, that scroll would close the menu — a deterministic
+  // timeout under CI's viewport. Bring the row into view up-front so opening and
+  // clicking an item never triggers a scroll.
+  await row.scrollIntoViewIfNeeded();
+
   for (let attempt = 0; attempt < 5; attempt += 1) {
     // Only click to OPEN the menu. The dot button is a toggle, so clicking again
     // while a slow-rendering menu is opening would close it — the race that made
