@@ -50,15 +50,26 @@ jobs:
       - name: Start Laravel backend (testing env, port 8000)
         working-directory: form-builder-api/laravel
         run: |
-          php artisan serve --env=testing --host=127.0.0.1 --port=8000 &
+          # Serve output (incl. any PHP warnings/fatals) is captured for later dump.
+          php artisan serve --env=testing --host=127.0.0.1 --port=8000 \
+            > "$GITHUB_WORKSPACE/laravel-serve.log" 2>&1 &
           for i in $(seq 1 30); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/ || true)
-            if [ "$code" != "000" ]; then
-              echo "Laravel up (HTTP $code) after ${i}s"; exit 0
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/_fb_laravel_health || true)
+            if [ "$code" = "200" ]; then
+              echo "Laravel healthy (HTTP 200) after ${i}s"; exit 0
             fi
             sleep 1
           done
-          echo "Laravel did not become ready on :8000"; exit 1
+          echo "Laravel did not become healthy on :8000 (last code: $code)"; exit 1
+
+      - name: Probe backend (diagnostic)
+        working-directory: form-builder-api/laravel
+        run: |
+          echo "--- GET /_fb_laravel_health ---"
+          curl -s -i http://127.0.0.1:8000/_fb_laravel_health | head -20 || true
+          echo; echo "--- POST /test_reset_database.php ---"
+          curl -s -i -X POST -H "X-E2E-Reset-Token: local-e2e-reset" \
+            http://127.0.0.1:8000/test_reset_database.php | head -30 || true
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -82,6 +93,14 @@ jobs:
         env:
           PLAYWRIGHT_CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
         run: npm run test:e2e
+
+      - name: Dump backend logs (diagnostic)
+        if: always()
+        run: |
+          echo "===== laravel-serve.log ====="
+          cat "$GITHUB_WORKSPACE/laravel-serve.log" 2>/dev/null || echo "(no serve log)"
+          echo; echo "===== storage/logs/laravel.log ====="
+          tail -n 200 form-builder-api/laravel/storage/logs/laravel.log 2>/dev/null || echo "(no laravel.log)"
 
       - name: Upload Playwright report
         if: always()
