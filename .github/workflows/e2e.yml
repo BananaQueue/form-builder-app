@@ -57,6 +57,10 @@ jobs:
 
       - name: Start Laravel backend (testing env, port 8000)
         working-directory: form-builder-api/laravel
+        env:
+          # php artisan serve is single-process; spawn built-in-server workers so
+          # concurrent requests from Playwright don't queue past the click timeout.
+          PHP_CLI_SERVER_WORKERS: 5
         run: |
           php artisan serve --env=testing --host=127.0.0.1 --port=8000 \
             > "$GITHUB_WORKSPACE/laravel-serve.log" 2>&1 &
