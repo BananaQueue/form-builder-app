@@ -25,6 +25,24 @@ function readController(name) {
   return readLaravelFile(`${CONTROLLERS}/${name}.php`);
 }
 
+function readMiddleware(name) {
+  return readLaravelFile(`app/Http/Middleware/${name}.php`);
+}
+
+// Extract the body of a `Route::middleware('<alias>')->group(...)` block so we
+// can assert which endpoints live behind a given guard. The block runs until
+// the next middleware group or the SPA catch-all route, whichever comes first.
+function routeGroup(web, alias) {
+  const start = web.indexOf(`Route::middleware('${alias}')`);
+  assert.notEqual(start, -1, `routes/web.php should define a ${alias} route group`);
+  const rest = web.slice(start + `Route::middleware('${alias}')`.length);
+  const nextGroup = rest.indexOf('Route::middleware(');
+  const fallback = rest.indexOf("Route::get('/{path}'");
+  const candidates = [nextGroup, fallback].filter((i) => i !== -1);
+  const end = candidates.length > 0 ? Math.min(...candidates) : rest.length;
+  return rest.slice(0, end);
+}
+
 function readAppFile(fileName) {
   return readFileSync(resolve(appRoot, fileName), 'utf8');
 }
@@ -52,16 +70,50 @@ test('CSRF protection is centralized with a limited exemption allowlist', () => 
   assert.doesNotMatch(bootstrap, /['"]api\/forms/, 'form-write routes must not be CSRF-exempt');
 });
 
-test('super-admin controllers enforce the super_admin role server-side', () => {
-  for (const name of ['LegacyAdminFormController', 'LegacyUserController', 'LegacyAuditLogController', 'LegacyBannerController']) {
-    assertContains(readController(name), /requireSuperAdmin\s*\(/, name);
+test('super-admin routes enforce the super_admin role server-side via middleware', () => {
+  // Enforcement moved from per-controller requireSuperAdmin() helpers to a
+  // single middleware applied to the super-admin route group. The guarantee is
+  // unchanged: no session -> 401, non-super-admin -> 403, server-side.
+  const mw = readMiddleware('RequireLegacySuperAdmin');
+  assertContains(mw, /session\(\)->get\('logged_in'\)\s*!==\s*true/, 'RequireLegacySuperAdmin');
+  assertContains(mw, /\],\s*401\)/, 'RequireLegacySuperAdmin');
+  assertContains(mw, /session\(\)->get\('role'\)\s*!==\s*'super_admin'/, 'RequireLegacySuperAdmin');
+  assertContains(mw, /\],\s*403\)/, 'RequireLegacySuperAdmin');
+
+  // Alias registered so the group reference resolves to that middleware.
+  assertContains(readLaravelFile('bootstrap/app.php'), /'legacy\.superadmin'\s*=>.*RequireLegacySuperAdmin::class/, 'bootstrap/app.php');
+
+  // Every super-admin endpoint lives inside that guarded group.
+  const group = routeGroup(readLaravelFile('routes/web.php'), 'legacy.superadmin');
+  for (const uri of [
+    'get_users.php', 'create_user_api.php', 'delete_user.php', 'change_password.php',
+    'get_all_forms.php', 'get_audit_logs.php', 'upload_banner.php', 'remove_banner.php',
+    'api/users', 'api/banner', 'api/admin/forms', 'api/admin/audit-logs',
+    'password-reset-code',
+  ]) {
+    assertContains(group, uri, 'legacy.superadmin group');
   }
 });
 
-test('authenticated controllers guard mutating actions with a session check', () => {
-  // Per-user authenticated endpoints require a logged-in session.
-  assertContains(readController('LegacyNotificationController'), /requireAuth\s*\(/, 'LegacyNotificationController');
-  // Form writes resolve the acting user from the session, not the request body.
+test('authenticated routes require a logged-in session via middleware', () => {
+  // Per-user endpoints require a session; enforcement is the shared auth
+  // middleware applied to the authenticated route group (no session -> 401).
+  const mw = readMiddleware('RequireLegacyAuth');
+  assertContains(mw, /session\(\)->get\('logged_in'\)\s*!==\s*true/, 'RequireLegacyAuth');
+  assertContains(mw, /\],\s*401\)/, 'RequireLegacyAuth');
+
+  assertContains(readLaravelFile('bootstrap/app.php'), /'legacy\.auth'\s*=>.*RequireLegacyAuth::class/, 'bootstrap/app.php');
+
+  const group = routeGroup(readLaravelFile('routes/web.php'), 'legacy.auth');
+  for (const uri of [
+    'get_notifications.php', 'get_forms.php', 'get_form_details.php',
+    'get_responses.php', 'export_responses.php',
+    'save_form.php', 'update_form.php', 'delete_form.php',
+  ]) {
+    assertContains(group, uri, 'legacy.auth group');
+  }
+
+  // Form writes still resolve the acting user from the session, not the request body.
   assertContains(readController('LegacyFormWriteController'), /session\(\)->get\('user_id'\)/, 'LegacyFormWriteController');
 });
 
@@ -124,7 +176,8 @@ test('initial super admin bootstrap is CLI-only and password-policy protected', 
 test('banner upload validates type, image content, size, and fixed destination', () => {
   const source = readController('LegacyBannerController');
 
-  assertContains(source, /requireSuperAdmin\s*\(/, 'LegacyBannerController');
+  // Super-admin gating is enforced by the legacy.superadmin route group
+  // (covered above); this test focuses on the file/image validation.
   assertContains(source, /2\s*\*\s*1024\s*\*\s*1024/, 'LegacyBannerController');
   assertContains(source, /getMimeType\s*\(\s*\)/, 'LegacyBannerController');
   assertContains(source, /'image\/png'/, 'LegacyBannerController');

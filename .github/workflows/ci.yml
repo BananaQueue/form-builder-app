@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-api-tests:
+    name: Lint & API tests
+    runs-on: ubuntu-latest
+    steps:
+      # test:api is a cross-repo white-box suite: it readFileSync()s the Laravel
+      # source in a SIBLING form-builder-api/ checkout. Both repos are laid out
+      # as siblings under the workspace so those relative paths resolve.
+      - name: Checkout frontend (form-builder-app)
+        uses: actions/checkout@v4
+        with:
+          path: form-builder-app
+
+      - name: Checkout backend (form-builder-api)
+        uses: actions/checkout@v4
+        with:
+          repository: BananaQueue/form-builder-api
+          path: form-builder-api
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: form-builder-app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: form-builder-app
+        run: npm ci
+
+      - name: Lint
+        working-directory: form-builder-app
+        run: npm run lint
+
+      - name: API hardening tests
+        working-directory: form-builder-app
+        run: npm run test:api

@@ -1,0 +1,95 @@
+name: E2E
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  playwright-e2e:
+    name: Playwright end-to-end
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:10.4
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'yes'
+          MARIADB_DATABASE: form_builder_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout frontend (form-builder-app)
+        uses: actions/checkout@v4
+
+      - name: Checkout backend (form-builder-api)
+        uses: actions/checkout@v4
+        with:
+          repository: BananaQueue/form-builder-api
+          path: form-builder-api
+
+      - name: Load schema into form_builder_test
+        run: mysql -h127.0.0.1 -P3306 -uroot form_builder_test < src/form_builder.sql
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mysqli
+          coverage: none
+
+      - name: Install backend dependencies
+        working-directory: form-builder-api/laravel
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Start Laravel backend (testing env, port 8000)
+        working-directory: form-builder-api/laravel
+        run: |
+          php artisan serve --env=testing --host=127.0.0.1 --port=8000 &
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/ || true)
+            if [ "$code" != "000" ]; then
+              echo "Laravel up (HTTP $code) after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "Laravel did not become ready on :8000"; exit 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install Google Chrome
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Install Playwright system deps
+        run: npx playwright install-deps chromium
+
+      - name: Run e2e tests
+        env:
+          PLAYWRIGHT_CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
