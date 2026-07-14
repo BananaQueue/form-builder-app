@@ -44,7 +44,7 @@ jobs:
           coverage: none
           # log every raw PHP error (incl. the original fatal that the render
           # cascade otherwise overwrites in error_get_last) to a file we dump.
-          ini-values: log_errors=On, error_log=/tmp/php_errors.log, display_errors=stderr
+          ini-values: log_errors=On, error_log=/tmp/php_errors.log, display_errors=stderr, output_buffering=4096, implicit_flush=Off
 
       - name: Install backend dependencies
         working-directory: form-builder-api/laravel
