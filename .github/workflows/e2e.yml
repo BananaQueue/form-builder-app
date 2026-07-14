@@ -42,37 +42,34 @@ jobs:
           php-version: '8.4'
           extensions: pdo_mysql, mysqli
           coverage: none
-          # log every raw PHP error (incl. the original fatal that the render
-          # cascade otherwise overwrites in error_get_last) to a file we dump.
-          ini-values: log_errors=On, error_log=/tmp/php_errors.log, display_errors=stderr, output_buffering=4096, implicit_flush=Off
 
       - name: Install backend dependencies
         working-directory: form-builder-api/laravel
         run: composer install --no-interaction --prefer-dist --no-progress
 
+      - name: Prepare testing env file
+        working-directory: form-builder-api/laravel
+        run: |
+          # .env.testing is gitignored, so seed it from the committed template
+          # and generate an APP_KEY (without one, every request 500s).
+          cp .env.testing.example .env.testing
+          php artisan key:generate --env=testing --force
+
       - name: Start Laravel backend (testing env, port 8000)
         working-directory: form-builder-api/laravel
         run: |
-          # Serve output (incl. any PHP warnings/fatals) is captured for later dump.
           php artisan serve --env=testing --host=127.0.0.1 --port=8000 \
             > "$GITHUB_WORKSPACE/laravel-serve.log" 2>&1 &
           for i in $(seq 1 30); do
             code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/_fb_laravel_health || true)
-            if [ "$code" != "000" ]; then
-              echo "Laravel responding (HTTP $code) after ${i}s"; exit 0
+            if [ "$code" = "200" ]; then
+              echo "Laravel healthy (HTTP 200) after ${i}s"; exit 0
             fi
             sleep 1
           done
-          echo "Laravel did not respond on :8000"; exit 1
-
-      - name: Probe backend (diagnostic)
-        working-directory: form-builder-api/laravel
-        run: |
-          echo "--- GET /_fb_laravel_health ---"
-          curl -s -i http://127.0.0.1:8000/_fb_laravel_health | head -20 || true
-          echo; echo "--- POST /test_reset_database.php ---"
-          curl -s -i -X POST -H "X-E2E-Reset-Token: local-e2e-reset" \
-            http://127.0.0.1:8000/test_reset_database.php | head -30 || true
+          echo "Laravel did not become healthy on :8000 (last code: $code)"
+          cat "$GITHUB_WORKSPACE/laravel-serve.log" || true
+          exit 1
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -97,13 +94,11 @@ jobs:
           PLAYWRIGHT_CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
         run: npm run test:e2e
 
-      - name: Dump backend logs (diagnostic)
-        if: always()
+      - name: Dump backend logs on failure
+        if: failure()
         run: |
           echo "===== laravel-serve.log ====="
           cat "$GITHUB_WORKSPACE/laravel-serve.log" 2>/dev/null || echo "(no serve log)"
-          echo; echo "===== /tmp/php_errors.log (raw PHP errors) ====="
-          cat /tmp/php_errors.log 2>/dev/null || echo "(no php_errors.log)"
           echo; echo "===== storage/logs/laravel.log ====="
           tail -n 200 form-builder-api/laravel/storage/logs/laravel.log 2>/dev/null || echo "(no laravel.log)"
 
