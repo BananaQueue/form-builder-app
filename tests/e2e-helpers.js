@@ -105,13 +105,18 @@ export async function openRowActionMenu(page, row) {
   const menuButton = row.locator('.afl-dot-btn');
   const dropdown = page.locator('.afl-dropdown');
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    await menuButton.click();
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    // Only click to OPEN the menu. The dot button is a toggle, so clicking again
+    // while a slow-rendering menu is opening would close it — the race that made
+    // this flaky under CI's slower headless rendering. Guard on visibility first.
+    if (!(await dropdown.isVisible())) {
+      await menuButton.click();
+    }
     try {
-      await expect(dropdown).toBeVisible({ timeout: 1500 });
+      await expect(dropdown).toBeVisible({ timeout: 2000 });
       return dropdown;
     } catch (error) {
-      if (attempt === 2) throw error;
+      if (attempt === 4) throw error;
     }
   }
 
