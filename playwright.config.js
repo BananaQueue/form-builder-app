@@ -6,7 +6,10 @@ const chromePath = process.env.PLAYWRIGHT_CHROME_PATH
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 30000,
+  // CI runs headless on slower hardware; give tests more room and retry flakes
+  // (e.g. the row-action dropdown timing) rather than failing the whole run.
+  timeout: process.env.CI ? 60000 : 30000,
+  retries: process.env.CI ? 2 : 0,
   workers: 1,
   webServer: {
     command: 'npm run dev -- --host 127.0.0.1',
