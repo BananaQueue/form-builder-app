@@ -1,11 +1,9 @@
 // src/PublicFormPage.jsx
 //
-// CHANGES FROM ORIGINAL:
-// - Accepts showToast as a prop (passed from App.jsx)
-// - Passes showToast into both FormDisplay instances (mobile + desktop)
-// - Removed the duplicate `const isMobile = useIsMobile()` call that
-//   was inside the if(isMobile) branch (that was a React rules violation —
-//   you can't call hooks conditionally or inside branches)
+// showToast is passed in from App.jsx and forwarded to both FormDisplay
+// instances (mobile + desktop). Keep useIsMobile() at the top level — calling
+// it conditionally inside an if(isMobile) branch would violate the rules of
+// hooks.
 
 import { useParams } from 'react-router-dom'
 import FormDisplay from './FormDisplay'

@@ -1,22 +1,12 @@
 // src/App.jsx
 //
-// CHANGES FROM ORIGINAL:
-// ─────────────────────────────────────────────────────────────────────────
-// 1. Import `useTheme` from './useTheme'
-// 2. Import `ThemeToggle` from './ThemeToggle'
-// 3. Call useTheme() and destructure { theme, toggleTheme }
-// 4. Pass `theme` and `toggleTheme` to AdminLayout
-//    (AdminLayout renders the nav bar where the toggle button lives)
+// Theme is initialized here in the root component (not in AdminLayout) so it is
+// applied to document.documentElement before the page renders — avoiding a
+// "flash of wrong theme" (FOWT). useTheme() sets the theme immediately via its
+// useEffect; { theme, toggleTheme } are passed down to AdminLayout's nav.
 //
-// WHY IS THE HOOK CALLED HERE AND NOT IN AdminLayout?
-// The theme must be initialized as early as possible — before the page
-// renders — to avoid a "flash of wrong theme" (FOWT).
-// App.jsx is the root component, so it runs first. useTheme() applies
-// the theme to document.documentElement immediately via its useEffect.
-//
-// The public form page (/form/:id) uses the browser/OS color scheme
-// directly, so it is not affected by the admin theme toggle.
-// ─────────────────────────────────────────────────────────────────────────
+// The public form page (/form/:id) follows the browser/OS color scheme
+// directly, so it is unaffected by the admin theme toggle.
 
 import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
