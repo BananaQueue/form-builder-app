@@ -64,6 +64,17 @@ function scrollPublicFormToTop(behavior = "smooth") {
   window.scrollTo(scrollOptions);
 }
 
+// Builds a fresh answers map ({ [questionId]: "" }) from a questions array.
+// Shared by the initial load (fetchFormDetails) and the post-submit reset
+// (resetForm) so both start from an identical blank state.
+function buildBlankAnswers(questions) {
+  const blank = {};
+  questions.forEach((q) => {
+    blank[q.id] = "";
+  });
+  return blank;
+}
+
 function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -95,11 +106,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
       if (result.success) {
         setForm(result.form);
-        const initialAnswers = {};
-        result.form.questions.forEach((q) => {
-          initialAnswers[q.id] = "";
-        });
-        setAnswers(initialAnswers);
+        setAnswers(buildBlankAnswers(result.form.questions));
       } else {
         setError(result.error || "Failed to load form");
       }
@@ -339,11 +346,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   // privacyAccepted is reset so handleSubmit re-shows the privacy modal
   // for privacy_notice forms on the next submit.
   function resetForm() {
-    const cleared = {};
-    form.questions.forEach((q) => {
-      cleared[q.id] = "";
-    });
-    setAnswers(cleared);
+    setAnswers(buildBlankAnswers(form.questions));
     setCurrentStep(0);
     setDateRangeEnabled({});
     setPrivacyAccepted(false);
