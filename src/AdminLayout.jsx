@@ -68,6 +68,9 @@ function AdminLayout({
   const [responsesFormId, setResponsesFormId] = useState(null);
   const [viewingResponseId, setViewingResponseId] = useState(null);
 
+  // Bumped on every nav-tab click so the target page remounts (see goToTab).
+  const [navResetKey, setNavResetKey] = useState(0);
+
   const location = useLocation();
   const layoutRef = useRef(null);
   const navRef = useRef(null);
@@ -275,6 +278,22 @@ function AdminLayout({
     });
   }
 
+  // ── goToTab ────────────────────────────────────────────────────────────────
+  // Nav-tab clicks should always land on a clean, unfiltered page — even when
+  // the user is already on that tab. Bumping navResetKey changes the target
+  // route element's key, forcing a fresh remount that clears all of that page's
+  // local state (search, filters, sort). We also scroll the app container back
+  // to the top. navigate() alone can't do this: navigating to the route you're
+  // already on is a no-op and leaves the mounted page (and its filters) intact.
+  function goToTab(path) {
+    setNavResetKey((k) => k + 1);
+    navigate(path);
+    requestAnimationFrame(() => {
+      document.querySelector(".theme-scope")?.scrollTo({ top: 0, left: 0 });
+      window.scrollTo({ top: 0, left: 0 });
+    });
+  }
+
   function navButtonClass(path, exact = true) {
     const isActive = exact
       ? location.pathname === path
@@ -283,18 +302,18 @@ function AdminLayout({
   }
 
   return (
-    <div ref={layoutRef} style={{ paddingBottom: "40px" }}>
+    <div ref={layoutRef} className="app-stage" style={{ paddingBottom: "40px" }}>
       <nav
         ref={navRef}
         className={`glass-nav${navOverContent ? " glass-nav--over-form" : ""}${navStickyActive ? " glass-nav--sticky-active" : ""}${actionsInNavbar ? " glass-nav--actions-migrated" : ""}`}
       >
         <div className="nav-nav nav-left">
-          <button onClick={() => navigate("/")} className={navButtonClass("/")}>
+          <button onClick={() => goToTab("/")} className={navButtonClass("/")}>
             {isSuperAdmin ? "All Forms" : "My Forms"}
           </button>
 
           <button
-            onClick={() => navigate("/create")}
+            onClick={() => goToTab("/create")}
             className={navButtonClass("/create")}
           >
             + New Form
@@ -303,21 +322,21 @@ function AdminLayout({
           {isSuperAdmin && (
             <>
               <button
-                onClick={() => navigate("/settings")}
+                onClick={() => goToTab("/settings")}
                 className={navButtonClass("/settings")}
               >
                 Settings
               </button>
 
               <button
-                onClick={() => navigate("/users")}
+                onClick={() => goToTab("/users")}
                 className={navButtonClass("/users")}
               >
                 Users
               </button>
 
               <button
-                onClick={() => navigate("/audit-logs")}
+                onClick={() => goToTab("/audit-logs")}
                 className={navButtonClass("/audit-logs")}
               >
                 Audit Logs
@@ -361,6 +380,7 @@ function AdminLayout({
           element={
             isSuperAdmin ? (
               <AdminFormList
+                key={`home-${navResetKey}`}
                 onViewForm={handleViewForm}
                 onEditForm={handleEditForm}
                 onViewResponses={handleViewResponses}
@@ -369,6 +389,7 @@ function AdminLayout({
               />
             ) : (
               <FormList
+                key={`home-${navResetKey}`}
                 onViewForm={handleViewForm}
                 onEditForm={handleEditForm}
                 onViewResponses={handleViewResponses}
@@ -384,7 +405,7 @@ function AdminLayout({
           path="/create"
           element={
             <FormBuilder
-              key="create"
+              key={`create-${navResetKey}`}
               showToast={showToast}
               isSuperAdmin={isSuperAdmin}
             />
@@ -474,7 +495,7 @@ function AdminLayout({
           path="/settings"
           element={
             isSuperAdmin ? (
-              <BannerSettings showToast={showToast} />
+              <BannerSettings key={`settings-${navResetKey}`} showToast={showToast} />
             ) : (
               <Navigate to="/" />
             )
@@ -486,6 +507,7 @@ function AdminLayout({
           element={
             isSuperAdmin ? (
               <UserManagement
+                key={`users-${navResetKey}`}
                 showToast={showToast}
                 showConfirm={showConfirm}
                 onViewForm={handleViewFormAsAdmin}
@@ -504,7 +526,7 @@ function AdminLayout({
           path="/audit-logs"
           element={
             isSuperAdmin ? (
-              <AuditLog showToast={showToast} />
+              <AuditLog key={`audit-${navResetKey}`} showToast={showToast} />
             ) : (
               <Navigate to="/" />
             )

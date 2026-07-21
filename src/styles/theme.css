@@ -25,8 +25,13 @@
   dark rgba values.
 */
 [data-theme="light"] .glass-nav {
+  /* Heavily frosted light glass — opaque enough that dark row text scrolling
+     underneath blurs into an indistinct wash. */
+  background: rgba(255, 255, 255, 0.88);
   border-color: rgba(15, 23, 42, 0.10);
   box-shadow: 0 2px 16px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(28px) saturate(1.2);
+  -webkit-backdrop-filter: blur(28px) saturate(1.2);
 }
 
 [data-theme="light"] .nav-user-chip {

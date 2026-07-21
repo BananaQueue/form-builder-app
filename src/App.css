@@ -57,6 +57,40 @@
   margin-right: auto;
 }
 
+/* Drop the top/bottom padding for the authed app only (not the public form or
+   the notification gate) so the app-stage panel can run flush to the top and
+   bottom edges. Horizontal padding stays, keeping the side gutters. */
+.theme-scope.auth-stage {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ── App-wide middle layer ──────────────────────────────────────────────────
+   A full-height frosted-glass band wrapping the entire authed app (nav + page
+   content) on every admin and regular-user page. It runs edge-to-edge
+   vertically — flush to the top and bottom of the viewport — with the page
+   gradient (painted by .theme-scope) showing only in the side gutters.
+   Theme-aware via the shared glass tokens, so it flips with light/dark; a faint
+   brand-violet sheen keeps the layer legible against the near-white light
+   theme. min-height fills the viewport but grows with long content. The bottom
+   padding comes from AdminLayout's inline 40px. */
+.app-stage {
+  min-height: 100vh;
+  padding: var(--space-6) var(--space-6) 0;
+  background:
+    linear-gradient(135deg, rgba(108, 99, 255, 0.14), rgba(108, 99, 255, 0) 55%),
+    var(--bg-glass);
+  border-left: 1px solid var(--border-glass);
+  border-right: 1px solid var(--border-glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  /* Top highlight like light on a glass edge; ambient shadow lifts the band off
+     the gradient gutters on either side. */
+  box-shadow:
+    inset 0 1px 0 var(--border-glass-strong),
+    0 0 50px rgba(0, 0, 0, 0.35);
+}
+
 .public-form-page {
   min-height: 100vh;
   padding: 28px 16px 40px;

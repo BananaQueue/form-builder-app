@@ -22,9 +22,13 @@
   margin-bottom: var(--space-8);
   border-radius: var(--radius-xl);
 
-  background: var(--bg-glass-strong);
-  backdrop-filter: var(--blur-md);
-  -webkit-backdrop-filter: var(--blur-md); /* Safari requires the -webkit- prefix */
+  /* Heavily frosted so list rows scrolling underneath the sticky nav wash out
+     instead of ghosting through. Dark, near-opaque glass in dark mode (a white
+     glass can't go opaque here without becoming an unreadable light bar); the
+     light-mode background is set in theme.css. */
+  background: rgba(20, 17, 44, 0.74);
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4); /* Safari requires the -webkit- prefix */
   border: 1px solid var(--border-glass);
   box-shadow: var(--shadow-soft);
 
