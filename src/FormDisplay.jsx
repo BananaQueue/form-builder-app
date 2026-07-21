@@ -64,6 +64,17 @@ function scrollPublicFormToTop(behavior = "smooth") {
   window.scrollTo(scrollOptions);
 }
 
+// Builds a fresh answers map ({ [questionId]: "" }) from a questions array.
+// Shared by the initial load (fetchFormDetails) and the post-submit reset
+// (resetForm) so both start from an identical blank state.
+function buildBlankAnswers(questions) {
+  const blank = {};
+  questions.forEach((q) => {
+    blank[q.id] = "";
+  });
+  return blank;
+}
+
 function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -73,6 +84,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   const [submitted, setSubmitted] = useState(false);
   const DATE_RANGE_SEPARATOR = " to ";
   const [dateRangeEnabled, setDateRangeEnabled] = useState({});
+  const [showSummary, setShowSummary] = useState(false);
 
   // NEW: which step the user is currently on (0-indexed).
   // Only used when form.step_mode == 1.
@@ -94,11 +106,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
       if (result.success) {
         setForm(result.form);
-        const initialAnswers = {};
-        result.form.questions.forEach((q) => {
-          initialAnswers[q.id] = "";
-        });
-        setAnswers(initialAnswers);
+        setAnswers(buildBlankAnswers(result.form.questions));
       } else {
         setError(result.error || "Failed to load form");
       }
@@ -332,6 +340,21 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
     }
   }
 
+  // ── resetForm ────────────────────────────────────────────────────────────
+  // Returns the form to a pristine state on the SAME loaded form so the
+  // respondent can submit another response without a page reload.
+  // privacyAccepted is reset so handleSubmit re-shows the privacy modal
+  // for privacy_notice forms on the next submit.
+  function resetForm() {
+    setAnswers(buildBlankAnswers(form.questions));
+    setCurrentStep(0);
+    setDateRangeEnabled({});
+    setPrivacyAccepted(false);
+    setShowSummary(false);
+    setSubmitted(false);
+    scrollPublicFormToTop("auto");
+  }
+
   useEffect(() => {
     fetchFormDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -366,12 +389,60 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   }
 
   if (submitted) {
+    const summaryItems = form.questions.filter(
+      (q) =>
+        q.question_type !== "section" &&
+        isQuestionVisible(q) &&
+        isAnsweredForQuestion(q, answers[q.id]),
+    );
+
     return (
       <div className="fd-state-screen">
         <h1 className="fd-submitted-title">✓ Thank You!</h1>
         <p className="fd-submitted-message">
           Your response has been submitted successfully.
         </p>
+
+        <div className="fd-thankyou-actions">
+          <button
+            type="button"
+            className="fd-thankyou-btn"
+            onClick={() => setShowSummary((v) => !v)}
+          >
+            {showSummary ? "Hide response" : "Review your response"}
+          </button>
+          <button
+            type="button"
+            className="fd-thankyou-btn fd-thankyou-btn--primary"
+            onClick={resetForm}
+          >
+            Submit another response
+          </button>
+        </div>
+
+        {showSummary && (
+          <div className="fd-summary">
+            {summaryItems.length === 0 ? (
+              <p className="fd-summary-empty">No answers to show.</p>
+            ) : (
+              <ul className="fd-summary-list">
+                {summaryItems.map((q) => (
+                  <li key={q.id} className="fd-summary-item">
+                    <div className="fd-summary-q">{q.question_text}</div>
+                    <div className="fd-summary-a">
+                      {/* Checkbox answers are stored comma-joined; space them
+                          for readability. Other types render as-is so free-text
+                          answers containing commas aren't mangled. */}
+                      {q.question_type === "checkbox"
+                        ? (answers[q.id] || "").split(",").join(", ")
+                        : answers[q.id] || ""}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     );
   }
