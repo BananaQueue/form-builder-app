@@ -73,6 +73,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   const [submitted, setSubmitted] = useState(false);
   const DATE_RANGE_SEPARATOR = " to ";
   const [dateRangeEnabled, setDateRangeEnabled] = useState({});
+  const [showSummary, setShowSummary] = useState(false);
 
   // NEW: which step the user is currently on (0-indexed).
   // Only used when form.step_mode == 1.
@@ -332,6 +333,25 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
     }
   }
 
+  // ── resetForm ────────────────────────────────────────────────────────────
+  // Returns the form to a pristine state on the SAME loaded form so the
+  // respondent can submit another response without a page reload.
+  // privacyAccepted is reset so handleSubmit re-shows the privacy modal
+  // for privacy_notice forms on the next submit.
+  function resetForm() {
+    const cleared = {};
+    form.questions.forEach((q) => {
+      cleared[q.id] = "";
+    });
+    setAnswers(cleared);
+    setCurrentStep(0);
+    setDateRangeEnabled({});
+    setPrivacyAccepted(false);
+    setShowSummary(false);
+    setSubmitted(false);
+    scrollPublicFormToTop("auto");
+  }
+
   useEffect(() => {
     fetchFormDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -366,12 +386,55 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   }
 
   if (submitted) {
+    const summaryItems = form.questions.filter(
+      (q) =>
+        q.question_type !== "section" &&
+        isQuestionVisible(q) &&
+        isAnsweredForQuestion(q, answers[q.id]),
+    );
+
     return (
       <div className="fd-state-screen">
         <h1 className="fd-submitted-title">✓ Thank You!</h1>
         <p className="fd-submitted-message">
           Your response has been submitted successfully.
         </p>
+
+        <div className="fd-thankyou-actions">
+          <button
+            type="button"
+            className="fd-thankyou-btn"
+            onClick={() => setShowSummary((v) => !v)}
+          >
+            {showSummary ? "Hide response" : "Review your response"}
+          </button>
+          <button
+            type="button"
+            className="fd-thankyou-btn fd-thankyou-btn--primary"
+            onClick={resetForm}
+          >
+            Submit another response
+          </button>
+        </div>
+
+        {showSummary && (
+          <div className="fd-summary">
+            {summaryItems.length === 0 ? (
+              <p className="fd-summary-empty">No answers to show.</p>
+            ) : (
+              <ul className="fd-summary-list">
+                {summaryItems.map((q) => (
+                  <li key={q.id} className="fd-summary-item">
+                    <div className="fd-summary-q">{q.question_text}</div>
+                    <div className="fd-summary-a">
+                      {(answers[q.id] || "").split(",").join(", ")}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     );
   }

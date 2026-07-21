@@ -57,6 +57,80 @@
   color: var(--text-secondary);
 }
 
+/* Thank-you page actions + response summary */
+.fd-thankyou-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.fd-thankyou-btn {
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fd-thankyou-btn:hover {
+  background: var(--accent-soft);
+}
+
+.fd-thankyou-btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.fd-thankyou-btn--primary:hover {
+  filter: brightness(0.95);
+}
+
+.fd-summary {
+  margin: var(--space-6) auto 0;
+  max-width: 640px;
+  text-align: left;
+  border: 1px solid var(--border-paper);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  background: var(--bg-paper-subtle);
+}
+
+.fd-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fd-summary-item {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-paper);
+}
+
+.fd-summary-item:last-child {
+  border-bottom: none;
+}
+
+.fd-summary-q {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fd-summary-a {
+  margin-top: var(--space-1);
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.fd-summary-empty {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
 /* Form header */
 .fd-form-header {
   margin-bottom: var(--space-8);
