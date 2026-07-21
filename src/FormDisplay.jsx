@@ -95,7 +95,13 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   const [bannerLoaded, setBannerLoaded] = useState(false);
   const [bannerTs] = useState(() => Date.now());
 
-  async function fetchFormDetails() {
+  // isCancelled is a live getter (not a captured boolean) so it reflects the
+  // effect's cleanup running after this async work started. Under React
+  // StrictMode the mount effect double-invokes, firing this fetch twice; on a
+  // serialized dev backend the second response can land after the user has
+  // typed answers. Bailing out when the effect was cleaned up stops a stale
+  // duplicate response from clobbering `answers` back to blank.
+  async function fetchFormDetails(isCancelled = () => false) {
     try {
       const url = formCode
         ? apiUrl(`/api/public/forms/${encodeURIComponent(formCode)}`)
@@ -104,6 +110,8 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
       const response = await fetch(url);
       const result = await response.json();
 
+      if (isCancelled()) return;
+
       if (result.success) {
         setForm(result.form);
         setAnswers(buildBlankAnswers(result.form.questions));
@@ -111,9 +119,10 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
         setError(result.error || "Failed to load form");
       }
     } catch (err) {
+      if (isCancelled()) return;
       setError("Could not connect to server: " + err.message);
     } finally {
-      setLoading(false);
+      if (!isCancelled()) setLoading(false);
     }
   }
 
@@ -356,7 +365,9 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   }
 
   useEffect(() => {
-    fetchFormDetails();
+    let cancelled = false;
+    fetchFormDetails(() => cancelled);
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formCode, formId]);
 
