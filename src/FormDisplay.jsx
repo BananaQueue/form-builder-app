@@ -430,7 +430,12 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                   <li key={q.id} className="fd-summary-item">
                     <div className="fd-summary-q">{q.question_text}</div>
                     <div className="fd-summary-a">
-                      {(answers[q.id] || "").split(",").join(", ")}
+                      {/* Checkbox answers are stored comma-joined; space them
+                          for readability. Other types render as-is so free-text
+                          answers containing commas aren't mangled. */}
+                      {q.question_type === "checkbox"
+                        ? (answers[q.id] || "").split(",").join(", ")
+                        : answers[q.id] || ""}
                     </div>
                   </li>
                 ))}
