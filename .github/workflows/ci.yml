@@ -38,6 +38,10 @@ jobs:
         working-directory: form-builder-app
         run: npm run lint
 
+      - name: Build
+        working-directory: form-builder-app
+        run: npm run build
+
       - name: API hardening tests
         working-directory: form-builder-app
         run: npm run test:api
