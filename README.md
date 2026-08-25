@@ -56,7 +56,7 @@ Edit ..\form-builder-api\laravel\.env
 
 Set `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `APP_TIMEZONE`, and `DB_TIMEZONE` in `../form-builder-api/laravel/.env` for your local database.
 
-3. Import the database schema:
+3. Create the database schema:
 
 ```powershell
 cd ..\form-builder-api\laravel

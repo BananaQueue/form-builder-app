@@ -147,6 +147,41 @@ For a brand-new database only:
 2. Run `php artisan migrate` — it creates the schema and records applied state in
    the `migrations` table.
 
+### For the existing production database (one time, at cutover)
+
+The live production database predates Laravel migrations: it has the FormBuilder
+tables already, but no `migrations` tracking table, so `artisan migrate --force`
+cannot run against it unattended — its baseline migration issues unconditional
+`CREATE TABLE`s that would collide with tables that already exist. `deploy.ps1`
+detects this (no `migrations` table present) and refuses to proceed automatically,
+by design: cutting the live database over to Laravel-tracked migrations is a
+**deliberate, one-time, manual** step, not something the deploy script decides on
+its own.
+
+Do this once, by hand, before the first post-migration deploy:
+
+1. **Confirm the live schema actually matches** what
+   `2026_07_14_000000_create_form_builder_schema.php` would create — the same
+   tables, columns, types, indexes, and foreign keys. (This was verified once,
+   structurally, by the retired `schema-diff` CI job — see `form-builder-api`
+   commit `a53c4c6` and `form-builder-app` commit `c05e0e0` for that history —
+   but re-check the live database specifically, since it may have drifted.)
+2. Create the migrations table without running any migration:
+   ```bash
+   php artisan migrate:install
+   ```
+3. Record the baseline migration as already applied, without Laravel re-running it:
+   ```sql
+   INSERT INTO migrations (migration, batch)
+   VALUES ('2026_07_14_000000_create_form_builder_schema', 1);
+   ```
+4. Re-run `deploy.ps1` (or `php artisan migrate --force` directly) — it will now
+   see the `migrations` table, treat the baseline as already applied, and only
+   run whatever migrations come after it.
+
+Skipping step 1 and doing steps 2–3 anyway would silently mark an unverified
+schema as the confirmed baseline — don't do that.
+
 Backups: daily; always before migrations; stored off the app server; restore
 tested periodically. Include uploaded assets such as `form-builder-api/uploads/`.
 
