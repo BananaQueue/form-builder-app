@@ -72,9 +72,13 @@ test('admin can export submitted responses to CSV and audit the export', async (
   await openResponsesForForm(page, formTitle);
   await expect(page.locator('.rl-subtitle')).toHaveText('1 response');
 
-  const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: /Export CSV/ }).click();
-  const download = await downloadPromise;
+  // handleExport() uses window.open(url, '_blank'), so the download lands on
+  // a new popup page, not this one — wait for that page, then its download.
+  const [popup] = await Promise.all([
+    page.waitForEvent('popup'),
+    page.getByRole('button', { name: /Export CSV/ }).click(),
+  ]);
+  const download = await popup.waitForEvent('download');
   const stream = await download.createReadStream();
   const chunks = [];
 
