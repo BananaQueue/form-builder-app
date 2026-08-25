@@ -19,6 +19,8 @@ Current status: migration complete. Every endpoint is served exclusively through
 
 Controllers are still named `Legacy*Controller` — that reflects the raw-SQL-over-Eloquent implementation style carried over from the pre-Laravel PHP app, not a routing compromise. There is nothing "legacy" left about how they're reached.
 
+Three Super Admin routes are deliberately **not** `/api`-prefixed — `POST /users/{id}/password-reset-code`, `POST /users/{id}/password-reset-code/verify`, `POST /users/{id}/email` (`PasswordResetVerificationController`, `LegacyUserController::setEmail`). Still native Laravel routes, still gated by the same `legacy.superadmin` middleware group as everything else in this table — just a naming inconsistency, not a routing gap or a security exception.
+
 ## What's still `.php`-suffixed (and why that's fine)
 
 Four standalone E2E test-helper routes remain at `test_database_guard.php`, `test_reset_database.php`, `test_audit_logs.php`, and `test_last_reset_code.php`. These never had a native `/api/...` counterpart — they're guarded test-only utilities (env + database-name + token checks), not a legacy/native pair, so there was nothing to retire there.
@@ -33,7 +35,7 @@ Four standalone E2E test-helper routes remain at `test_database_guard.php`, `tes
 ## Verification Snapshot
 
 - `php artisan test`: 92 passed
-- `npm run test:api`: 55 passed
+- `npm run test:api`: 54 passed
 - `npm run lint`: 0 errors, 8 pre-existing hook-dependency warnings
 - `npm run build`: passed
 - No `.php`-suffixed route in `routes/web.php` duplicates a native `/api/...` route

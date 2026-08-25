@@ -52,6 +52,13 @@ function FormViewer({
     return `${window.location.origin}/form/${rawCode || formId}`;
   }
 
+  function openPublicForm() {
+    const popup = window.open(buildPublicUrl(), "_blank", "noopener,noreferrer");
+    if (!popup) {
+      showToast("Blocked by your browser. Allow pop-ups for this site and try again.", "error");
+    }
+  }
+
   async function copyPublicLink() {
     const publicUrl = buildPublicUrl();
     try {
@@ -197,7 +204,7 @@ function FormViewer({
   useEffect(() => {
     if (!form || !actionsRef) return;
     actionsRef.current = {
-      fillOut:  () => window.open(buildPublicUrl(), "_blank", "noopener,noreferrer"),
+      fillOut:  openPublicForm,
       copyLink: copyPublicLink,
       showQr:   () => setShowQrModal(true),
       duplicate: duplicateForm,
@@ -400,7 +407,7 @@ function FormViewer({
           </button>
         )}
         <ActionButtons
-          onFillOut={() => window.open(buildPublicUrl(), "_blank", "noopener,noreferrer")}
+          onFillOut={openPublicForm}
           onCopyLink={copyPublicLink}
           onShowQr={() => setShowQrModal(true)}
           onDuplicate={duplicateForm}

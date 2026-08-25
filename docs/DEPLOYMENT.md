@@ -1,8 +1,9 @@
 # Deployment Guide
 
-Production runs **Laravel** as the single host: it serves the compiled React app,
-the `/api/*` routes, and the legacy `*.php` compatibility routes, backed by
-MySQL/MariaDB.
+Production runs **Laravel** as the single host: it serves the compiled React app
+and the `/api/*` routes, backed by MySQL/MariaDB. There are no legacy `.php`
+compatibility routes left to serve — those were retired along with the
+standalone PHP endpoint files.
 
 Target environment: a **Windows PC running XAMPP** (Apache + MariaDB + PHP) on
 the internal network.

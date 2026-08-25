@@ -17,6 +17,7 @@ export default function DeleteFormModal({ form, onCancel, onConfirm }) {
   useEffect(() => {
     confirmRef.current?.focus();
     function handleEscape(event) {
+      if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopPropagation();
     }

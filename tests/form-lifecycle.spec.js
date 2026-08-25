@@ -130,6 +130,41 @@ test('super admin can delete a form and audit the deletion', async ({ page, requ
   expect(Number(logs[0].entity_id)).toBe(savedForm.id);
 });
 
+test('delete-form modal accepts keyboard input for a custom reason', async ({ page, request }) => {
+  // Regression test: DeleteFormModal's keydown handler used to swallow every
+  // keystroke (not just Escape), so typing into the custom-reason textarea
+  // silently did nothing. If that regresses, this fill() leaves the textarea
+  // empty and the assertion below catches it.
+  const formTitle = `E2E Keyboard Delete Form ${Date.now()}`;
+  const customReason = 'Reason typed via keyboard for regression coverage';
+
+  await loginAsSuperAdmin(page);
+  await createTextQuestionForm(page, formTitle, 'What is your office?');
+
+  await page.goto('/');
+  const row = page.locator('tr').filter({ has: page.locator('.afl-form-title', { hasText: formTitle }) });
+  await expect(row).toBeVisible();
+
+  const dropdown = await openRowActionMenu(page, row);
+  await dropdown.locator('.afl-dropdown-item', { hasText: 'Delete' }).click();
+
+  await expect(page.getByRole('dialog', { name: 'Delete Form' })).toBeVisible();
+  await page.locator('#delete-reason-select').selectOption('Other');
+  await page.locator('#delete-custom-reason').fill(customReason);
+  await expect(page.locator('#delete-custom-reason')).toHaveValue(customReason);
+  await page.getByRole('button', { name: 'Delete Form' }).click();
+
+  await expect(page.getByText('Form deleted.')).toBeVisible();
+
+  const logs = await getAuditLogs(request, {
+    action: 'FORM_DELETED',
+    entity_label: formTitle,
+  });
+
+  expect(logs).toHaveLength(1);
+  expect(logs[0].metadata).toContain(customReason);
+});
+
 test('super admin can update a form and audit the update', async ({ page, request }) => {
   const originalTitle = `E2E Update Form ${Date.now()}`;
   const updatedTitle = `${originalTitle} Updated`;
