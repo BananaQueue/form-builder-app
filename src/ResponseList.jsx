@@ -15,16 +15,18 @@
 // 4. The empty state gets a proper .rl-empty treatment instead of a
 //    bare centered <div> with inline padding and color.
 //
-// ALL LOGIC IS IDENTICAL TO THE ORIGINAL:
+// LOGIC IS OTHERWISE IDENTICAL TO THE ORIGINAL:
 // - fetchResponses() is unchanged
-// - handleExport() (window.open to export URL) is unchanged
+// - handleExport() still opens the export URL via window.open, but now
+//   surfaces a toast if the browser's popup blocker returns null instead
+//   of silently doing nothing
 // - onBack / onViewResponse prop wiring is unchanged
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react'
 import { apiUrl, API_BASE } from './apiBase'
 
-function ResponseList({ formId, onBack, onViewResponse, isSuperAdmin = false }) {
+function ResponseList({ formId, onBack, onViewResponse, showToast, isSuperAdmin = false }) {
   const [form, setForm]           = useState(null)
   const [responses, setResponses] = useState([])
   const [loading, setLoading]     = useState(true)
@@ -59,7 +61,11 @@ function ResponseList({ formId, onBack, onViewResponse, isSuperAdmin = false }) 
 
   function handleExport() {
     const exportUrl = `${API_BASE}/api/forms/${formId}/responses/export${isSuperAdmin ? '?admin_override=1' : ''}`
-    window.open(exportUrl, '_blank')
+    const popup = window.open(exportUrl, '_blank')
+
+    if (!popup) {
+      showToast?.('Export blocked by your browser. Allow pop-ups for this site and try again.', 'error')
+    }
   }
 
   // ── Guards ─────────────────────────────────────────────────────────────────
