@@ -27,6 +27,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: BananaQueue/form-builder-api
+          ref: schema/native-migrations # TEMPORARY: pin to the api branch for Task 2 iteration; remove once schema/native-migrations merges to main
           path: form-builder-api
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
