@@ -78,6 +78,22 @@ What it does, in order:
 Because Apache points at the fixed `current` link, **later deploys need no Apache
 changes at all** — and rollback is just repointing that link.
 
+**A real first production deploy takes 2–3 runs of this script, not one.** Step 4
+has two hard-stops that are expected the first time, not failures:
+
+- **`.env` has placeholder values.** The very first run creates
+  `C:\formbuilder\shared\.env` from the production template and then dies,
+  telling you to edit it with real values. Edit it, then re-run the script.
+- **The target database predates this plan's migrations.** If the `migrations`
+  table is missing, or it exists but the baseline row isn't recorded, the script
+  dies rather than risk `artisan migrate --force` colliding with tables that
+  already exist. Do the one-time manual cutover in
+  ["For the existing production database (one time, at cutover)"](#for-the-existing-production-database-one-time-at-cutover)
+  below, then re-run the script.
+
+Each die leaves the release folder built but inactive and the Step 2 backup
+already on disk — nothing about a die is destructive.
+
 ### Step 3 — Point Apache at the app (first deploy only)
 
 In `C:\xampp\apache\conf\extra\httpd-vhosts.conf`:
@@ -158,14 +174,52 @@ by design: cutting the live database over to Laravel-tracked migrations is a
 **deliberate, one-time, manual** step, not something the deploy script decides on
 its own.
 
-Do this once, by hand, before the first post-migration deploy:
+Do this once, by hand, before the first post-migration deploy. **Run every command
+below from the release's `laravel/` folder** — i.e.
+`C:\formbuilder\releases\<timestamp>\laravel`, the one `deploy.ps1` already built
+and copied `.env` into before it died at the pre-cutover guard. That `.env` has
+the real production DB credentials already in place; a plain source checkout
+generally does not, and running `artisan` from the wrong directory means it talks
+to the wrong database (or none).
 
 1. **Confirm the live schema actually matches** what
    `2026_07_14_000000_create_form_builder_schema.php` would create — the same
    tables, columns, types, indexes, and foreign keys. (This was verified once,
    structurally, by the retired `schema-diff` CI job — see `form-builder-api`
    commit `a53c4c6` and `form-builder-app` commit `c05e0e0` for that history —
-   but re-check the live database specifically, since it may have drifted.)
+   but that job only ever compared the *baseline migration* to the *legacy SQL
+   dump*. It never ran against the live production database, and it no longer
+   exists. Re-verify with a fresh comparison instead:
+
+   ```bash
+   # 1. Dump the live database's structure (no data, no noise that changes every run).
+   mysqldump -u root --no-data --skip-comments --skip-dump-date form_builder > live.sql
+
+   # 2. Create a throwaway scratch database, point a scratch .env at it
+   #    (copy laravel/.env, change only DB_DATABASE=fb_scratch), then from
+   #    the laravel/ folder with that scratch .env active:
+   php artisan migrate
+
+   # 3. Dump the freshly-migrated scratch database the same way. Exclude the
+   #    migrations table itself - it has no equivalent in the live pre-cutover DB.
+   mysqldump -u root --no-data --skip-comments --skip-dump-date fb_scratch --ignore-table=fb_scratch.migrations > fresh.sql
+
+   # 4. AUTO_INCREMENT counters differ by row count and aren't structural -
+   #    strip them from both before comparing.
+   sed -i -E 's/ AUTO_INCREMENT=[0-9]+//' live.sql fresh.sql
+
+   # 5. Compare. No output means the structures match.
+   diff -u live.sql fresh.sql
+   ```
+
+   **One difference is expected and is not a problem:** `live.sql`'s
+   `password_reset_codes.updated_at` column will show `ON UPDATE
+   CURRENT_TIMESTAMP` (inherited from the original numbered SQL migration),
+   while `fresh.sql`'s version correctly omits it, matching the dump used for
+   CI verification. This is harmless — application code always sets
+   `updated_at` explicitly on every write to that table — but it will appear
+   in the diff. Any *other* difference means the live schema has drifted and
+   needs investigating before proceeding.
 2. Create the migrations table without running any migration:
    ```bash
    php artisan migrate:install
@@ -175,9 +229,14 @@ Do this once, by hand, before the first post-migration deploy:
    INSERT INTO migrations (migration, batch)
    VALUES ('2026_07_14_000000_create_form_builder_schema', 1);
    ```
-4. Re-run `deploy.ps1` (or `php artisan migrate --force` directly) — it will now
-   see the `migrations` table, treat the baseline as already applied, and only
-   run whatever migrations come after it.
+4. Confirm Laravel now sees the baseline as applied and nothing else pending:
+   ```bash
+   php artisan migrate:status
+   ```
+   It should show `2026_07_14_000000_create_form_builder_schema` as `Ran`.
+5. Re-run `deploy.ps1` (or `php artisan migrate --force` directly) — it will now
+   see the `migrations` table with the baseline row recorded, treat the baseline
+   as already applied, and only run whatever migrations come after it.
 
 Skipping step 1 and doing steps 2–3 anyway would silently mark an unverified
 schema as the confirmed baseline — don't do that.
