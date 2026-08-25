@@ -56,6 +56,10 @@ jobs:
         working-directory: form-builder-api/laravel
         run: php artisan migrate --force --env=testing
 
+      - name: Verify migrated schema shape
+        working-directory: form-builder-api/laravel
+        run: php artisan fb:verify-schema-shape --env=testing
+
       - name: Start Laravel backend (testing env, port 8000)
         working-directory: form-builder-api/laravel
         env:
