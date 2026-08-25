@@ -33,9 +33,6 @@ jobs:
           repository: BananaQueue/form-builder-api
           path: form-builder-api
 
-      - name: Load schema into form_builder_test
-        run: mysql -h127.0.0.1 -P3306 -uroot form_builder_test < src/form_builder.sql
-
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -54,6 +51,10 @@ jobs:
           # and generate an APP_KEY (without one, every request 500s).
           cp .env.testing.example .env.testing
           php artisan key:generate --env=testing --force
+
+      - name: Migrate schema into form_builder_test
+        working-directory: form-builder-api/laravel
+        run: php artisan migrate --force --env=testing
 
       - name: Start Laravel backend (testing env, port 8000)
         working-directory: form-builder-api/laravel
