@@ -474,48 +474,67 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   function renderQuestion(question, visibleIndex) {
     if (!isQuestionVisible(question)) return null;
 
+    const isRequired =
+      question.is_required === 1 ||
+      question.is_required === "1" ||
+      question.is_required === true;
+    const titleId = `question-${question.id}-label`;
+    const fieldId = `question-${question.id}-input`;
+    // Single-input types can use a normal htmlFor/id pairing; grouped-input
+    // types (radio/checkbox sets, the date range pair) associate via
+    // role="group" + aria-labelledby instead, since one label can't point
+    // at more than one control.
+    const isGroupedType =
+      question.question_type === "multiple_choice" ||
+      question.question_type === "checkbox" ||
+      question.question_type === "rating" ||
+      (question.question_type === "datetime" &&
+        Boolean(dateRangeEnabled[question.id]));
+
     return (
       <div key={question.id} className="fd-question-card">
-        <label className="fd-question-label">
+        <label
+          className="fd-question-label"
+          id={titleId}
+          htmlFor={isGroupedType ? undefined : fieldId}
+        >
           <strong className="fd-question-title">
             {visibleIndex}. {question.question_text}
           </strong>
-          {(question.is_required === 1 ||
-            question.is_required === "1" ||
-            question.is_required === true) && (
+          {isRequired ? (
             <span className="fd-required-star">*</span>
-          )}
-          {!(
-            question.is_required === 1 ||
-            question.is_required === "1" ||
-            question.is_required === true
-          ) && (
+          ) : (
             <span className="fd-optional-text">(optional)</span>
           )}
         </label>
 
         {question.question_type === "text" && (
           <input
+            id={fieldId}
             type="text"
             value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
             className="fd-input"
             placeholder="Your answer"
+            aria-required={isRequired}
           />
         )}
 
         {question.question_type === "email" && (
           <input
+            id={fieldId}
             type="email"
             value={answers[question.id] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
             className="fd-input"
             placeholder="Enter your email address"
+            aria-required={isRequired}
           />
         )}
 
         {question.question_type === "number" && (
           <input
+            id={fieldId}
             type="number"
             step="1"
             value={answers[question.id] || ""}
@@ -533,6 +552,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                 ? `Enter number (${question.number_min} - ${question.number_max})`
                 : "Enter number"
             }
+            aria-required={isRequired}
           />
         )}
 
@@ -568,11 +588,20 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                 const { start, end } = parseDateRangeAnswer(
                   answers[question.id] || "",
                 );
+                const startId = `${fieldId}-start`;
+                const endId = `${fieldId}-end`;
                 return (
-                  <div className="fd-date-range-grid">
+                  <div
+                    className="fd-date-range-grid"
+                    role="group"
+                    aria-labelledby={titleId}
+                  >
                     <div>
-                      <div className="fd-date-range-sublabel">Start</div>
+                      <label className="fd-date-range-sublabel" htmlFor={startId}>
+                        Start
+                      </label>
                       <input
+                        id={startId}
                         type={inputType}
                         value={start}
                         onChange={(e) =>
@@ -582,11 +611,15 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                           )
                         }
                         className="fd-input"
+                        aria-required={isRequired}
                       />
                     </div>
                     <div>
-                      <div className="fd-date-range-sublabel">End</div>
+                      <label className="fd-date-range-sublabel" htmlFor={endId}>
+                        End
+                      </label>
                       <input
+                        id={endId}
                         type={inputType}
                         value={end}
                         min={start || undefined}
@@ -597,6 +630,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
                           )
                         }
                         className="fd-input"
+                        aria-required={isRequired}
                       />
                     </div>
                   </div>
@@ -604,19 +638,26 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
               })()
             ) : (
               <input
+                id={fieldId}
                 type={question.datetime_type || "date"}
                 value={answers[question.id] || ""}
                 onChange={(e) =>
                   handleAnswerChange(question.id, e.target.value)
                 }
                 className="fd-input"
+                aria-required={isRequired}
               />
             )}
           </>
         )}
 
         {question.question_type === "multiple_choice" && (
-          <div className="fd-options-row">
+          <div
+            className="fd-options-row"
+            role="group"
+            aria-labelledby={titleId}
+            aria-required={isRequired}
+          >
             {(Array.isArray(question.options) ? question.options : []).map((option, optIndex) => (
               <div key={optIndex} className="fd-option-item">
                 <label className="fd-option-label">
@@ -638,7 +679,12 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
         )}
 
         {question.question_type === "checkbox" && (
-          <div className="fd-options-row">
+          <div
+            className="fd-options-row"
+            role="group"
+            aria-labelledby={titleId}
+            aria-required={isRequired}
+          >
             {(Array.isArray(question.options) ? question.options : []).map((option, optIndex) => (
               <div key={optIndex} className="fd-option-item">
                 <label className="fd-option-label">
@@ -667,7 +713,12 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
         )}
 
         {question.question_type === "rating" && (
-          <div className="fd-rating-row">
+          <div
+            className="fd-rating-row"
+            role="group"
+            aria-labelledby={titleId}
+            aria-required={isRequired}
+          >
             {(Array.isArray(question.options) ? question.options : []).map((option, optIndex) => (
               <label
                 key={optIndex}
