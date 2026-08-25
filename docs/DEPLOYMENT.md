@@ -67,16 +67,13 @@ What it does, in order:
 
 1. **Preflight** — aborts if PHP < 8.4.1, or if composer/npm/mysqldump are missing.
 2. **Backs up the database** to `C:\formbuilder\backups\`. Aborts if the backup fails.
-3. **Checks schema state.** If tables the app needs (`audit_logs`,
-   `notifications`, `password_reset_codes`) are missing, it stops and tells you to
-   re-run with `-ApplyMigrations`, which applies `form-builder-api/migrations/*.sql`
-   in numeric order.
-4. **Builds a new release** in `C:\formbuilder\releases\<timestamp>` — the existing
+3. **Builds a new release** in `C:\formbuilder\releases\<timestamp>` — the existing
    live app is never overwritten.
-5. **Configures** `.env` (shared across releases so `APP_KEY` stays stable) and
-   caches config + views.
-6. **Smoke-tests** the release on a temporary port before any traffic is switched.
-7. **Activates** it by repointing the `C:\formbuilder\current` link.
+4. **Configures** `.env` (shared across releases so `APP_KEY` stays stable), then runs
+   `php artisan migrate --force` (already-applied migrations are skipped, tracked in the
+   `migrations` table) and caches config + views.
+5. **Smoke-tests** the release on a temporary port before any traffic is switched.
+6. **Activates** it by repointing the `C:\formbuilder\current` link.
 
 Because Apache points at the fixed `current` link, **later deploys need no Apache
 changes at all** — and rollback is just repointing that link.
@@ -147,15 +144,8 @@ The live database is the source of truth. **Back it up before every deploy**
 For a brand-new database only:
 
 1. Create the database, e.g. `form_builder`.
-2. Import `form-builder-app/src/form_builder.sql`.
-3. Apply `form-builder-api/migrations/*.sql` in numeric order.
-
-> **Known weakness.** The schema currently lives in three places: the numbered
-> `migrations/*.sql`, the `form_builder.sql` dump, and hardcoded DDL inside
-> `LegacyTestController`. There is no migration-tracking table, so nothing records
-> which migrations a given database has already had applied. Re-running a migration
-> can error. Consolidating this into a single source of truth is outstanding
-> technical debt and should be done before the schema changes much further.
+2. Run `php artisan migrate` — it creates the schema and records applied state in
+   the `migrations` table.
 
 Backups: daily; always before migrations; stored off the app server; restore
 tested periodically. Include uploaded assets such as `form-builder-api/uploads/`.

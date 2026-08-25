@@ -58,7 +58,10 @@ Set `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `APP_TIMEZONE`, and `DB_TIMEZON
 
 3. Import the database schema:
 
-Use `src/form_builder.sql` for a fresh database, then apply any newer files in `../form-builder-api/migrations/` in numeric order until Laravel migrations fully replace the legacy SQL path.
+```powershell
+cd ..\form-builder-api\laravel
+php artisan migrate
+```
 
 4. Start Laravel:
 

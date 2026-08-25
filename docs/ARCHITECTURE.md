@@ -63,9 +63,8 @@ Main tables:
 - `audit_logs`
 - `categories`
 
-The canonical schema dump is currently in `form-builder-app/src/form_builder.sql`.
-
-Incremental migrations live in `form-builder-api/migrations/`.
+The schema's single source of truth is the Laravel migration in
+`form-builder-api/laravel/database/migrations/`. Run `php artisan migrate` to create it.
 
 Laravel PHPUnit tests use an in-memory SQLite database by default through `phpunit.xml`. Local app runs use the MySQL/MariaDB settings in `form-builder-api/laravel/.env`.
 

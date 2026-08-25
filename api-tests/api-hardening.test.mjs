@@ -206,17 +206,6 @@ test('form ownership checks exist on sensitive form and response endpoints', () 
   }
 });
 
-test('committed schema dump excludes production-like data and password hashes', () => {
-  const source = readAppFile('src/form_builder.sql');
-
-  assert.match(source, /CREATE TABLE `audit_logs`/);
-  assert.doesNotMatch(source, /INSERT INTO `users`/);
-  assert.doesNotMatch(source, /INSERT INTO `answers`/);
-  assert.doesNotMatch(source, /INSERT INTO `responses`/);
-  assert.doesNotMatch(source, /\$2y\$/);
-  assert.doesNotMatch(source, /admin_ORD|admin_FAD|Darwin|gmail\.com|tester|john/i);
-});
-
 test('privileged and sensitive actions write audit log entries', () => {
   const auditedActions = {
     LegacyAuthController: ['USER_LOGIN', 'USER_LOGOUT'],
