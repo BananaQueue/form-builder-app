@@ -1,0 +1,72 @@
+name: Schema Diff
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  schema-diff:
+    name: migrate == dump
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.4
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'yes'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with:
+          path: form-builder-app
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          repository: BananaQueue/form-builder-api
+          path: form-builder-api
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mysqli
+          coverage: none
+      - name: Install backend dependencies
+        working-directory: form-builder-api/laravel
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Create both databases
+        run: |
+          mysql -h127.0.0.1 -uroot -e "CREATE DATABASE fb_from_dump  CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+          mysql -h127.0.0.1 -uroot -e "CREATE DATABASE fb_from_migrate CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+      - name: Build fb_from_dump from the committed dump
+        run: mysql -h127.0.0.1 -uroot fb_from_dump < form-builder-app/src/form_builder.sql
+      - name: Build fb_from_migrate via artisan migrate
+        working-directory: form-builder-api/laravel
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: fb_from_migrate
+          DB_USERNAME: root
+          DB_PASSWORD: ''
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+        run: php artisan migrate --force
+      - name: Diff the two schemas
+        run: |
+          norm() {
+            mysqldump -h127.0.0.1 -uroot --no-data --skip-comments --skip-dump-date "$1" \
+              | sed -E 's/ AUTO_INCREMENT=[0-9]+//g' \
+              | grep -vE '^/\*|^--|^$'
+          }
+          norm fb_from_dump    > /tmp/dump.sql
+          norm fb_from_migrate > /tmp/migrate.sql
+          echo "=== differences (none expected) ==="
+          if diff -u /tmp/dump.sql /tmp/migrate.sql; then
+            echo "Schemas are identical."
+          else
+            echo "::error::migrate-built schema differs from form_builder.sql"
+            exit 1
+          fi
