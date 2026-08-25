@@ -58,7 +58,10 @@ jobs:
       - name: Diff the two schemas
         run: |
           norm() {
-            mysqldump -h127.0.0.1 -uroot --no-data --skip-comments --skip-dump-date "$1" \
+            # --ignore-table excludes Laravel's own migration-bookkeeping table:
+            # `artisan migrate` always creates it, and it has no counterpart in
+            # the legacy dump, so it isn't part of the application schema being compared.
+            mysqldump -h127.0.0.1 -uroot --no-data --skip-comments --skip-dump-date --ignore-table="$1".migrations "$1" \
               | sed -E 's/ AUTO_INCREMENT=[0-9]+//g' \
               | grep -vE '^/\*|^--|^$'
           }
