@@ -65,7 +65,7 @@ Minimum checks:
 
 - Laravel app HTTP 200
 - `/_fb_laravel_health`
-- API session endpoint such as `/check_session.php`
+- API session endpoint such as `/api/session`
 - database connectivity
 - disk space
 - backup success

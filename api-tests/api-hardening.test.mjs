@@ -61,7 +61,7 @@ test('CSRF protection is centralized with a limited exemption allowlist', () => 
   assertContains(bootstrap, /validateCsrfTokens\s*\(\s*except:/, 'bootstrap/app.php');
 
   // Only pre-session / public endpoints may be exempt from CSRF.
-  for (const exempt of ['login.php', 'submit_response.php', 'test_reset_database.php', 'api/public/forms/*/responses', 'api/login']) {
+  for (const exempt of ['test_reset_database.php', 'api/public/forms/*/responses', 'api/login']) {
     assertContains(bootstrap, exempt, 'bootstrap/app.php');
   }
 
@@ -86,8 +86,6 @@ test('super-admin routes enforce the super_admin role server-side via middleware
   // Every super-admin endpoint lives inside that guarded group.
   const group = routeGroup(readLaravelFile('routes/web.php'), 'legacy.superadmin');
   for (const uri of [
-    'get_users.php', 'create_user_api.php', 'delete_user.php', 'change_password.php',
-    'get_all_forms.php', 'get_audit_logs.php', 'upload_banner.php', 'remove_banner.php',
     'api/users', 'api/banner', 'api/admin/forms', 'api/admin/audit-logs',
     'password-reset-code',
   ]) {
@@ -106,9 +104,8 @@ test('authenticated routes require a logged-in session via middleware', () => {
 
   const group = routeGroup(readLaravelFile('routes/web.php'), 'legacy.auth');
   for (const uri of [
-    'get_notifications.php', 'get_forms.php', 'get_form_details.php',
-    'get_responses.php', 'export_responses.php',
-    'save_form.php', 'update_form.php', 'delete_form.php',
+    'api/notifications', 'api/forms', 'api/forms/{id}',
+    'api/forms/{id}/responses', 'api/forms/{id}/responses/export',
   ]) {
     assertContains(group, uri, 'legacy.auth group');
   }

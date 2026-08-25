@@ -73,13 +73,13 @@ Laravel PHPUnit tests use an in-memory SQLite database by default through `phpun
 
 - Auth uses Laravel sessions through compatibility controllers.
 - Session cookies are HttpOnly and SameSite=Lax.
-- CSRF tokens are issued by `check_session.php` and returned on login.
+- CSRF tokens are issued by `/api/session` and returned on login.
 - Regular users can manage their own forms.
 - Super Admins can access all forms, users, settings, and audit logs.
 
 ## Public Forms
 
-Public forms are loaded by form code through `/api/public/forms/{code}` in migrated frontend reads. Compatibility route `/get_form_by_code.php` remains active. Public responses are still submitted through the compatibility `/submit_response.php` route.
+Public forms are loaded by form code through `/api/public/forms/{code}`. Public responses are submitted through `/api/public/forms/{id}/responses`.
 
 Public form theme follows browser/OS color scheme, not the admin theme toggle.
 

@@ -47,7 +47,7 @@ test('user creation, password change, and deletion are audited', async ({ page, 
   await expect(rowForUser(page, username)).toBeVisible();
 
   const createdUser = await getUserFromApi(page, username);
-  expect(createdUser?.id, 'created user should be available through get_users.php').toBeTruthy();
+  expect(createdUser?.id, 'created user should be available through /api/users').toBeTruthy();
 
   const createdLogs = await getAuditLogs(request, {
     action: 'USER_CREATED',

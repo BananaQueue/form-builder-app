@@ -139,7 +139,7 @@ test('super admin can update a form and audit the update', async ({ page, reques
   await createTextQuestionForm(page, originalTitle, 'What is your office?');
 
   const savedForm = await getFormFromApi(page, originalTitle);
-  expect(Number(savedForm?.id), 'created form should be available through get_all_forms.php').toBeGreaterThan(0);
+  expect(Number(savedForm?.id), 'created form should be available through /api/admin/forms').toBeGreaterThan(0);
 
   await page.goto('/');
   const row = page.locator('tr').filter({ has: page.locator('.afl-form-title', { hasText: originalTitle }) });

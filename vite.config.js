@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       proxy: {
         '/api': {
-          // Forward frontend calls like /api/get_forms.php to local Laravel.
+          // Forward frontend calls like /api/forms to local Laravel.
           // Override with VITE_API_TARGET=http://127.0.0.1:8001 for test DB smoke checks.
           target: apiTarget,
           changeOrigin: true,
