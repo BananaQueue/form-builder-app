@@ -32,13 +32,11 @@ The app uses React state for some admin detail navigation. For example, viewing/
 Laravel exposes the current production routes in `form-builder-api/laravel/routes/web.php`. It serves two kinds of requests:
 
 - React shell routes such as `/` and `/form/{code}` from `public/app/index.html`
-- API routes handled by Laravel controllers, including both Laravel-native `/api/...` aliases and compatibility routes with the old `.php` names
-
-The compatibility route names keep older frontend calls and rollback tests low-risk while the conversion continues.
+- API routes handled by Laravel controllers, reached only through native `/api/...` routes — there are no `.php`-suffixed route aliases left
 
 Important Laravel components:
 
-- `routes/web.php` - React shell routing, health route, compatibility routes, and native `/api/...` aliases.
+- `routes/web.php` - React shell routing, health route, and the `/api/...` routes.
 - `app/Http/Controllers/LegacyAuthController.php` - session and auth endpoints.
 - `app/Http/Controllers/LegacyLookupController.php` - forms, public forms, responses, exports, and lookups.
 - `app/Http/Controllers/LegacyFormWriteController.php` - form create/update/delete.
@@ -47,7 +45,7 @@ Important Laravel components:
 - `app/Http/Controllers/LegacyNotificationController.php` - notification reads and updates.
 - `app/Http/Controllers/LegacyBannerController.php` - banner upload/removal.
 
-The older root PHP files in `form-builder-api/` still exist for reference, hardening tests, and rollback while the Laravel conversion is completed. New backend behavior should prefer Laravel routes/controllers.
+Controllers keep the `Legacy*` name because they carry over the raw-SQL implementation style from the pre-Laravel PHP app, not because of how they're routed — the standalone root PHP files themselves were removed once the Laravel app became self-contained.
 
 ## Database
 
@@ -70,7 +68,7 @@ Laravel PHPUnit tests use an in-memory SQLite database by default through `phpun
 
 ## Authentication And Authorization
 
-- Auth uses Laravel sessions through compatibility controllers.
+- Auth uses Laravel sessions through the `Legacy*` controllers.
 - Session cookies are HttpOnly and SameSite=Lax.
 - CSRF tokens are issued by `/api/session` and returned on login.
 - Regular users can manage their own forms.
@@ -96,9 +94,6 @@ Super Admins can view logs through the frontend `Audit Logs` page.
 
 ## Known Architectural Limitations
 
-- CORS/header logic is duplicated in many PHP endpoints.
-- No formal migration runner exists.
 - Large frontend modules, especially `FormBuilder.jsx`, should be split.
 - Direct admin deep links are limited by state-based routing.
 - No central structured logging or monitoring integration.
-- Some write/admin frontend calls still use compatibility `.php` route names pending the next Laravel-native route migration.
