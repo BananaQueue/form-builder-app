@@ -61,7 +61,7 @@ function ResponseList({ formId, onBack, onViewResponse, showToast, isSuperAdmin 
 
   function handleExport() {
     const exportUrl = `${API_BASE}/api/forms/${formId}/responses/export${isSuperAdmin ? '?admin_override=1' : ''}`
-    const popup = window.open(exportUrl, '_blank')
+    const popup = window.open(exportUrl, '_blank', 'noopener,noreferrer')
 
     if (!popup) {
       showToast?.('Export blocked by your browser. Allow pop-ups for this site and try again.', 'error')
