@@ -25,7 +25,7 @@
 // able to show notifications. Instead of copying the same useState/logic
 // into every file, we write it once here and share it.
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 // useCallback is like useMemo but for functions.
 // Without it, every time the component re-renders, React would create a
@@ -55,6 +55,16 @@ export function useNotification() {
   // Shape when hidden:  null
   const [confirm, setConfirm] = useState(null)
 
+  // ── toastTimerRef ─────────────────────────────────────────────────────────
+  // Holds the id of the pending auto-dismiss setTimeout, so a NEW toast can
+  // cancel an OLDER toast's still-running timer. Without this, showing a
+  // second toast while the first one's timer is still ticking lets that old
+  // timer fire later and hide the new toast early — a toast shown 3s after
+  // an earlier one would only stay visible for 0.5s instead of 3.5s.
+  // useRef (not useState) because storing this doesn't need to trigger a
+  // re-render — it's just bookkeeping between calls.
+  const toastTimerRef = useRef(null)
+
   // ── showToast ─────────────────────────────────────────────────────────────
   // Call this anywhere you'd previously call alert() for a simple message.
   //
@@ -68,23 +78,47 @@ export function useNotification() {
   const showToast = useCallback((message, type = 'info') => {
     setToast({ message, type })
 
+    // Cancel a previous toast's still-pending timer before scheduling this
+    // one's, so it can't hide THIS toast early.
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current)
+    }
+
     // Auto-dismiss after 3.5 seconds.
     // setTimeout schedules a function to run after a delay (in milliseconds).
     // 3500ms = 3.5 seconds.
     // After that time, we set toast back to null, which makes the banner
     // disappear. The CSS handles the fade-out animation.
-    setTimeout(() => {
+    toastTimerRef.current = setTimeout(() => {
       setToast(null)
+      toastTimerRef.current = null
     }, 3500)
   }, [])
   // The empty [] dependency array means: never recreate this function.
-  // It's safe because setToast (from useState) is always stable.
+  // It's safe because setToast (from useState) and toastTimerRef (from
+  // useRef) are always stable.
 
   // ── hideToast ─────────────────────────────────────────────────────────────
   // Lets the user dismiss the banner early by clicking an X button.
-  // We just set toast back to null.
+  // Also cancels the pending auto-dismiss timer — otherwise it would still
+  // fire later and null out whatever toast happens to be showing by then.
   const hideToast = useCallback(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current)
+      toastTimerRef.current = null
+    }
     setToast(null)
+  }, [])
+
+  // If whatever component is using this hook unmounts while a toast is
+  // still showing (e.g. the user logs out), cancel the pending timer so it
+  // doesn't try to update state on a component that's gone.
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current)
+      }
+    }
   }, [])
 
   // ── showConfirm ───────────────────────────────────────────────────────────
