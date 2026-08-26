@@ -133,8 +133,9 @@ test('super admin can delete a form and audit the deletion', async ({ page, requ
 test('delete-form modal accepts keyboard input for a custom reason', async ({ page, request }) => {
   // Regression test: DeleteFormModal's keydown handler used to swallow every
   // keystroke (not just Escape), so typing into the custom-reason textarea
-  // silently did nothing. If that regresses, this fill() leaves the textarea
-  // empty and the assertion below catches it.
+  // silently did nothing. pressSequentially() dispatches real keydown events
+  // (unlike fill()), so if that regresses, the textarea stays empty and the
+  // assertion below catches it.
   const formTitle = `E2E Keyboard Delete Form ${Date.now()}`;
   const customReason = 'Reason typed via keyboard for regression coverage';
 
@@ -150,7 +151,7 @@ test('delete-form modal accepts keyboard input for a custom reason', async ({ pa
 
   await expect(page.getByRole('dialog', { name: 'Delete Form' })).toBeVisible();
   await page.locator('#delete-reason-select').selectOption('Other');
-  await page.locator('#delete-custom-reason').fill(customReason);
+  await page.locator('#delete-custom-reason').pressSequentially(customReason);
   await expect(page.locator('#delete-custom-reason')).toHaveValue(customReason);
   await page.getByRole('button', { name: 'Delete Form' }).click();
 
