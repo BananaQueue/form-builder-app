@@ -313,7 +313,7 @@ function AdminFormList({
   // ── Fetch forms ──────────────────────────────────────────────────────────
   // useCallback wraps the function so it only gets recreated when its
   // dependencies change. This prevents unnecessary re-renders.
-  const fetchForms = useCallback(async () => {
+  const fetchForms = useCallback(async (signal) => {
     const showSoftRefresh = hasLoadedRef.current;
     if (showSoftRefresh) setIsRefreshing(true);
     setError(null);
@@ -331,6 +331,7 @@ function AdminFormList({
 
       const res = await fetch(apiUrl(`/api/admin/forms?${params}`), {
         credentials: "include",
+        signal,
       });
 
       const result = await res.json();
@@ -343,26 +344,38 @@ function AdminFormList({
         setError(result.error || "Failed to load forms");
       }
     } catch (err) {
+      if (err.name === "AbortError") return; // a newer request superseded this one
       setError("Could not connect to server: " + err.message);
     } finally {
-      hasLoadedRef.current = true;
-      if (showSoftRefresh) {
-        clearTimeout(rowAnimationTimer.current);
-        rowAnimationTimer.current = setTimeout(() => {
-          setIsRefreshing(false);
-          setIsRollingRows(true);
+      // signal is undefined for the manual Refresh/Try-Again/post-delete
+      // call sites below, which don't participate in the race-cancellation
+      // this exists for - optional chaining lets those skip the check.
+      // Don't finalize loading state for a request a newer one superseded.
+      if (!signal?.aborted) {
+        hasLoadedRef.current = true;
+        if (showSoftRefresh) {
+          clearTimeout(rowAnimationTimer.current);
           rowAnimationTimer.current = setTimeout(() => {
-            setIsRollingRows(false);
-          }, 620);
-        }, 220);
+            setIsRefreshing(false);
+            setIsRollingRows(true);
+            rowAnimationTimer.current = setTimeout(() => {
+              setIsRollingRows(false);
+            }, 620);
+          }, 220);
+        }
+        setLoading(false);
       }
-      setLoading(false);
     }
   }, [page, sortBy, debouncedSearch, categoryId, ownerId]);
 
-  // Run fetchForms whenever its dependencies change
+  // Run fetchForms whenever its dependencies change. Aborts a still-in-flight
+  // request when the filters change again before it resolves, so a slow
+  // response to an OLDER page/filter can't land after a newer one and
+  // overwrite the list with stale data.
   useEffect(() => {
-    fetchForms();
+    const controller = new AbortController();
+    fetchForms(controller.signal);
+    return () => controller.abort();
   }, [fetchForms]);
 
   // ── Fetch supporting data ────────────────────────────────────────────────
@@ -470,7 +483,7 @@ function AdminFormList({
 
         <button
           className={`glass-button refresh-button ${isRefreshing ? "refresh-button--active" : ""}`}
-          onClick={fetchForms}
+          onClick={() => fetchForms()}
           disabled={loading || isRefreshing}
         >
           {isRefreshing && <span className="refresh-button__spinner" aria-hidden="true" />}
@@ -536,7 +549,7 @@ function AdminFormList({
         <div className="glass-card form-list-error">
           <p className="form-list-error__title">⚠ Could not load forms</p>
           <p className="form-list-error__message">{error}</p>
-          <button className="glass-button" onClick={fetchForms}>
+          <button className="glass-button" onClick={() => fetchForms()}>
             Try Again
           </button>
         </div>
