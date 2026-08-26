@@ -8,7 +8,7 @@
 // The public form page (/form/:id) follows the browser/OS color scheme
 // directly, so it is unaffected by the admin theme toggle.
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import PublicFormPage from './PublicFormPage'
@@ -74,6 +74,13 @@ function App() {
   const [notificationGateComplete, setNotificationGateComplete] = useState(false)
   const [authTransition, setAuthTransition] = useState('idle')
   const logoutTimerRef = useRef(null)
+
+  // Stable identity so NotificationGate's pending-notifications fetch effect
+  // (which depends on this callback) doesn't re-run every time a toast causes
+  // App to re-render mid-queue — that used to skip a queued notification.
+  const handleNotificationGateComplete = useCallback(() => {
+    setNotificationGateComplete(true)
+  }, [])
 
   // ── Notification system (unchanged) ──────────────────────────────────
   const {
@@ -224,7 +231,7 @@ function App() {
                 ? <div className="theme-scope" data-theme={theme}>
                     <NotificationGate
                       showToast={showToast}
-                      onComplete={() => setNotificationGateComplete(true)}
+                      onComplete={handleNotificationGateComplete}
                     />
                   </div>
                 : <div className={themedStageClass} data-theme={theme}>
