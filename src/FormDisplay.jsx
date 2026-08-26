@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiUrl } from "./apiBase";
 
 // ── buildSteps ────────────────────────────────────────────────────────────────
@@ -94,6 +94,26 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [bannerLoaded, setBannerLoaded] = useState(false);
   const [bannerTs] = useState(() => Date.now());
+
+  // ── Privacy modal accessibility ────────────────────────────────────────
+  // This is the only modal on the public-facing page, and it gates a
+  // legally-required consent notice - every other modal in the app has
+  // dialog semantics; this one was missed. Focuses the checkbox (not the
+  // Confirm button, which starts disabled and can't take focus) and lets
+  // Escape cancel, matching the plain confirm/cancel modals elsewhere.
+  const privacyCheckboxRef = useRef(null);
+
+  useEffect(() => {
+    if (!showPrivacyModal) return undefined;
+    privacyCheckboxRef.current?.focus();
+
+    function handleEscape(event) {
+      if (event.key !== "Escape") return;
+      setShowPrivacyModal(false);
+    }
+    window.addEventListener("keydown", handleEscape, true);
+    return () => window.removeEventListener("keydown", handleEscape, true);
+  }, [showPrivacyModal]);
 
   // isCancelled is a live getter (not a captured boolean) so it reflects the
   // effect's cleanup running after this async work started. Under React
@@ -766,9 +786,14 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
 
       {/* ── Privacy Modal ── */}
       {showPrivacyModal && (
-        <div className="fd-modal-overlay">
-          <div className="fd-modal-card">
-            <h2 className="fd-modal-title">🔒 Privacy Notice</h2>
+        <div className="fd-modal-overlay" role="presentation">
+          <div
+            className="fd-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="fd-privacy-modal-title"
+          >
+            <h2 id="fd-privacy-modal-title" className="fd-modal-title">🔒 Privacy Notice</h2>
             <p className="fd-modal-subtitle">
               Please read the following before submitting your response.
             </p>
@@ -817,6 +842,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
             </div>
             <label className="fd-privacy-label">
               <input
+                ref={privacyCheckboxRef}
                 type="checkbox"
                 checked={privacyAccepted}
                 onChange={(e) => setPrivacyAccepted(e.target.checked)}
