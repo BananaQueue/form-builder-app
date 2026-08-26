@@ -53,7 +53,13 @@ function FormViewer({
   }
 
   function openPublicForm() {
-    const popup = window.open(buildPublicUrl(), "_blank", "noopener,noreferrer");
+    // noopener is deliberately omitted: per MDN, window.open() always
+    // returns null when noopener is set, even when the tab opens
+    // successfully - which breaks this exact blocked-popup detection below
+    // (every legitimate click would show a false "Blocked by your browser"
+    // toast). The target is same-origin, so the tabnabbing risk noopener
+    // defends against doesn't apply here anyway.
+    const popup = window.open(buildPublicUrl(), "_blank");
     if (!popup) {
       showToast("Blocked by your browser. Allow pop-ups for this site and try again.", "error");
     }

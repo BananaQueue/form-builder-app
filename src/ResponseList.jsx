@@ -60,8 +60,14 @@ function ResponseList({ formId, onBack, onViewResponse, showToast, isSuperAdmin 
   // ── Export handler (unchanged) ─────────────────────────────────────────────
 
   function handleExport() {
+    // noopener is deliberately omitted here: per MDN, window.open() always
+    // returns null when noopener is set, even when the popup opens
+    // successfully - incompatible with the !popup blocked-detection below,
+    // and broke the e2e test that waits on the popup for its download
+    // (confirmed by CI failure after adding it). Same-origin target, so the
+    // tabnabbing risk noopener defends against doesn't apply anyway.
     const exportUrl = `${API_BASE}/api/forms/${formId}/responses/export${isSuperAdmin ? '?admin_override=1' : ''}`
-    const popup = window.open(exportUrl, '_blank', 'noopener,noreferrer')
+    const popup = window.open(exportUrl, '_blank')
 
     if (!popup) {
       showToast?.('Export blocked by your browser. Allow pop-ups for this site and try again.', 'error')
