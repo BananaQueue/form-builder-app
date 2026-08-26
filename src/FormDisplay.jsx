@@ -316,6 +316,9 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
     setSubmitting(true);
 
     const submissionData = {
+      // Proves the submitter actually has the share link, not just a
+      // guessable sequential id - the id alone used to be enough.
+      form_code: formCode,
       answers: form.questions.map((q) => ({
         question_id: q.id,
         question_text: q.question_text,

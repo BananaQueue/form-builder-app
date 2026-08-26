@@ -192,10 +192,23 @@ test('banner upload validates type, image content, size, and fixed destination',
   assertContains(source, /banner\.png/, 'LegacyBannerController');
 });
 
+test('public response submission requires the share code, not just the id', () => {
+  // Regression test: submission used to be authorized by the numeric id
+  // alone, so anyone could walk id=1,2,3... and inject responses into every
+  // form in the system, including ones whose share link was never
+  // distributed. The code is the actual capability, matching the read
+  // endpoint (LegacyLookupController::publicFormByCode).
+  const source = readController('LegacySubmissionController');
+
+  assertContains(source, /isset\s*\([^)]*'form_code'/, 'LegacySubmissionController');
+  assertContains(source, /codeMatchesForm\s*\(/, 'LegacySubmissionController');
+  assertContains(source, /hash_equals\s*\(/, 'LegacySubmissionController');
+});
+
 test('public response submission validates server-owned form questions', () => {
   const source = readController('LegacySubmissionController');
 
-  assertContains(source, /SELECT\s+id\s+FROM\s+forms\s+WHERE\s+id\s+=\s+\?/i, 'LegacySubmissionController');
+  assertContains(source, /SELECT\s+form_code\s+FROM\s+forms\s+WHERE\s+id\s+=\s+\?/i, 'LegacySubmissionController');
   assertContains(source, /WHERE\s+form_id\s+=\s+\?/i, 'LegacySubmissionController');
   assertContains(source, /isset\s*\(\s*\$questionsById\[\$questionId\]\s*\)/, 'LegacySubmissionController');
   assertContains(source, /isQuestionVisible\s*\(/, 'LegacySubmissionController');
