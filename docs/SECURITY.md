@@ -38,7 +38,7 @@
 
 ### Password Policy
 
-Backend password creation and reset now use the shared server policy in `auth_helper.php`:
+Backend password creation and reset now use the shared server policy enforced in `LegacyUserController::passwordPolicyError()` (and `BootstrapSuperAdmin` for the first account):
 
 - minimum 12 characters by default
 - at least one uppercase letter
@@ -73,8 +73,8 @@ Test endpoints are guarded by config but still present in the API directory.
 
 Recommended:
 
-- disable `allow_test_guard` in production
-- block `test_*.php` at the web server level
+- never set `FB_ALLOW_TEST_GUARD=1` in production (the primary guard: these routes are inert without it, outside the `testing` environment)
+- as belt-and-braces, block the test paths at the web server level — but note these are Laravel *routes* (`routes/web.php`), not files on disk, so a filename-based rule (Apache `<Files>`/`<FilesMatch>`) matches the resolved `index.php` path and does nothing; use a URL-path rule instead, e.g. `<LocationMatch "^/test_(database_guard|reset_database|audit_logs|last_reset_code)\.php$">Require all denied</LocationMatch>`
 - consider excluding test endpoints from production artifact
 
 ## Audit Logging
