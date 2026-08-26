@@ -24,6 +24,8 @@
 // - toast / confirm state shapes are unchanged
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { useEffect, useRef } from 'react'
+
 // ── Toast icons ────────────────────────────────────────────────────────────
 // We keep the icon mapping in JavaScript because it's DATA, not appearance.
 // The icon character tells the user WHAT kind of notification this is.
@@ -50,6 +52,25 @@ function NotificationHost({ toast, confirm, hideToast, hideConfirm }) {
   function handleConfirmNo() {
     hideConfirm()
   }
+
+  // ── Dialog accessibility ───────────────────────────────────────────────────
+  // Focus the Confirm button when the dialog opens (matching DeleteFormModal
+  // and NotificationGate's convention elsewhere in this codebase), and let
+  // Escape cancel it — this dialog has no extra required input like those
+  // two do, so unlike them there's no reason to swallow Escape.
+  const confirmButtonRef = useRef(null)
+
+  useEffect(() => {
+    if (!confirm) return undefined
+    confirmButtonRef.current?.focus()
+
+    function handleEscape(event) {
+      if (event.key !== 'Escape') return
+      hideConfirm()
+    }
+    window.addEventListener('keydown', handleEscape, true)
+    return () => window.removeEventListener('keydown', handleEscape, true)
+  }, [confirm, hideConfirm])
 
   // The type to use if somehow an unknown type arrives.
   // Defensive programming: always have a fallback.
@@ -137,10 +158,14 @@ function NotificationHost({ toast, confirm, hideToast, hideConfirm }) {
       {confirm && (
         <div
           className="notif-overlay"
+          role="presentation"
           onClick={handleConfirmNo}
         >
           <div
             className="notif-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="notif-confirm-message"
             onClick={e => e.stopPropagation()}
           >
             {/* Danger icon */}
@@ -149,7 +174,7 @@ function NotificationHost({ toast, confirm, hideToast, hideConfirm }) {
             </div>
 
             {/* The question being asked */}
-            <p className="notif-modal__message">
+            <p id="notif-confirm-message" className="notif-modal__message">
               {confirm.message}
             </p>
 
@@ -162,6 +187,7 @@ function NotificationHost({ toast, confirm, hideToast, hideConfirm }) {
                 Cancel
               </button>
               <button
+                ref={confirmButtonRef}
                 className="notif-modal__btn notif-modal__btn--confirm"
                 onClick={handleConfirmYes}
               >
