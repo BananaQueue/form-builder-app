@@ -6,6 +6,12 @@ import {
   resetTestDatabase,
 } from './e2e-helpers';
 
+// The default 720px viewport leaves no room below the last row of a short
+// table for its actions dropdown, clipping items like "Delete" off-screen
+// (confirmed via a CI failure screenshot). This test always deletes the
+// second of two rows, so it needs the extra height.
+test.use({ viewport: { width: 1280, height: 1200 } });
+
 async function login(page, user) {
   await page.goto('/');
   await page.locator('#login-username').fill(user.username);
