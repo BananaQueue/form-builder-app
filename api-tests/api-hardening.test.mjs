@@ -61,9 +61,17 @@ test('CSRF protection is centralized with a limited exemption allowlist', () => 
   assertContains(bootstrap, /validateCsrfTokens\s*\(\s*except:/, 'bootstrap/app.php');
 
   // Only pre-session / public endpoints may be exempt from CSRF.
-  for (const exempt of ['test_reset_database.php', 'api/public/forms/*/responses', 'api/login']) {
+  for (const exempt of ['test_reset_database.php', 'api/public/forms/*/responses']) {
     assertContains(bootstrap, exempt, 'bootstrap/app.php');
   }
+
+  // api/login must NOT be exempt: a guest still has a real session (and
+  // therefore a real CSRF token, returned by /api/session), so there is no
+  // reason to exempt it - doing so would allow login CSRF (forcing a
+  // victim's browser to authenticate as the attacker's account).
+  const exemptListMatch = bootstrap.match(/validateCsrfTokens\s*\(\s*except:\s*\[([^\]]*)\]/);
+  assert.ok(exemptListMatch, 'bootstrap/app.php should define the CSRF exempt list');
+  assert.doesNotMatch(exemptListMatch[1], /api\/login/, 'api/login must not be CSRF-exempt');
 
   // Authenticated mutating routes must stay CSRF-protected (never exempt).
   assert.doesNotMatch(bootstrap, /api\/users|api\/banner|api\/notifications/, 'authenticated routes must not be CSRF-exempt');

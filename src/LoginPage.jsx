@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { apiUrl, setCsrfToken } from './apiBase'
+import { apiUrl, csrfHeaders, setCsrfToken } from './apiBase'
 import PasswordInput from './PasswordInput'
 
 const agencyLogoUrl = `${import.meta.env.BASE_URL}EMB1-LOGO-WITH-NAME-BAGONG-PILIPINAS.png`
@@ -26,7 +26,7 @@ function LoginPage({ onLoginSuccess }) {
     try {
       const response = await fetch(apiUrl('/api/login'), {
         method:      'POST',
-        headers:     { 'Content-Type': 'application/json' },
+        headers:     csrfHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body:        JSON.stringify({ username, password }),
       })

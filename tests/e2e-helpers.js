@@ -35,7 +35,16 @@ export async function resetTestDatabase(request) {
 // (e.g. /api/api/login -> /api/login), mirroring how the app's apiUrl()
 // builds URLs in dev.
 export async function loginViaApi(request, username, password) {
+  // api/login is CSRF-protected like everything else (a guest still has a
+  // real session, and therefore a real token) - mirror the real frontend's
+  // flow of reading it from /api/session before submitting the login POST.
+  const sessionResponse = await request.get('/api/api/session');
+  const { csrf_token: guestCsrfToken } = await sessionResponse.json();
+
   const response = await request.post('/api/api/login', {
+    headers: {
+      'X-CSRF-Token': guestCsrfToken,
+    },
     data: { username, password },
   });
   const body = await response.text();
