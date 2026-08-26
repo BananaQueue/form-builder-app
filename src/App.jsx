@@ -104,9 +104,14 @@ function App() {
   // that's the only place the toggle button is rendered (in the nav bar).
   const { theme, toggleTheme } = useTheme()
 
-  // ── Session check (unchanged) ─────────────────────────────────────────
-  useEffect(() => {
-    fetch(apiUrl('/api/session'), { credentials: 'include' })
+  // ── Session check ──────────────────────────────────────────────────────
+  // Also called after logout: the server just invalidated the old session
+  // (a fresh CSRF token comes with it), and without re-fetching here the
+  // in-memory token would stay null for the rest of the SPA's life -
+  // silently breaking every subsequent login attempt, since api/login now
+  // requires a valid token like everything else.
+  const refreshSession = useCallback(() => {
+    return fetch(apiUrl('/api/session'), { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         setCsrfToken(data.csrf_token)
@@ -121,6 +126,10 @@ function App() {
         setAuthUser(false)
       })
   }, [])
+
+  useEffect(() => {
+    refreshSession()
+  }, [refreshSession])
 
   // ── iOS Safari viewport zoom lock (unchanged) ─────────────────────────
   useEffect(() => {
@@ -177,9 +186,8 @@ function App() {
           credentials: 'include',
         })
       } finally {
-        setCsrfToken(null)
+        await refreshSession() // picks up the fresh guest csrf_token the server just issued
         setNotificationGateComplete(false)
-        setAuthUser(false)
         setAuthTransition('idle')
       }
     }, 220)
