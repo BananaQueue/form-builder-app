@@ -197,12 +197,15 @@ test('public response submission requires the share code, not just the id', () =
   // alone, so anyone could walk id=1,2,3... and inject responses into every
   // form in the system, including ones whose share link was never
   // distributed. The code is the actual capability, matching the read
-  // endpoint (LegacyLookupController::publicFormByCode).
+  // endpoint (LegacyLookupController::publicFormByCode). The match itself
+  // now lives in the shared FormCodeMatcher class (used by both endpoints),
+  // not a private method on this controller.
   const source = readController('LegacySubmissionController');
+  const matcherSource = readLaravelFile('app/Support/FormCodeMatcher.php');
 
   assertContains(source, /isset\s*\([^)]*'form_code'/, 'LegacySubmissionController');
-  assertContains(source, /codeMatchesForm\s*\(/, 'LegacySubmissionController');
-  assertContains(source, /hash_equals\s*\(/, 'LegacySubmissionController');
+  assertContains(source, /FormCodeMatcher::matches\s*\(/, 'LegacySubmissionController');
+  assertContains(matcherSource, /hash_equals\s*\(/, 'FormCodeMatcher');
 });
 
 test('public response submission validates server-owned form questions', () => {
