@@ -25,6 +25,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef } from 'react'
+import { trapTabFocus } from './focusTrap'
 
 // ── Toast icons ────────────────────────────────────────────────────────────
 // We keep the icon mapping in JavaScript because it's DATA, not appearance.
@@ -59,14 +60,18 @@ function NotificationHost({ toast, confirm, hideToast, hideConfirm }) {
   // Escape cancel it — this dialog has no extra required input like those
   // two do, so unlike them there's no reason to swallow Escape.
   const confirmButtonRef = useRef(null)
+  const confirmModalRef = useRef(null)
 
   useEffect(() => {
     if (!confirm) return undefined
     confirmButtonRef.current?.focus()
 
     function handleEscape(event) {
-      if (event.key !== 'Escape') return
-      hideConfirm()
+      if (event.key === 'Escape') {
+        hideConfirm()
+        return
+      }
+      trapTabFocus(event, confirmModalRef.current)
     }
     window.addEventListener('keydown', handleEscape, true)
     return () => window.removeEventListener('keydown', handleEscape, true)
@@ -163,6 +168,7 @@ function NotificationHost({ toast, confirm, hideToast, hideConfirm }) {
         >
           <div
             className="notif-modal"
+            ref={confirmModalRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="notif-confirm-message"

@@ -4,6 +4,7 @@ import { apiUrl, csrfHeaders } from "./apiBase";
 import QRCode from "qrcode";
 import ActionButtons from "./ActionButtons";
 import { useIsMobile } from "./useIsMobile";
+import { trapTabFocus } from "./focusTrap";
 
 function FormViewer({
   formId,
@@ -27,6 +28,7 @@ function FormViewer({
   const fromUsername = location.state?.fromUsername ?? null;
   const isMobile = useIsMobile();
   const closeQrButtonRef = useRef(null);
+  const qrModalRef = useRef(null);
 
   // ── URL helpers (unchanged) ────────────────────────────────────────────────
 
@@ -272,10 +274,14 @@ function FormViewer({
     if (!showQrModal) return undefined;
     closeQrButtonRef.current?.focus();
     function handleEscape(event) {
-      if (event.key === "Escape") setShowQrModal(false);
+      if (event.key === "Escape") {
+        setShowQrModal(false);
+        return;
+      }
+      trapTabFocus(event, qrModalRef.current);
     }
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
+    window.addEventListener("keydown", handleEscape, true);
+    return () => window.removeEventListener("keydown", handleEscape, true);
   }, [showQrModal]);
 
   function handleBackNavigation() {
@@ -359,6 +365,7 @@ function FormViewer({
         >
           <div
             className="qr-modal"
+            ref={qrModalRef}
             onClick={e => e.stopPropagation()}
             role="dialog"
             aria-modal="true"

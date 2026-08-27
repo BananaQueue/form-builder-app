@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { apiUrl, csrfHeaders } from './apiBase'
 import FormList from './FormList'
 import PasswordInput from './PasswordInput'
+import { trapTabFocus } from './focusTrap'
 
 function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onViewResponses, isSuperAdmin = false, currentUser = '' }) {
 
@@ -41,15 +42,21 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
   // code) are mutually exclusive in practice - they form one sequential
   // flow, each closing the previous one before opening. Escape closes
   // whichever is currently open; each already focuses its primary input via
-  // autoFocus, so no separate focus-management effect is needed here.
+  // autoFocus, so no separate focus-management effect is needed here. The
+  // same modalRef is attached to all three dialog divs below - fine since
+  // only one is ever mounted at a time.
+  const modalRef = useRef(null)
   useEffect(() => {
     if (!pwModal && !emailModal && !verifyModal) return undefined
 
     function handleEscape(event) {
-      if (event.key !== 'Escape') return
-      setPwModal(null)
-      setEmailModal(null)
-      setVerifyModal(null)
+      if (event.key === 'Escape') {
+        setPwModal(null)
+        setEmailModal(null)
+        setVerifyModal(null)
+        return
+      }
+      trapTabFocus(event, modalRef.current)
     }
     window.addEventListener('keydown', handleEscape, true)
     return () => window.removeEventListener('keydown', handleEscape, true)
@@ -415,6 +422,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
         <div className="um-modal-overlay" role="presentation" onClick={() => setPwModal(null)}>
           <div
             className="um-modal"
+            ref={modalRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="um-pw-modal-title"
@@ -457,6 +465,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
         <div className="um-modal-overlay" role="presentation" onClick={() => setEmailModal(null)}>
           <div
             className="um-modal"
+            ref={modalRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="um-email-modal-title"
@@ -495,6 +504,7 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
         <div className="um-modal-overlay" role="presentation" onClick={() => setVerifyModal(null)}>
           <div
             className="um-modal"
+            ref={modalRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="um-verify-modal-title"

@@ -19,6 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { apiUrl, csrfHeaders } from "./apiBase";
 import { isOrderValidForConditions } from "./questionOrder";
 import { useIsMobile } from "./useIsMobile";
+import { trapTabFocus } from "./focusTrap";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SortableQuestionRow
@@ -402,13 +403,18 @@ function EditQuestionModal({ question, questions, onSave, onClose, showToast }) 
 
   // Focus management + Escape-to-close for accessibility
   const firstInputRef = useRef(null);
+  const modalRef = useRef(null);
   useEffect(() => {
     firstInputRef.current?.focus();
     function onKey(e) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      trapTabFocus(e, modalRef.current);
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, []);
 
   // Precompute available previous questions and selected question for
@@ -446,6 +452,7 @@ function EditQuestionModal({ question, questions, onSave, onClose, showToast }) 
       {/* stopPropagation prevents a click inside the card from closing it */}
       <div
         onClick={(e) => e.stopPropagation()}
+        ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-question-title"

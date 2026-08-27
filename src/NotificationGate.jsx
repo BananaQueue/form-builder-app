@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { apiUrl, csrfHeaders } from "./apiBase";
+import { trapTabFocus } from "./focusTrap";
 
 function formatDateTime(value) {
   if (!value) return "—";
@@ -12,6 +13,7 @@ export default function NotificationGate({ showToast, onComplete }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [acknowledging, setAcknowledging] = useState(false);
   const ackButtonRef = useRef(null);
+  const modalRef = useRef(null);
 
   const current = queue[currentIndex] ?? null;
 
@@ -44,7 +46,9 @@ export default function NotificationGate({ showToast, onComplete }) {
       if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
+        return;
       }
+      trapTabFocus(event, modalRef.current);
     }
     window.addEventListener("keydown", blockEscape, true);
     return () => window.removeEventListener("keydown", blockEscape, true);
@@ -114,6 +118,7 @@ export default function NotificationGate({ showToast, onComplete }) {
     <div className="notif-overlay notif-overlay--blocking" role="presentation">
       <div
         className="notif-modal notif-modal--wide"
+        ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="notification-gate-title"

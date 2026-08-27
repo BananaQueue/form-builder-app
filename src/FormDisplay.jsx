@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { apiUrl } from "./apiBase";
+import { trapTabFocus } from "./focusTrap";
 
 // ── buildSteps ────────────────────────────────────────────────────────────────
 // Converts the flat questions array into an array of step objects.
@@ -102,14 +103,18 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
   // Confirm button, which starts disabled and can't take focus) and lets
   // Escape cancel, matching the plain confirm/cancel modals elsewhere.
   const privacyCheckboxRef = useRef(null);
+  const privacyModalRef = useRef(null);
 
   useEffect(() => {
     if (!showPrivacyModal) return undefined;
     privacyCheckboxRef.current?.focus();
 
     function handleEscape(event) {
-      if (event.key !== "Escape") return;
-      setShowPrivacyModal(false);
+      if (event.key === "Escape") {
+        setShowPrivacyModal(false);
+        return;
+      }
+      trapTabFocus(event, privacyModalRef.current);
     }
     window.addEventListener("keydown", handleEscape, true);
     return () => window.removeEventListener("keydown", handleEscape, true);
@@ -789,6 +794,7 @@ function FormDisplay({ formCode, formId, isMobile = false, showToast }) {
         <div className="fd-modal-overlay" role="presentation">
           <div
             className="fd-modal-card"
+            ref={privacyModalRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="fd-privacy-modal-title"

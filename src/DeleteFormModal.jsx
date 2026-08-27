@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { trapTabFocus } from "./focusTrap";
 
 const PRESET_REASONS = [
   "Duplicate form",
@@ -13,13 +14,17 @@ export default function DeleteFormModal({ form, onCancel, onConfirm }) {
   const [customReason, setCustomReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const confirmRef = useRef(null);
+  const modalRef = useRef(null);
 
   useEffect(() => {
     confirmRef.current?.focus();
     function handleEscape(event) {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      event.stopPropagation();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      trapTabFocus(event, modalRef.current);
     }
     window.addEventListener("keydown", handleEscape, true);
     return () => window.removeEventListener("keydown", handleEscape, true);
@@ -44,6 +49,7 @@ export default function DeleteFormModal({ form, onCancel, onConfirm }) {
     <div className="notif-overlay notif-overlay--blocking" role="presentation">
       <div
         className="notif-modal notif-modal--wide"
+        ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-form-modal-title"

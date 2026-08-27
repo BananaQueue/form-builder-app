@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import ReactCrop from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { apiUrl, csrfHeaders } from './apiBase'
+import { trapTabFocus } from './focusTrap'
 
 function BannerSettings({ showToast }) {
   const [file, setFile] = useState(null)
@@ -20,6 +21,7 @@ function BannerSettings({ showToast }) {
   const [completedCrop, setCompletedCrop] = useState()
   const cropImgRef = useRef(null)
   const applyCropBtnRef = useRef(null)
+  const cropModalRef = useRef(null)
 
   // Revoke object URLs when they change or on unmount
   useEffect(() => {
@@ -39,8 +41,11 @@ function BannerSettings({ showToast }) {
     applyCropBtnRef.current?.focus()
 
     function handleEscape(event) {
-      if (event.key !== 'Escape') return
-      applyOriginalImage()
+      if (event.key === 'Escape') {
+        applyOriginalImage()
+        return
+      }
+      trapTabFocus(event, cropModalRef.current)
     }
     window.addEventListener('keydown', handleEscape, true)
     return () => window.removeEventListener('keydown', handleEscape, true)
@@ -171,7 +176,7 @@ function BannerSettings({ showToast }) {
       {/* ── Crop modal ──────────────────────────────────────────────────────── */}
       {showCropModal && rawObjectUrl && (
         <div className="bs-crop-overlay" role="presentation" onClick={applyOriginalImage}>
-          <div className="bs-crop-modal" role="dialog" aria-modal="true" aria-labelledby="bs-crop-modal-title" onClick={e => e.stopPropagation()}>
+          <div className="bs-crop-modal" ref={cropModalRef} role="dialog" aria-modal="true" aria-labelledby="bs-crop-modal-title" onClick={e => e.stopPropagation()}>
             <h3 className="bs-crop-title" id="bs-crop-modal-title">Crop Banner</h3>
             <p className="bs-crop-hint">
               Drag the handles to trim negative space. Leave the full selection to use the whole image.
