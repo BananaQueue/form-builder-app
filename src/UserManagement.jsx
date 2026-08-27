@@ -36,6 +36,25 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
   const [verifying, setVerifying]   = useState(false)
   const [requestingCode, setRequestingCode] = useState(false)
 
+  // ── Account-recovery modal accessibility ─────────────────────────────────
+  // The three modals below (change password, set recovery email, verify
+  // code) are mutually exclusive in practice - they form one sequential
+  // flow, each closing the previous one before opening. Escape closes
+  // whichever is currently open; each already focuses its primary input via
+  // autoFocus, so no separate focus-management effect is needed here.
+  useEffect(() => {
+    if (!pwModal && !emailModal && !verifyModal) return undefined
+
+    function handleEscape(event) {
+      if (event.key !== 'Escape') return
+      setPwModal(null)
+      setEmailModal(null)
+      setVerifyModal(null)
+    }
+    window.addEventListener('keydown', handleEscape, true)
+    return () => window.removeEventListener('keydown', handleEscape, true)
+  }, [pwModal, emailModal, verifyModal])
+
   const location = useLocation()
 
   // Restore the drill-down user if we navigated back here from FormViewer
@@ -393,9 +412,15 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
 
       {/* ── Change password modal ──────────────────────────────────────────── */}
       {pwModal && (
-        <div className="um-modal-overlay" onClick={() => setPwModal(null)}>
-          <div className="um-modal" onClick={e => e.stopPropagation()}>
-            <h3 className="um-modal-title">Change Password</h3>
+        <div className="um-modal-overlay" role="presentation" onClick={() => setPwModal(null)}>
+          <div
+            className="um-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="um-pw-modal-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 id="um-pw-modal-title" className="um-modal-title">Change Password</h3>
             <p className="um-modal-sub">Setting new password for <strong>{pwModal.username}</strong></p>
             <form onSubmit={handleChangePassword}>
               <PasswordInput
@@ -429,9 +454,15 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
 
       {/* ── Set recovery email modal ─────────────────────────────────────────── */}
       {emailModal && (
-        <div className="um-modal-overlay" onClick={() => setEmailModal(null)}>
-          <div className="um-modal" onClick={e => e.stopPropagation()}>
-            <h3 className="um-modal-title">Set Recovery Email</h3>
+        <div className="um-modal-overlay" role="presentation" onClick={() => setEmailModal(null)}>
+          <div
+            className="um-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="um-email-modal-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 id="um-email-modal-title" className="um-modal-title">Set Recovery Email</h3>
             <p className="um-modal-sub">
               <strong>{emailModal.username}</strong> has no email on file yet. A verification
               code must be sent here before this account's password can be changed.
@@ -461,9 +492,15 @@ function UserManagement({ showToast, showConfirm, onViewForm, onEditForm, onView
 
       {/* ── Email verification modal ─────────────────────────────────────────── */}
       {verifyModal && (
-        <div className="um-modal-overlay" onClick={() => setVerifyModal(null)}>
-          <div className="um-modal" onClick={e => e.stopPropagation()}>
-            <h3 className="um-modal-title">Check Your Email</h3>
+        <div className="um-modal-overlay" role="presentation" onClick={() => setVerifyModal(null)}>
+          <div
+            className="um-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="um-verify-modal-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 id="um-verify-modal-title" className="um-modal-title">Check Your Email</h3>
             <p className="um-modal-sub">
               A 6-digit code was sent to <strong>{verifyModal.maskedEmail}</strong>. It
               expires in {verifyModal.expiresInMinutes} minutes.

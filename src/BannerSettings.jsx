@@ -19,6 +19,7 @@ function BannerSettings({ showToast }) {
   const [crop, setCrop] = useState()
   const [completedCrop, setCompletedCrop] = useState()
   const cropImgRef = useRef(null)
+  const applyCropBtnRef = useRef(null)
 
   // Revoke object URLs when they change or on unmount
   useEffect(() => {
@@ -28,6 +29,23 @@ function BannerSettings({ showToast }) {
   useEffect(() => {
     return () => { if (rawObjectUrl) URL.revokeObjectURL(rawObjectUrl) }
   }, [rawObjectUrl])
+
+  // Crop modal accessibility. Escape mirrors the overlay's own click
+  // behavior (applyOriginalImage) rather than a neutral cancel, since that's
+  // already the modal's established "dismiss" gesture - clicking outside it
+  // commits the uncropped image rather than discarding the upload entirely.
+  useEffect(() => {
+    if (!showCropModal) return undefined
+    applyCropBtnRef.current?.focus()
+
+    function handleEscape(event) {
+      if (event.key !== 'Escape') return
+      applyOriginalImage()
+    }
+    window.addEventListener('keydown', handleEscape, true)
+    return () => window.removeEventListener('keydown', handleEscape, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCropModal])
 
   function handleFileChange(e) {
     const f = e.target.files[0]
@@ -152,9 +170,9 @@ function BannerSettings({ showToast }) {
 
       {/* ── Crop modal ──────────────────────────────────────────────────────── */}
       {showCropModal && rawObjectUrl && (
-        <div className="bs-crop-overlay" onClick={applyOriginalImage}>
-          <div className="bs-crop-modal" onClick={e => e.stopPropagation()}>
-            <h3 className="bs-crop-title">Crop Banner</h3>
+        <div className="bs-crop-overlay" role="presentation" onClick={applyOriginalImage}>
+          <div className="bs-crop-modal" role="dialog" aria-modal="true" aria-labelledby="bs-crop-modal-title" onClick={e => e.stopPropagation()}>
+            <h3 className="bs-crop-title" id="bs-crop-modal-title">Crop Banner</h3>
             <p className="bs-crop-hint">
               Drag the handles to trim negative space. Leave the full selection to use the whole image.
             </p>
@@ -174,7 +192,7 @@ function BannerSettings({ showToast }) {
               </ReactCrop>
             </div>
             <div className="bs-crop-actions">
-              <button className="bs-upload-btn" onClick={applyCrop}>
+              <button className="bs-upload-btn" ref={applyCropBtnRef} onClick={applyCrop}>
                 Apply Crop
               </button>
               <button className="bs-remove-btn" onClick={applyOriginalImage}>
