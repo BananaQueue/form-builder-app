@@ -289,6 +289,7 @@ function AdminFormList({
   const [isRollingRows, setIsRollingRows] = useState(false);
   const hasLoadedRef = useRef(false);
   const rowAnimationTimer = useRef(null);
+  const activeFetchControllerRef = useRef(null);
 
   // We store a debounced version of the search string separately.
   // This means the API call only fires after the user stops typing
@@ -313,7 +314,21 @@ function AdminFormList({
   // ── Fetch forms ──────────────────────────────────────────────────────────
   // useCallback wraps the function so it only gets recreated when its
   // dependencies change. This prevents unnecessary re-renders.
-  const fetchForms = useCallback(async (signal) => {
+  //
+  // Every call - automatic (filters changed) or manual (Refresh, Try Again,
+  // post-delete refresh below) - aborts whatever fetch is still in flight
+  // before starting its own. That used to only happen for the automatic
+  // path (via the effect's own AbortController); the three manual call
+  // sites had no signal at all, so a slow manual request could land after a
+  // newer one - automatic or manual - and overwrite the list with stale
+  // data. Managing the controller here instead closes that gap for all
+  // call sites at once, with no change needed at any of them.
+  const fetchForms = useCallback(async () => {
+    activeFetchControllerRef.current?.abort();
+    const controller = new AbortController();
+    activeFetchControllerRef.current = controller;
+    const { signal } = controller;
+
     const showSoftRefresh = hasLoadedRef.current;
     if (showSoftRefresh) setIsRefreshing(true);
     setError(null);
@@ -347,11 +362,8 @@ function AdminFormList({
       if (err.name === "AbortError") return; // a newer request superseded this one
       setError("Could not connect to server: " + err.message);
     } finally {
-      // signal is undefined for the manual Refresh/Try-Again/post-delete
-      // call sites below, which don't participate in the race-cancellation
-      // this exists for - optional chaining lets those skip the check.
       // Don't finalize loading state for a request a newer one superseded.
-      if (!signal?.aborted) {
+      if (!signal.aborted) {
         hasLoadedRef.current = true;
         if (showSoftRefresh) {
           clearTimeout(rowAnimationTimer.current);
@@ -368,14 +380,11 @@ function AdminFormList({
     }
   }, [page, sortBy, debouncedSearch, categoryId, ownerId]);
 
-  // Run fetchForms whenever its dependencies change. Aborts a still-in-flight
-  // request when the filters change again before it resolves, so a slow
-  // response to an OLDER page/filter can't land after a newer one and
-  // overwrite the list with stale data.
+  // Run fetchForms whenever its dependencies change, and abort whatever it
+  // has in flight on unmount.
   useEffect(() => {
-    const controller = new AbortController();
-    fetchForms(controller.signal);
-    return () => controller.abort();
+    fetchForms();
+    return () => activeFetchControllerRef.current?.abort();
   }, [fetchForms]);
 
   // ── Fetch supporting data ────────────────────────────────────────────────
