@@ -34,8 +34,10 @@ Four standalone E2E test-helper routes remain at `test_database_guard.php`, `tes
 
 ## Verification Snapshot
 
-- `php artisan test`: 92 passed
-- `npm run test:api`: 54 passed
+These counts drift as tests are added - treat them as "verified as of the last update to this doc," not a live figure. Re-run the commands yourself for the current count.
+
+- `php artisan test`: 107 passed
+- `npm run test:api`: 55 passed
 - `npm run lint`: 0 errors, 8 pre-existing hook-dependency warnings
 - `npm run build`: passed
 - No `.php`-suffixed route in `routes/web.php` duplicates a native `/api/...` route

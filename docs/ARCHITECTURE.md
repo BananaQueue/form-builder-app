@@ -40,12 +40,16 @@ Important Laravel components:
 - `app/Http/Controllers/LegacyAuthController.php` - session and auth endpoints.
 - `app/Http/Controllers/LegacyLookupController.php` - forms, public forms, responses, exports, and lookups.
 - `app/Http/Controllers/LegacyFormWriteController.php` - form create/update/delete.
+- `app/Http/Controllers/LegacySubmissionController.php` - public response submission.
+- `app/Http/Controllers/LegacyAdminFormController.php` - Super Admin all-forms list.
 - `app/Http/Controllers/LegacyUserController.php` - Super Admin user management.
+- `app/Http/Controllers/PasswordResetVerificationController.php` - Super Admin password-reset email verification.
 - `app/Http/Controllers/LegacyAuditLogController.php` - audit log reads.
 - `app/Http/Controllers/LegacyNotificationController.php` - notification reads and updates.
 - `app/Http/Controllers/LegacyBannerController.php` - banner upload/removal.
+- `app/Support/FormCodeMatcher.php` - decides whether a submitted share code refers to a given `forms.form_code`; shared by `LegacyLookupController` and `LegacySubmissionController` so the public read and write paths agree on what a valid code is.
 
-Controllers keep the `Legacy*` name because they carry over the raw-SQL implementation style from the pre-Laravel PHP app, not because of how they're routed — the standalone root PHP files themselves were removed once the Laravel app became self-contained.
+Controllers keep the `Legacy*` name because they carry over the raw-SQL implementation style from the pre-Laravel PHP app, not because of how they're routed — the standalone root PHP files themselves were removed once the Laravel app became self-contained. See `docs/laravel-endpoint-inventory.md` for the full route-to-controller mapping, including the handful of Super Admin routes that aren't `/api`-prefixed and the test-only helper routes not listed above.
 
 ## Database
 
