@@ -23,7 +23,7 @@
 // - onBack / onViewResponse prop wiring is unchanged
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { apiUrl, API_BASE } from './apiBase'
 
 function ResponseList({ formId, onBack, onViewResponse, showToast, isSuperAdmin = false }) {
@@ -31,12 +31,22 @@ function ResponseList({ formId, onBack, onViewResponse, showToast, isSuperAdmin 
   const [responses, setResponses] = useState([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState(null)
+  const activeFetchControllerRef  = useRef(null)
 
-  // ── Data fetching (unchanged) ──────────────────────────────────────────────
+  // ── Data fetching ────────────────────────────────────────────────────────
+  // Aborts whatever fetch is still in flight before starting a new one, so
+  // navigating between two forms' response lists in quick succession can't
+  // let the slower, older request resolve last and overwrite the newer
+  // form's data with the previous form's.
 
   async function fetchResponses() {
+    activeFetchControllerRef.current?.abort()
+    const controller = new AbortController()
+    activeFetchControllerRef.current = controller
+    const { signal } = controller
+
     try {
-      const response = await fetch(apiUrl(`/api/forms/${formId}/responses${isSuperAdmin ? '?admin_override=1' : ''}`), { credentials: 'include' })
+      const response = await fetch(apiUrl(`/api/forms/${formId}/responses${isSuperAdmin ? '?admin_override=1' : ''}`), { credentials: 'include', signal })
       const result   = await response.json()
 
       if (result.success) {
@@ -46,14 +56,16 @@ function ResponseList({ formId, onBack, onViewResponse, showToast, isSuperAdmin 
         setError(result.error || 'Failed to load responses')
       }
     } catch (err) {
+      if (err.name === 'AbortError') return // a newer request superseded this one
       setError('Could not connect to server: ' + err.message)
     } finally {
-      setLoading(false)
+      if (!signal.aborted) setLoading(false)
     }
   }
 
   useEffect(() => {
     fetchResponses()
+    return () => activeFetchControllerRef.current?.abort()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formId])
 

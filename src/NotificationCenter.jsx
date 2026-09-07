@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiUrl, csrfHeaders } from "./apiBase";
 
 const FILTERS = [
@@ -17,8 +17,19 @@ export default function NotificationCenter({ showToast }) {
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const activeFetchControllerRef = useRef(null);
 
+  // Aborts whatever fetch (filter change or manual Refresh) is still in
+  // flight before starting a new one, so a slower older request can never
+  // land after a newer one and overwrite the list with stale/wrong-filter
+  // data - e.g. clicking "Deleted Forms" then quickly "All" used to risk
+  // the slower of the two responses winning regardless of click order.
   async function fetchNotifications(activeFilter = filter) {
+    activeFetchControllerRef.current?.abort();
+    const controller = new AbortController();
+    activeFetchControllerRef.current = controller;
+    const { signal } = controller;
+
     setLoading(true);
     try {
       const query =
@@ -27,6 +38,7 @@ export default function NotificationCenter({ showToast }) {
           : `?type=${encodeURIComponent(activeFilter)}`;
       const res = await fetch(apiUrl(`/api/notifications${query}`), {
         credentials: "include",
+        signal,
       });
       const data = await res.json();
       if (data.success) {
@@ -35,15 +47,17 @@ export default function NotificationCenter({ showToast }) {
       } else {
         showToast(data.error || "Failed to load notifications.", "error");
       }
-    } catch {
+    } catch (err) {
+      if (err.name === "AbortError") return; // a newer request superseded this one
       showToast("Could not connect to server.", "error");
     } finally {
-      setLoading(false);
+      if (!signal.aborted) setLoading(false);
     }
   }
 
   useEffect(() => {
     fetchNotifications(filter);
+    return () => activeFetchControllerRef.current?.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
