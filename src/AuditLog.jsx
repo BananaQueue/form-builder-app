@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { apiUrl } from './apiBase'
 
 const PAGE_SIZE = 25
@@ -105,14 +105,28 @@ function AuditLog({ showToast }) {
   })
   const [loading, setLoading] = useState(true)
 
+  // The API call only fires 400ms after the user stops typing, rather than
+  // on every keystroke - matching AdminFormList's search debounce.
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const debounceTimer = useRef(null)
+
+  useEffect(() => {
+    clearTimeout(debounceTimer.current)
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 400)
+    return () => clearTimeout(debounceTimer.current)
+  }, [search])
+
   const queryString = useMemo(() => {
     const params = new URLSearchParams()
     params.set('page', String(page))
     params.set('page_size', String(PAGE_SIZE))
     if (action) params.set('action', action)
-    if (search.trim()) params.set('search', search.trim())
+    if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim())
     return params.toString()
-  }, [action, page, search])
+  }, [action, page, debouncedSearch])
 
   useEffect(() => {
     let cancelled = false
@@ -152,7 +166,6 @@ function AuditLog({ showToast }) {
 
   function handleSearchChange(event) {
     setSearch(event.target.value)
-    setPage(1)
   }
 
   function handleActionChange(event) {
